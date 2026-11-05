@@ -1,4 +1,4 @@
-﻿
+
 import {
   ShoppingCart,
   UserRound,
@@ -7,7 +7,7 @@ import {
 } from "lucide-react";
 
 import { NavLink, useNavigate, useLocation } from "react-router-dom";
-import logo from "../assets/PreBotix.png";
+
 
 export default function Navbar({
   lang,
@@ -114,7 +114,7 @@ export default function Navbar({
         aria-hidden={!mobileOpen}
       >
         <NavLink to="/" onClick={handleHome} end>
-          {lang === "bn" ? "হোম" : "Home"}
+          {lang === "bn" ? "???" : "Home"}
         </NavLink>
 
         <NavLink
@@ -135,7 +135,7 @@ export default function Navbar({
           to="/contact"
           onClick={() => handleNavigation("/contact")}
         >
-          {t.navContact || (lang === "bn" ? "যোগাযোগ" : "Contact")}
+          {t.navContact || (lang === "bn" ? "???????" : "Contact")}
         </NavLink>
       </nav>
 
@@ -160,10 +160,10 @@ export default function Navbar({
           type="button"
           className="icon-button account-button"
           aria-label={
-            lang === "bn" ? "আমার অ্যাকাউন্ট" : "My Account"
+            lang === "bn" ? "???? ??????????" : "My Account"
           }
           title={
-            lang === "bn" ? "আমার অ্যাকাউন্ট" : "My Account"
+            lang === "bn" ? "???? ??????????" : "My Account"
           }
           onClick={() => {
             setMobileOpen(false);
@@ -178,10 +178,10 @@ export default function Navbar({
           className="language-button"
           onClick={() => setLang(lang === "en" ? "bn" : "en")}
           aria-label={
-            lang === "en" ? "বাংলা ভাষায় পরিবর্তন করুন" : "Switch to English"
+            lang === "en" ? "????? ????? ???????? ????" : "Switch to English"
           }
         >
-          {lang === "en" ? "বাংলা" : "EN"}
+          {lang === "en" ? "?????" : "EN"}
           <ChevronDown size={14} />
         </button>
 
@@ -199,3 +199,4 @@ export default function Navbar({
     </header>
   );
 }
+
