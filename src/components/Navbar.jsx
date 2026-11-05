@@ -1,3 +1,4 @@
+import logo from "../assets/PreBotix.png";
 
 import {
   ShoppingCart,
@@ -199,4 +200,5 @@ export default function Navbar({
     </header>
   );
 }
+
 
