@@ -36,3 +36,5 @@ dist-ssr/
 uploads/
 temp/
 tmp/
+
+!.env.production
