@@ -1,4 +1,4 @@
-import logo from "../assets/PreBotix.png";
+﻿import logo from "../assets/PreBotix.png";
 
 import {
   ShoppingCart,
@@ -115,7 +115,7 @@ export default function Navbar({
         aria-hidden={!mobileOpen}
       >
         <NavLink to="/" onClick={handleHome} end>
-          {lang === "bn" ? "বাংলা" : "Home"}
+          {lang === "bn" ? "হোম" : "Home"}
         </NavLink>
 
         <NavLink
@@ -136,7 +136,7 @@ export default function Navbar({
           to="/contact"
           onClick={() => handleNavigation("/contact")}
         >
-          {t.navContact || (lang === "bn" ? "???????" : "Contact")}
+          {t.navContact || (lang === "bn" ? "যোগাযোগ" : "Contact")}
         </NavLink>
       </nav>
 
@@ -161,10 +161,10 @@ export default function Navbar({
           type="button"
           className="icon-button account-button"
           aria-label={
-            lang === "bn" ? "???? ??????????" : "My Account"
+            lang === "bn" ? "আমার অ্যাকাউন্ট" : "My Account"
           }
           title={
-            lang === "bn" ? "???? ??????????" : "My Account"
+            lang === "bn" ? "আমার অ্যাকাউন্ট" : "My Account"
           }
           onClick={() => {
             setMobileOpen(false);
@@ -179,10 +179,10 @@ export default function Navbar({
           className="language-button"
           onClick={() => setLang(lang === "en" ? "bn" : "en")}
           aria-label={
-            lang === "en" ? "????? ????? ???????? ????" : "Switch to English"
+            lang === "en" ? "বাংলায় পরিবর্তন করুন" : "Switch to English"
           }
         >
-          {lang === "en" ? "?????" : "EN"}
+          {lang === "en" ? "বাংলা" : "EN"}
           <ChevronDown size={14} />
         </button>
 
@@ -200,6 +200,7 @@ export default function Navbar({
     </header>
   );
 }
+
 
 
 
