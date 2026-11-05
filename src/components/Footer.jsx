@@ -1,3 +1,4 @@
+import logo from "../assets/PreBotix.png";
 
 
 export default function Footer({ t }) {
@@ -5,7 +6,7 @@ export default function Footer({ t }) {
     <footer className="site-footer">
       <a className="brand" href="#home">
         <span className="brand-icon">
-          <img className="logo" src="/PreBotix/assets/PreBotix.png" alt="PreBotix" />
+          <img className="logo" src={logo} alt="PreBotix" />
         </span>
         <span className="brand-accent">
           <span className="brand-name">PRE</span>
@@ -20,4 +21,5 @@ export default function Footer({ t }) {
     </footer>
   );
 }
+
 
