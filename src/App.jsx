@@ -991,18 +991,18 @@ useEffect(() => {
   };
 
   const handleProductBack = useCallback(() => {
-    setSelectedProduct(null);
-    setShowCatalogPage(false);
-    setShowWishlist(false);
-    setAccountOpen(false);
+  setSelectedProduct(null);
+  setShowCatalogPage(false);
+  setShowWishlist(false);
+  setAccountOpen(false);
 
-    navigate("/", { replace: true });
+  navigate("/", { replace: true });
 
-    window.scrollTo({
-      top: 0,
-      behavior: "auto",
-    });
-  }, [navigate]);
+  window.scrollTo({
+    top: 0,
+    behavior: "auto",
+  });
+}, [navigate]);
 
   const goSection = (id) => {
     setMobileOpen(false);
@@ -1855,16 +1855,7 @@ if (routePath === "/moderator" || routePath.startsWith("/moderator/")) {
               )
               .reduce((sum, item) => sum + Number(item.quantity || 0), 0)}
             onAdd={addToCart}
-            onBack={() => {
-              setSelectedProduct(null);
-              setShowWishlist(false);
-              setShowCatalogPage(true);
-              navigate("/products");
-              window.scrollTo({
-                top: 0,
-                behavior: "smooth",
-              });
-            }}
+            onBack={handleProductBack}
           />
         ) : showWishlist ? (
           <WishlistPage
