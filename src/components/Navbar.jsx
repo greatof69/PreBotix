@@ -115,7 +115,7 @@ export default function Navbar({
         aria-hidden={!mobileOpen}
       >
         <NavLink to="/" onClick={handleHome} end>
-          {lang === "bn" ? "???" : "Home"}
+          {lang === "bn" ? "বাংলা" : "Home"}
         </NavLink>
 
         <NavLink
