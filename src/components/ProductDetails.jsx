@@ -412,8 +412,8 @@ export default function ProductDetails({
   };
 
   function goBack() {
-  if (window.history.length > 1) {
-    window.history.back();
+  if (typeof onBack === "function") {
+    onBack();
   } else {
     window.location.assign("/");
   }
