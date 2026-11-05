@@ -412,8 +412,12 @@ export default function ProductDetails({
   };
 
   function goBack() {
+  if (window.history.length > 1) {
+    window.history.back();
+  } else {
     window.location.assign("/");
   }
+}
 
   // ADD TO CART
   // Existing cart logic preserved.
