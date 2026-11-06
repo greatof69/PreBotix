@@ -278,6 +278,9 @@ export default function ProductCard({
             src={imageSrc}
             alt={title}
             loading="lazy"
+            draggable={false}
+            onContextMenu={(event) => event.preventDefault()}
+            onDragStart={(event) => event.preventDefault()}
             onError={(event) => {
               event.currentTarget.style.display = "none";
             }}
