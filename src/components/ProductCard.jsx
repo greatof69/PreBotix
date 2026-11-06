@@ -254,13 +254,19 @@ export default function ProductCard({
 
   return (
     <article
-      className={`product-card ${
-        outOfStock ? "out-of-stock" : ""
-      } ${
-        isStaff ? "product-card--staff" : ""
-      }`}
+      className={`product-card ${outOfStock ? "out-of-stock" : ""
+        } ${isStaff ? "product-card--staff" : ""
+        }`}
       onClick={() => onDetails?.(product)}
-      style={{ cursor: "pointer" }}
+      onContextMenu={(event) => event.preventDefault()}
+      onDragStart={(event) => event.preventDefault()}
+      onSelectStart={(event) => event.preventDefault()}
+      draggable={false}
+      style={{
+        cursor: "pointer",
+        userSelect: "none",
+        WebkitUserSelect: "none",
+      }}
     >
       {/* Product image */}
       <button
