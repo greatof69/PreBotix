@@ -266,6 +266,8 @@ export default function ProductCard({
       <button
         type="button"
         className="product-image product-image-button"
+        onContextMenu={(event) => event.preventDefault()}
+        onDragStart={(event) => event.preventDefault()}
         onClick={(event) => {
           event.stopPropagation();
           onDetails?.(product);
