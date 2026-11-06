@@ -188,6 +188,13 @@ export default function ProductCard({
       ? `${apiBase}${image}`
       : image;
 
+  console.log("PRODUCT IMAGE DEBUG:", {
+  productId: product.id,
+  originalImage: product.image,
+  apiBase,
+  finalImageUrl: imageSrc,
+});    
+
   const isStaff = isAdmin || isModerator;
   const canUseWishlist = !isStaff;
 
