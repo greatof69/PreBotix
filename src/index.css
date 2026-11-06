@@ -4676,3 +4676,12 @@ body:has(.modal-backdrop, .account-overlay, .pb-inline-editor-backdrop, .pb-bulk
   .pb-contact-page .pb-contact-orbit-one { animation: pb-contact-spin 120s linear infinite !important; }
   .pb-contact-page .pb-contact-orbit-two { animation: pb-contact-spin 100s linear infinite reverse !important; }
 }
+/* PreBotix public image interaction protection */
+body img:not([data-allow-image-copy]) {
+  -webkit-user-drag: none !important;
+  user-drag: none !important;
+  -webkit-user-select: none !important;
+  user-select: none !important;
+  -webkit-touch-callout: none !important;
+  pointer-events: auto;
+}
