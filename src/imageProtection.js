@@ -3,14 +3,19 @@
   picture img:not([data-allow-image-copy])
 `;
 
+function getEventElement(event) {
+  const target = event.target;
+  return target instanceof Element ? target : target?.parentElement;
+}
+
 document.addEventListener("contextmenu", (event) => {
-  if (event.target.closest(PROTECTED_IMAGE_SELECTOR)) {
+  if (getEventElement(event)?.closest(PROTECTED_IMAGE_SELECTOR)) {
     event.preventDefault();
   }
 });
 
 document.addEventListener("dragstart", (event) => {
-  if (event.target.closest(PROTECTED_IMAGE_SELECTOR)) {
+  if (getEventElement(event)?.closest(PROTECTED_IMAGE_SELECTOR)) {
     event.preventDefault();
   }
 });
@@ -20,9 +25,7 @@ document.addEventListener("copy", (event) => {
 
   if (selection && selection.toString()) {
     const node = selection.anchorNode;
-    const element = node?.nodeType === 1
-      ? node
-      : node?.parentElement;
+    const element = node instanceof Element ? node : node?.parentElement;
 
     if (element?.closest(PROTECTED_IMAGE_SELECTOR)) {
       event.preventDefault();
@@ -31,7 +34,7 @@ document.addEventListener("copy", (event) => {
 });
 
 document.addEventListener("selectstart", (event) => {
-  if (event.target.closest(PROTECTED_IMAGE_SELECTOR)) {
+  if (getEventElement(event)?.closest(PROTECTED_IMAGE_SELECTOR)) {
     event.preventDefault();
   }
 });
