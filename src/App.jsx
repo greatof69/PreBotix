@@ -37,6 +37,8 @@ const CustomProjectPage = lazy(() => import("./pages/CustomProjectPage"));
 import FloatingContactWidget from "./components/FloatingContactWidget";
 const AIChat = lazy(() => import("./components/AI-chat"));
 import {
+  authFetch,
+  getRefreshToken,
   getAccessToken,
   getAuthUser,
   saveAuthSession,
@@ -236,19 +238,15 @@ export default function App() {
         return;
       }
 
-      const token = getAccessToken();
-      if (!token) {
+      if (!getAccessToken()) {
         showNotice("Admin login required to delete products.", 3500);
         return;
       }
 
       try {
-        const response = await fetch(
+        const response = await authFetch(
           `${API_BASE_URL}/api/admin/products/${Number(productId)}`,
-          {
-            method: "DELETE",
-            headers: { Authorization: `Bearer ${token}` },
-          }
+          { method: "DELETE" }
         );
         const data = await response.json().catch(() => ({}));
         if (!response.ok) {
@@ -1144,11 +1142,10 @@ const removeItem = (cartKey) => {
       );
     }
 
-    const response = await fetch(`${API_BASE_URL}/api/orders`, {
+    const response = await authFetch(`${API_BASE_URL}/api/orders`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${accessToken}`,
       },
       body: JSON.stringify({
         form: payload.form,
@@ -1283,20 +1280,11 @@ const removeItem = (cartKey) => {
     setOrdersError("");
 
     try {
-      const response = await fetch(`${API_BASE_URL}/api/orders/my`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      const response = await authFetch(`${API_BASE_URL}/api/orders/my`);
 
       const data = await response.json().catch(() => ({}));
 
       if (!response.ok) {
-        if (response.status === 401) {
-          clearAuthSession();
-          setAccountUser(null);
-          setAccountMode("login");
-        }
 
         throw new Error(
           data.message ||
@@ -1476,7 +1464,13 @@ const removeItem = (cartKey) => {
           );
         }
 
-        saveAuthSession(data.accessToken, data.user, rememberMe);
+        saveAuthSession(
+          data.accessToken,
+          data.user,
+          rememberMe,
+          data.refreshToken
+        );
+
         setAccountUser(data.user);
 
         // Login done: close the modal and never open the dashboard.
@@ -1614,7 +1608,21 @@ const removeItem = (cartKey) => {
 
 
  // LOGOUT
-const logoutAccount = () => {
+const logoutAccount = async () => {
+  const refreshToken = getRefreshToken();
+
+  if (refreshToken) {
+    try {
+      await fetch(`${API_BASE_URL}/api/auth/logout`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ refreshToken }),
+      });
+    } catch (error) {
+      console.warn("Backend logout request failed:", error);
+    }
+  }
+
   // Stop the previous account's data from being saved again.
   cartStorageAccountRef.current = "";
   skipNextCartSaveRef.current = true;
@@ -1753,7 +1761,7 @@ if (routePath === "/moderator" || routePath.startsWith("/moderator/")) {
         </div>
       )}
 
-      
+
       <div className="announcement">
         <Zap className="announcement-zap" />
         <span>
@@ -2031,7 +2039,7 @@ if (routePath === "/moderator" || routePath.startsWith("/moderator/")) {
         />
       )}
 
-      
+
       {order && (
         <OrderSuccess
           order={order}
@@ -2041,7 +2049,7 @@ if (routePath === "/moderator" || routePath.startsWith("/moderator/")) {
         />
       )}
 
-   
+
       </Suspense>
 
 <BackToTop />
