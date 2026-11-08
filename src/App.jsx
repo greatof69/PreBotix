@@ -1768,20 +1768,16 @@ const logoutAccount = async () => {
         <Zap className="announcement-zap" />
         <span>
           {lang === "bn"
-            ? storefrontSettings?.announcementBn ||
-            "আপনারা যদি প্রজেক্ট অর্ডার দেন, তবে শুধু কম্পোনেন্টই (উপাদান) পাবেন না, বরং সম্পূর্ণ তৈরি (build in) অবস্থায় পাবেন। প্রজেক্ট তৈরি করার জন্য আমরা কোনো পারিশ্রমিক লাগবে না।"
-            : storefrontSettings?.announcement ||
-            "আপনারা যদি প্রজেক্ট অর্ডার দেন, তবে শুধু কম্পোনেন্টই (উপাদান) পাবেন না, বরং সম্পূর্ণ তৈরি (build in) অবস্থায় পাবেন। প্রজেক্ট তৈরি করার জন্য আমরা কোনো পারিশ্রমিক লাগবে না।"}
+            ? storefrontSettings?.announcementBn
+            : storefrontSettings?.announcement}
         </span>
       </div>
 
       <div className="announcement1">
         <span>
           {lang === "bn"
-            ? storefrontSettings?.announcementBn ||
-            "আপনারা চাইলে নিজেদের আইডিয়া শেয়ার করে প্রজেক্ট তৈরি (build-in) করতে পারবেন।"
-            : storefrontSettings?.announcement ||
-            "আপনারা চাইলে নিজেদের আইডিয়া শেয়ার করে প্রজেক্ট তৈরি (build-in) করতে পারবেন।"}
+            ? storefrontSettings?.announcement1Bn
+            : storefrontSettings?.announcement1}
         </span>
       </div>
 
