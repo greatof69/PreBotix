@@ -1987,28 +1987,30 @@ if (routePath === "/moderator" || routePath.startsWith("/moderator/")) {
       )}
 
       
-      <div className="announcement">
-        <Zap className="announcement-zap" />
-        <span>
-          {lang === "bn"
-            ? storefrontSettings?.announcementBn ||
-            "à¦†à¦ªà¦¨à¦¾à¦°à¦¾ à¦¯à¦¦à¦¿ à¦ªà§à¦°à¦œà§‡à¦•à§à¦Ÿ à¦…à¦°à§à¦¡à¦¾à¦° à¦¦à§‡à¦¨, à¦¤à¦¬à§‡ à¦¶à§à¦§à§ à¦•à¦®à§à¦ªà§‹à¦¨à§‡à¦¨à§à¦Ÿà¦‡ (à¦‰à¦ªà¦¾à¦¦à¦¾à¦¨) à¦ªà¦¾à¦¬à§‡à¦¨ à¦¨à¦¾, à¦¬à¦°à¦‚ à¦¸à¦®à§à¦ªà§‚à¦°à§à¦£ à¦¤à§ˆà¦°à¦¿ (build in) à¦…à¦¬à¦¸à§à¦¥à¦¾à§Ÿ à¦ªà¦¾à¦¬à§‡à¦¨à¥¤ à¦ªà§à¦°à¦œà§‡à¦•à§à¦Ÿ à¦¤à§ˆà¦°à¦¿ à¦•à¦°à¦¾à¦° à¦œà¦¨à§à¦¯ à¦†à¦®à¦°à¦¾ à¦•à§‹à¦¨à§‹ à¦ªà¦¾à¦°à¦¿à¦¶à§à¦°à¦®à¦¿à¦• à¦²à¦¾à¦—à¦¬à§‡ à¦¨à¦¾à¥¤"
-            : storefrontSettings?.announcement ||
-            "à¦†à¦ªà¦¨à¦¾à¦°à¦¾ à¦¯à¦¦à¦¿ à¦ªà§à¦°à¦œà§‡à¦•à§à¦Ÿ à¦…à¦°à§à¦¡à¦¾à¦° à¦¦à§‡à¦¨, à¦¤à¦¬à§‡ à¦¶à§à¦§à§ à¦•à¦®à§à¦ªà§‹à¦¨à§‡à¦¨à§à¦Ÿà¦‡ (à¦‰à¦ªà¦¾à¦¦à¦¾à¦¨) à¦ªà¦¾à¦¬à§‡à¦¨ à¦¨à¦¾, à¦¬à¦°à¦‚ à¦¸à¦®à§à¦ªà§‚à¦°à§à¦£ à¦¤à§ˆà¦°à¦¿ (build in) à¦…à¦¬à¦¸à§à¦¥à¦¾à¦¯à¦¼ à¦ªà¦¾à¦¬à§‡à¦¨à¥¤ à¦ªà§à¦°à¦œà§‡à¦•à§à¦Ÿ à¦¤à§ˆà¦°à¦¿ à¦•à¦°à¦¾à¦° à¦œà¦¨à§à¦¯ à¦†à¦®à¦°à¦¾ à¦•à§‹à¦¨à§‹ à¦ªà¦¾à¦°à¦¿à¦¶à§à¦°à¦®à¦¿à¦• à¦²à¦¾à¦—à¦¬à§‡ à¦¨à¦¾à¥¤"}
-        </span>
-      </div>
+      {(lang === "bn"
+        ? storefrontSettings?.announcementBn
+        : storefrontSettings?.announcement) && (
+        <div className="announcement">
+          <Zap className="announcement-zap" />
+          <span>
+            {lang === "bn"
+              ? storefrontSettings.announcementBn
+              : storefrontSettings.announcement}
+          </span>
+        </div>
+      )}
 
-      <div className="announcement1">
-        <span>
-          {lang === "bn"
-            ? storefrontSettings?.announcementBn ||
-            "à¦†à¦ªà¦¨à¦¾à¦°à¦¾ à¦šà¦¾à¦‡à¦²à§‡ à¦¨à¦¿à¦œà§‡à¦¦à§‡à¦° à¦†à¦‡à¦¡à¦¿à§Ÿà¦¾ à¦¶à§‡à§Ÿà¦¾à¦° à¦•à¦°à§‡ à¦ªà§à¦°à¦œà§‡à¦•à§à¦Ÿ à¦¤à§ˆà¦°à¦¿ (build-in) à¦•à¦°à¦¤à§‡ à¦ªà¦¾à¦°à¦¬à§‡à¦¨à¥¤"
-            : storefrontSettings?.announcement ||
-            "à¦†à¦ªà¦¨à¦¾à¦°à¦¾ à¦šà¦¾à¦‡à¦²à§‡ à¦¨à¦¿à¦œà§‡à¦¦à§‡à¦° à¦†à¦‡à¦¡à¦¿à§Ÿà¦¾ à¦¶à§‡à§Ÿà¦¾à¦° à¦•à¦°à§‡ à¦ªà§à¦°à¦œà§‡à¦•à§à¦Ÿ à¦¤à§ˆà¦°à¦¿ (build-in) à¦•à¦°à¦¤à§‡ à¦ªà¦¾à¦°à¦¬à§‡à¦¨à¥¤"}
-        </span>
-      </div>
-
-
+      {(lang === "bn"
+        ? storefrontSettings?.announcement1Bn
+        : storefrontSettings?.announcement1) && (
+        <div className="announcement1">
+          <span>
+            {lang === "bn"
+              ? storefrontSettings.announcement1Bn
+              : storefrontSettings.announcement1}
+          </span>
+        </div>
+      )}
       <Navbar
         lang={lang}
         t={t}
