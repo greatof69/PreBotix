@@ -1554,6 +1554,7 @@ body:has(.pb-contact-page) .search-panel { display: none; }
   .hero .hero-copy {
     display: -webkit-box;
     -webkit-line-clamp: 2;
+    line-clamp: 2;
     -webkit-box-orient: vertical;
     overflow: hidden;
   }
@@ -4708,6 +4709,6 @@ body img:not([data-allow-image-copy]) {
 /* MOBILE: Reduce Only Image Height */
 @media (max-width: 560px) {
   html body .hero-visual .hero-slide-image {
-    height: 70% !important;
+    height: 60% !important;
   }
 }
