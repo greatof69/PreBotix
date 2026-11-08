@@ -4717,4 +4717,10 @@ body img:not([data-allow-image-copy]) {
     padding: 2px 3px !important;
     line-height: 1 !important;
 }
+
+.product-category {
+    font-size: 4px !important;
+    padding: 2px 3px !important;
+    line-height: 1 !important;
+  }
 }
