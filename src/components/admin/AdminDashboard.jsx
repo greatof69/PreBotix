@@ -1,4 +1,4 @@
-﻿import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import DashboardLayout from "../shared/DashboardLayout";
 import { clearAuthSession, getAccessToken } from "../../utils/authSession";
@@ -996,7 +996,7 @@ const deleteOrder = async (order) => {
 
     if (paymentStatus === "failed") {
       const input = window.prompt(
-        "Enter payment rejection reason (1â€“500 characters):"
+        "Enter payment rejection reason (1\u2013500 characters):"
       );
 
       if (input === null) return;
@@ -1004,7 +1004,7 @@ const deleteOrder = async (order) => {
       reason = input.trim();
 
       if (!reason || reason.length > 500) {
-        setError("Rejection reason must be 1â€“500 characters.");
+        setError("Rejection reason must be 1\u2013500 characters.");
         return;
       }
     }
@@ -1974,10 +1974,10 @@ const pageTitle =
                       return (
                         <tr key={userId || index}>
                           <td style={{ padding: 12, borderBottom: "1px solid #eee" }}>
-                            {user.name || user.fullName || "â€”"}
+                            {user.name || user.fullName || "\u2014"}
                           </td>
                           <td style={{ padding: 12, borderBottom: "1px solid #eee" }}>
-                            {user.email || "â€”"}
+                            {user.email || "\u2014"}
                           </td>
                           <td style={{ padding: 12, borderBottom: "1px solid #eee" }}>
                             {currentRole}
@@ -2162,7 +2162,7 @@ const pageTitle =
                           </strong>
 
                           <div style={{ color: "#6b7280", fontSize: 13, marginTop: 5 }}>
-                            {item.email || "â€”"}
+                            {item.email || "\u2014"}
                             {item.phone ? ` · ${item.phone}` : ""}
                           </div>
 
@@ -2171,7 +2171,7 @@ const pageTitle =
                               ? new Date(item.createdAt).toLocaleString(
                                   lang === "bn" ? "bn-BD" : "en-BD"
                                 )
-                              : "â€”"}
+                              : "\u2014"}
                           </div>
                         </div>
 
@@ -2207,7 +2207,7 @@ const pageTitle =
                             {item.subject}
                           </div>
                         )}
-                        {item.message || item.content || item.body || "â€”"}
+                        {item.message || item.content || item.body || "\u2014"}
                       </div>
 
                       {history.length > 0 && (
@@ -2263,7 +2263,7 @@ const pageTitle =
                                       ? new Date(reply.createdAt).toLocaleString(
                                           lang === "bn" ? "bn-BD" : "en-BD"
                                         )
-                                      : "â€”"}
+                                      : "\u2014"}
                                   </span>
                                 </div>
 
@@ -2274,7 +2274,7 @@ const pageTitle =
                                     lineHeight: 1.6,
                                   }}
                                 >
-                                  {reply.reply || reply.message || reply.text || "â€”"}
+                                  {reply.reply || reply.message || reply.text || "\u2014"}
                                 </div>
                               </div>
                             ))}

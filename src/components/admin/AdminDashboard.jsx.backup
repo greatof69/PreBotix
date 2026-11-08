@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+﻿import { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import DashboardLayout from "../shared/DashboardLayout";
 import { clearAuthSession, getAccessToken } from "../../utils/authSession";
@@ -992,11 +992,22 @@ const deleteOrder = async (order) => {
       return;
     }
 
-    const actionLabel = isCodCashReceipt
-      ? "confirm that the COD cash was received"
-      : paymentStatus === "paid"
-        ? "verify this payment"
-        : "reject this payment";
+    let reason = "";
+
+    if (paymentStatus === "failed") {
+      const input = window.prompt(
+        "Enter payment rejection reason (1â€“500 characters):"
+      );
+
+      if (input === null) return;
+
+      reason = input.trim();
+
+      if (!reason || reason.length > 500) {
+        setError("Rejection reason must be 1â€“500 characters.");
+        return;
+      }
+    }
 
     setSaving(true);
     setError("");
@@ -1005,7 +1016,10 @@ const deleteOrder = async (order) => {
     try {
       await request(`/orders/${orderId}/payment`, {
         method: "PATCH",
-        body: JSON.stringify({ paymentStatus }),
+        body: JSON.stringify({
+          paymentStatus,
+          ...(paymentStatus === "failed" ? { reason } : {}),
+        }),
       });
 
       setMessage(
@@ -1013,7 +1027,7 @@ const deleteOrder = async (order) => {
           ? "COD cash receipt confirmed. Payment marked as paid."
           : paymentStatus === "paid"
             ? "Payment marked as paid after admin verification."
-            : "Payment marked as failed."
+            : "Payment rejected successfully."
       );
 
       await loadOrders();
@@ -1133,43 +1147,43 @@ const deleteOrder = async (order) => {
       id: "orders",
       label: "Order Management",
       labelBn: "অর্ডার ম্যানেজমেন্ট",
-      icon: "📋",
+      icon: "ðŸ“‹",
     },
     {
       id: "users",
       label: "Account Management",
       labelBn: "অ্যাকাউন্ট ম্যানেজমেন্ট",
-      icon: "👥",
+      icon: "ðŸ‘¥",
     },
     {
       id: "generalSettings",
       label: "General Settings",
       labelBn: "সাধারণ সেটিংস",
-      icon: "⚙️",
+      icon: "âš™ï¸",
     },
     {
       id: "messages",
       label: "Customer Messages",
       labelBn: "গ্রাহকের মেসেজ",
-      icon: "💬",
+      icon: "ðŸ’¬",
     },
     {
       id: "paymentDelivery",
       label: "Payment & Delivery Settings",
       labelBn: "পেমেন্ট ও ডেলিভারি সেটিংস",
-      icon: "💳",
+      icon: "ðŸ’³",
     },
     {
       id: "courier",
       label: "Courier Orders",
       labelBn: "কুরিয়ার অর্ডার",
-      icon: "📦",
+      icon: "ðŸ“¦",
     },
     {
       id: "history",
       label: "Order History",
       labelBn: "অর্ডার হিস্টোরি",
-      icon: "🗂️",
+      icon: "ðŸ—‚ï¸",
     },
   ];
 
@@ -1792,6 +1806,20 @@ const pageTitle =
                                 {t("Payment status:", "পেমেন্ট স্ট্যাটাস:")}{" "}
                                 {String(order?.paymentStatus || "unpaid").toLowerCase()}
                               </div>
+                              {String(order?.paymentStatus || "").toLowerCase() === "failed" &&
+                                order?.paymentRejectionReason && (
+                                  <div style={{
+                                    marginTop: 6,
+                                    padding: 8,
+                                    borderRadius: 6,
+                                    background: "#fef2f2",
+                                    color: "#b91c1c",
+                                    fontSize: 12,
+                                  }}>
+                                    <strong>{t("Rejection reason:", "প্রত্যাখ্যানের কারণ:")}</strong>{" "}
+                                    {order.paymentRejectionReason}
+                                  </div>
+                                )}
                               {order?.paymentSenderNumber && (
                                 <div style={{ marginTop: 4, fontSize: 12 }}>
                                   {t("Sender:", "প্রেরক:")} {order.paymentSenderNumber}
@@ -1946,10 +1974,10 @@ const pageTitle =
                       return (
                         <tr key={userId || index}>
                           <td style={{ padding: 12, borderBottom: "1px solid #eee" }}>
-                            {user.name || user.fullName || "—"}
+                            {user.name || user.fullName || "â€”"}
                           </td>
                           <td style={{ padding: 12, borderBottom: "1px solid #eee" }}>
-                            {user.email || "—"}
+                            {user.email || "â€”"}
                           </td>
                           <td style={{ padding: 12, borderBottom: "1px solid #eee" }}>
                             {currentRole}
@@ -2134,7 +2162,7 @@ const pageTitle =
                           </strong>
 
                           <div style={{ color: "#6b7280", fontSize: 13, marginTop: 5 }}>
-                            {item.email || "—"}
+                            {item.email || "â€”"}
                             {item.phone ? ` · ${item.phone}` : ""}
                           </div>
 
@@ -2143,7 +2171,7 @@ const pageTitle =
                               ? new Date(item.createdAt).toLocaleString(
                                   lang === "bn" ? "bn-BD" : "en-BD"
                                 )
-                              : "—"}
+                              : "â€”"}
                           </div>
                         </div>
 
@@ -2179,7 +2207,7 @@ const pageTitle =
                             {item.subject}
                           </div>
                         )}
-                        {item.message || item.content || item.body || "—"}
+                        {item.message || item.content || item.body || "â€”"}
                       </div>
 
                       {history.length > 0 && (
@@ -2235,7 +2263,7 @@ const pageTitle =
                                       ? new Date(reply.createdAt).toLocaleString(
                                           lang === "bn" ? "bn-BD" : "en-BD"
                                         )
-                                      : "—"}
+                                      : "â€”"}
                                   </span>
                                 </div>
 
@@ -2246,7 +2274,7 @@ const pageTitle =
                                     lineHeight: 1.6,
                                   }}
                                 >
-                                  {reply.reply || reply.message || reply.text || "—"}
+                                  {reply.reply || reply.message || reply.text || "â€”"}
                                 </div>
                               </div>
                             ))}
@@ -2798,3 +2826,4 @@ const pageTitle =
     
   );
 }
+
