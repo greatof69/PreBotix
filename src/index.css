@@ -4674,3 +4674,18 @@ body img:not([data-allow-image-copy]) {
   }
 }
 
+
+/* MOBILE HERO: Smaller height + show full image */
+@media (max-width: 560px) {
+  .hero-visual,
+  .hero-visual.hero-visual-slide-2 {
+    height: clamp(110px, 16dvh, 160px) !important;
+  }
+
+  .hero-visual .hero-slide-image {
+    height: 100% !important;
+    object-fit: contain !important;
+    mask-image: none !important;
+  }
+}
+
