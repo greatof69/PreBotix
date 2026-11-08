@@ -4704,3 +4704,22 @@ body img:not([data-allow-image-copy]) {
     mask-image: linear-gradient(to bottom, #000 70%, transparent 100%) !important;
   }
 }
+
+/* MOBILE HERO: Fit Full Image Inside Container */
+@media (max-width: 560px) {
+  .hero-visual,
+  .hero-visual.hero-visual-slide-2 {
+    height: 130px !important;
+    overflow: hidden !important;
+  }
+
+  .hero-visual .hero-slide-image {
+    height: 100% !important;
+    max-height: 100% !important;
+    width: auto !important;
+    max-width: 100% !important;
+    object-fit: contain !important;
+    object-position: center center !important;
+    mask-image: none !important;
+  }
+}
