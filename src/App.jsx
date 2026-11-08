@@ -13,7 +13,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { heroSlides, heroSlidesBn } from "./data/heroSlides";
 import { copy } from "./data/translations";
 import { resizeImage } from "./utils/resizeImage";
-import { getTitle, productMatchesQuery } from "./utils/productHelpers";
+import { getTitle, productMatchesQuery, productSearchScore } from "./utils/productHelpers";
 
 const ProductDetails = lazy(() => import("./components/ProductDetails"));
 const CartPanel = lazy(() => import("./components/CartPanel"));
@@ -37,8 +37,6 @@ const CustomProjectPage = lazy(() => import("./pages/CustomProjectPage"));
 import FloatingContactWidget from "./components/FloatingContactWidget";
 const AIChat = lazy(() => import("./components/AI-chat"));
 import {
-  authFetch,
-  getRefreshToken,
   getAccessToken,
   getAuthUser,
   saveAuthSession,
@@ -238,15 +236,19 @@ export default function App() {
         return;
       }
 
-      if (!getAccessToken()) {
+      const token = getAccessToken();
+      if (!token) {
         showNotice("Admin login required to delete products.", 3500);
         return;
       }
 
       try {
-        const response = await authFetch(
+        const response = await fetch(
           `${API_BASE_URL}/api/admin/products/${Number(productId)}`,
-          { method: "DELETE" }
+          {
+            method: "DELETE",
+            headers: { Authorization: `Bearer ${token}` },
+          }
         );
         const data = await response.json().catch(() => ({}));
         if (!response.ok) {
@@ -676,15 +678,17 @@ useEffect(() => {
 }, [productsLoaded, products, accountUser]);
 
   // PRODUCT FILTERING
-  const visibleProducts = useMemo(
-    () =>
-      products.filter((product) => {
-        const matchesSearch = productMatchesQuery(product, searchQuery);
-
+  const visibleProducts = useMemo(() => {
+    const query = searchQuery.trim();
+    return products
+      .map((product) => ({
+        product,
+        score: productSearchScore(product, query),
+      }))
+      .filter(({ product, score }) => {
         const productCategory = String(product.category || "")
           .trim()
           .toUpperCase();
-
         const matchesCategory =
           category === "all" ||
           (category === "projects"
@@ -692,11 +696,11 @@ useEffect(() => {
             : category === "components"
               ? productCategory !== "ROBOTICS KIT"
               : product.category === category);
-
-        return matchesSearch && matchesCategory;
-      }),
-    [products, searchQuery, category]
-  );
+        return score > 0 && matchesCategory;
+      })
+      .sort((a, b) => (query ? b.score - a.score : 0))
+      .map(({ product }) => product);
+  }, [products, searchQuery, category]);
 
   const searchSuggestions = useMemo(() => {
     const query = searchQuery.toLowerCase().trim();
@@ -704,8 +708,14 @@ useEffect(() => {
     if (!query) return [];
 
     return products
-      .filter((product) => productMatchesQuery(product, query))
-      .slice(0, 6);
+      .map((product) => ({
+        product,
+        score: productSearchScore(product, query),
+      }))
+      .filter((item) => item.score > 0)
+      .sort((a, b) => b.score - a.score)
+      .slice(0, 8)
+      .map((item) => item.product);
   }, [products, searchQuery]);
 
   // SAVE WISHLIST
@@ -1142,10 +1152,11 @@ const removeItem = (cartKey) => {
       );
     }
 
-    const response = await authFetch(`${API_BASE_URL}/api/orders`, {
+    const response = await fetch(`${API_BASE_URL}/api/orders`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
+        Authorization: `Bearer ${accessToken}`,
       },
       body: JSON.stringify({
         form: payload.form,
@@ -1280,11 +1291,20 @@ const removeItem = (cartKey) => {
     setOrdersError("");
 
     try {
-      const response = await authFetch(`${API_BASE_URL}/api/orders/my`);
+      const response = await fetch(`${API_BASE_URL}/api/orders/my`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
 
       const data = await response.json().catch(() => ({}));
 
       if (!response.ok) {
+        if (response.status === 401) {
+          clearAuthSession();
+          setAccountUser(null);
+          setAccountMode("login");
+        }
 
         throw new Error(
           data.message ||
@@ -1464,13 +1484,7 @@ const removeItem = (cartKey) => {
           );
         }
 
-        saveAuthSession(
-          data.accessToken,
-          data.user,
-          rememberMe,
-          data.refreshToken
-        );
-
+        saveAuthSession(data.accessToken, data.user, rememberMe);
         setAccountUser(data.user);
 
         // Login done: close the modal and never open the dashboard.
@@ -1608,21 +1622,7 @@ const removeItem = (cartKey) => {
 
 
  // LOGOUT
-const logoutAccount = async () => {
-  const refreshToken = getRefreshToken();
-
-  if (refreshToken) {
-    try {
-      await fetch(`${API_BASE_URL}/api/auth/logout`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ refreshToken }),
-      });
-    } catch (error) {
-      console.warn("Backend logout request failed:", error);
-    }
-  }
-
+const logoutAccount = () => {
   // Stop the previous account's data from being saved again.
   cartStorageAccountRef.current = "";
   skipNextCartSaveRef.current = true;
@@ -1651,89 +1651,87 @@ const logoutAccount = async () => {
 
   navigate("/", { replace: true });
 };
-  
-  // ROUTE PATH
+  // ROUTE PATH: keep existing storefront components intact.
   const routePath = location.pathname.replace(/\/+$/, "") || "/";
-
   const isKnownStoreRoute =
-    [
-      "/",
-      "/index.html",
-      "/products",
-      "/shop",
-      "/custom",
-      "/wishlist",
-      "/login",
-      "/register",
-      "/account",
-      "/account/orders",
-      "/contact",
-    ].includes(routePath) ||
-    /^\/products\/[^/]+$/.test(routePath);
+  [
+    "/",
+    "/index.html",
+    "/products",
+    "/shop",
+    "/custom",
+    "/wishlist",
+    "/login",
+    "/register",
+    "/account",
+    "/account/orders",
+    "/contact",
+  ].includes(routePath) || /^\/products\/[^/]+$/.test(routePath);
 
-  // ADMIN ROUTE
-  if (routePath === "/admin") {
-    return (
-      <Suspense fallback={<div className="pb-route-loading">Loading dashboard…</div>}>
-        <>
-          <RoleGuard allowedRoles={["admin"]}>
-            <AdminDashboard
-              lang={lang}
-              setLang={setLang}
-              mobileOpen={mobileOpen}
-              setMobileOpen={setMobileOpen}
-            />
-          </RoleGuard>
+  if (routePath === "/admin" || routePath.startsWith("/admin/")) {
+  if (routePath !== "/admin") return <NotFoundPage />;
 
-          <FloatingContactWidget
-            onOpenAI={() => setIsAIChatOpen(true)}
-          />
+  return (
+    <Suspense fallback={<div className="pb-route-loading" role="status">Loading dashboard…</div>}>
+      <>
+      <RoleGuard allowedRoles={["admin"]}>
+        <AdminDashboard
+          lang={lang}
+          setLang={setLang}
+          mobileOpen={mobileOpen}
+          setMobileOpen={setMobileOpen}
+        />
+      </RoleGuard>
 
-          <AIChat
-            isOpen={isAIChatOpen}
-            onClose={() => setIsAIChatOpen(false)}
-            products={products}
-            lang={lang}
-            onDetails={openProduct}
-            onAdd={addToCart}
-          />
-        </>
-      </Suspense>
-    );
-  }
+      <FloatingContactWidget
+        onOpenAI={() => setIsAIChatOpen(true)}
+      />
 
-  // MODERATOR ROUTE
-  if (routePath === "/moderator") {
-    return (
-      <Suspense fallback={<div className="pb-route-loading">Loading dashboard…</div>}>
-        <>
-          <RoleGuard allowedRoles={["moderator"]}>
-            <ModeratorDashboard
-              lang={lang}
-              setLang={setLang}
-              mobileOpen={mobileOpen}
-              setMobileOpen={setMobileOpen}
-            />
-          </RoleGuard>
+      <AIChat
+        isOpen={isAIChatOpen}
+        onClose={() => setIsAIChatOpen(false)}
+        products={products}
+        lang={lang}
+        onDetails={openProduct}
+        onAdd={addToCart}
+      />
+      </>
+    </Suspense>
+  );
+}
 
-          <FloatingContactWidget
-            onOpenAI={() => setIsAIChatOpen(true)}
-          />
+if (routePath === "/moderator" || routePath.startsWith("/moderator/")) {
+  if (routePath !== "/moderator") return <NotFoundPage />;
 
-          <AIChat
-            isOpen={isAIChatOpen}
-            onClose={() => setIsAIChatOpen(false)}
-            products={products}
-            lang={lang}
-            onDetails={openProduct}
-            onAdd={addToCart}
-          />
-        </>
-      </Suspense>
-    );
-  }
+  return (
+    <Suspense fallback={<div className="pb-route-loading" role="status">Loading dashboard…</div>}>
+      <>
+      <RoleGuard allowedRoles={["moderator"]}>
+        <ModeratorDashboard
+          lang={lang}
+          setLang={setLang}
+          mobileOpen={mobileOpen}
+          setMobileOpen={setMobileOpen}
+        />
+      </RoleGuard>
 
-  // UNKNOWN ROUTE
+      <FloatingContactWidget
+        onOpenAI={() => setIsAIChatOpen(true)}
+      />
+
+      <AIChat
+        isOpen={isAIChatOpen}
+        onClose={() => setIsAIChatOpen(false)}
+        products={products}
+        lang={lang}
+        onDetails={openProduct}
+        onAdd={addToCart}
+      />
+      </>
+    </Suspense>
+  );
+}
+
   if (!isKnownStoreRoute) {
     return <NotFoundPage />;
   }
@@ -1763,21 +1761,25 @@ const logoutAccount = async () => {
         </div>
       )}
 
-
+      
       <div className="announcement">
         <Zap className="announcement-zap" />
         <span>
           {lang === "bn"
-            ? storefrontSettings?.announcementBn
-            : storefrontSettings?.announcement}
+            ? storefrontSettings?.announcementBn ||
+            "আপনারা যদি প্রজেক্ট অর্ডার দেন, তবে শুধু কম্পোনেন্টই (উপাদান) পাবেন না, বরং সম্পূর্ণ তৈরি (build in) অবস্থায় পাবেন। প্রজেক্ট তৈরি করার জন্য আমরা কোনো পারিশ্রমিক লাগবে না।"
+            : storefrontSettings?.announcement ||
+            "আপনারা যদি প্রজেক্ট অর্ডার দেন, তবে শুধু কম্পোনেন্টই (উপাদান) পাবেন না, বরং সম্পূর্ণ তৈরি (build in) অবস্থায় পাবেন। প্রজেক্ট তৈরি করার জন্য আমরা কোনো পারিশ্রমিক লাগবে না।"}
         </span>
       </div>
 
       <div className="announcement1">
         <span>
           {lang === "bn"
-            ? storefrontSettings?.announcement1Bn
-            : storefrontSettings?.announcement1}
+            ? storefrontSettings?.announcementBn ||
+            "আপনারা চাইলে নিজেদের আইডিয়া শেয়ার করে প্রজেক্ট তৈরি (build-in) করতে পারবেন।"
+            : storefrontSettings?.announcement ||
+            "আপনারা চাইলে নিজেদের আইডিয়া শেয়ার করে প্রজেক্ট তৈরি (build-in) করতে পারবেন।"}
         </span>
       </div>
 
@@ -2037,7 +2039,7 @@ const logoutAccount = async () => {
         />
       )}
 
-
+      
       {order && (
         <OrderSuccess
           order={order}
@@ -2047,7 +2049,7 @@ const logoutAccount = async () => {
         />
       )}
 
-
+   
       </Suspense>
 
 <BackToTop />
