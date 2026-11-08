@@ -4724,3 +4724,10 @@ body img:not([data-allow-image-copy]) {
     line-height: 1 !important;
   }
 }
+
+.search-query {
+  display: inline-block;
+  direction: ltr;
+  unicode-bidi: isolate;
+  margin-left: 4px;
+}

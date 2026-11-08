@@ -426,11 +426,16 @@ export default function CatalogPage({
               </span>
 
               <h1>
-                {normalizedQuery
-                  ? `${isBangla ? "সার্চের ফলাফল" : "Search results"}: "${String(query).trim()}"`
-                  : isBangla
-                    ? "সব পণ্য"
-                    : "All Products"}
+                {normalizedQuery ? (
+                  <>
+                    {isBangla ? "সার্চের ফলাফল" : "Search results"}:{" "}
+                    <span className="search-query">
+                      "{String(query).trim()}"
+                    </span>
+                  </>
+                ) : (
+                  isBangla ? "সব পণ্য" : "All Products"
+                )}
               </h1>
 
               <p>
