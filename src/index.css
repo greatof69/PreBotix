@@ -4655,3 +4655,22 @@ body img:not([data-allow-image-copy]) {
 .pb-float-contact {
   z-index: 39 !important;
 }
+
+/* FIX: Mobile Checkout & Login Overlay */
+@media (max-width: 900px) {
+  .modal-backdrop,
+  .checkout-backdrop,
+  .account-overlay {
+    z-index: 99999 !important;
+  }
+
+  .site-header {
+    z-index: 40 !important;
+  }
+
+  .pb-float-contact,
+  .pb-back-to-top {
+    z-index: 39 !important;
+  }
+}
+
