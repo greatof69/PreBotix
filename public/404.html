@@ -1,0 +1,25 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8" />
+  <title>Redirecting...</title>
+  <script>
+    const path = window.location.pathname;
+    const base = "/PreBotix";
+
+    if (path.startsWith(base + "/")) {
+      const route = path.slice(base.length + 1);
+
+      window.location.replace(
+        base + "/?/" + route +
+        window.location.search +
+        window.location.hash
+      );
+    } else {
+      window.location.replace(base + "/");
+    }
+  </script>
+</head>
+<body></body>
+</html>

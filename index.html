@@ -24,6 +24,20 @@
     <link rel="apple-touch-icon" href="/PreBotix/PreBotix.png" />
     
     <title>PreBotix | Your Ideas, Our Engineering</title>
+    <script>
+      const redirect = window.location.search;
+
+      if (redirect.startsWith("?/")) {
+        const route = redirect.slice(2).split("&")[0];
+
+        window.history.replaceState(
+          null,
+          "",
+          "/PreBotix/" + route
+        );
+      }
+    </script>
+ 
   </head>
 
   <body>

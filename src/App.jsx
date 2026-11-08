@@ -1651,87 +1651,89 @@ const logoutAccount = async () => {
 
   navigate("/", { replace: true });
 };
-  // ROUTE PATH: keep existing storefront components intact.
+  
+  // ROUTE PATH
   const routePath = location.pathname.replace(/\/+$/, "") || "/";
+
   const isKnownStoreRoute =
-  [
-    "/",
-    "/index.html",
-    "/products",
-    "/shop",
-    "/custom",
-    "/wishlist",
-    "/login",
-    "/register",
-    "/account",
-    "/account/orders",
-    "/contact",
-  ].includes(routePath) || /^\/products\/[^/]+$/.test(routePath);
+    [
+      "/",
+      "/index.html",
+      "/products",
+      "/shop",
+      "/custom",
+      "/wishlist",
+      "/login",
+      "/register",
+      "/account",
+      "/account/orders",
+      "/contact",
+    ].includes(routePath) ||
+    /^\/products\/[^/]+$/.test(routePath);
 
-  if (routePath === "/admin" || routePath.startsWith("/admin/")) {
-  if (routePath !== "/admin") return <NotFoundPage />;
+  // ADMIN ROUTE
+  if (routePath === "/admin") {
+    return (
+      <Suspense fallback={<div className="pb-route-loading">Loading dashboard…</div>}>
+        <>
+          <RoleGuard allowedRoles={["admin"]}>
+            <AdminDashboard
+              lang={lang}
+              setLang={setLang}
+              mobileOpen={mobileOpen}
+              setMobileOpen={setMobileOpen}
+            />
+          </RoleGuard>
 
-  return (
-    <Suspense fallback={<div className="pb-route-loading" role="status">Loading dashboard…</div>}>
-      <>
-      <RoleGuard allowedRoles={["admin"]}>
-        <AdminDashboard
-          lang={lang}
-          setLang={setLang}
-          mobileOpen={mobileOpen}
-          setMobileOpen={setMobileOpen}
-        />
-      </RoleGuard>
+          <FloatingContactWidget
+            onOpenAI={() => setIsAIChatOpen(true)}
+          />
 
-      <FloatingContactWidget
-        onOpenAI={() => setIsAIChatOpen(true)}
-      />
+          <AIChat
+            isOpen={isAIChatOpen}
+            onClose={() => setIsAIChatOpen(false)}
+            products={products}
+            lang={lang}
+            onDetails={openProduct}
+            onAdd={addToCart}
+          />
+        </>
+      </Suspense>
+    );
+  }
 
-      <AIChat
-        isOpen={isAIChatOpen}
-        onClose={() => setIsAIChatOpen(false)}
-        products={products}
-        lang={lang}
-        onDetails={openProduct}
-        onAdd={addToCart}
-      />
-      </>
-    </Suspense>
-  );
-}
+  // MODERATOR ROUTE
+  if (routePath === "/moderator") {
+    return (
+      <Suspense fallback={<div className="pb-route-loading">Loading dashboard…</div>}>
+        <>
+          <RoleGuard allowedRoles={["moderator"]}>
+            <ModeratorDashboard
+              lang={lang}
+              setLang={setLang}
+              mobileOpen={mobileOpen}
+              setMobileOpen={setMobileOpen}
+            />
+          </RoleGuard>
 
-if (routePath === "/moderator" || routePath.startsWith("/moderator/")) {
-  if (routePath !== "/moderator") return <NotFoundPage />;
+          <FloatingContactWidget
+            onOpenAI={() => setIsAIChatOpen(true)}
+          />
 
-  return (
-    <Suspense fallback={<div className="pb-route-loading" role="status">Loading dashboard…</div>}>
-      <>
-      <RoleGuard allowedRoles={["moderator"]}>
-        <ModeratorDashboard
-          lang={lang}
-          setLang={setLang}
-          mobileOpen={mobileOpen}
-          setMobileOpen={setMobileOpen}
-        />
-      </RoleGuard>
+          <AIChat
+            isOpen={isAIChatOpen}
+            onClose={() => setIsAIChatOpen(false)}
+            products={products}
+            lang={lang}
+            onDetails={openProduct}
+            onAdd={addToCart}
+          />
+        </>
+      </Suspense>
+    );
+  }
 
-      <FloatingContactWidget
-        onOpenAI={() => setIsAIChatOpen(true)}
-      />
-
-      <AIChat
-        isOpen={isAIChatOpen}
-        onClose={() => setIsAIChatOpen(false)}
-        products={products}
-        lang={lang}
-        onDetails={openProduct}
-        onAdd={addToCart}
-      />
-      </>
-    </Suspense>
-  );
-}
-
+  // UNKNOWN ROUTE
   if (!isKnownStoreRoute) {
     return <NotFoundPage />;
   }
