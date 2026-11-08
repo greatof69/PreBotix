@@ -4690,11 +4690,17 @@ body img:not([data-allow-image-copy]) {
 }
 
 
-/* MOBILE: Reduce Hero Image Height Only */
+/* MOBILE HERO: Reduce Container and Keep Image Natural */
 @media (max-width: 560px) {
+  .hero-visual,
+  .hero-visual.hero-visual-slide-2 {
+    height: 130px !important;
+  }
+
   .hero-visual .hero-slide-image {
-    height: 65% !important;
-    object-fit: contain !important;
-    mask-image: none !important;
+    width: var(--img-w) !important;
+    height: 86% !important;
+    object-fit: cover !important;
+    mask-image: linear-gradient(to bottom, #000 70%, transparent 100%) !important;
   }
 }
