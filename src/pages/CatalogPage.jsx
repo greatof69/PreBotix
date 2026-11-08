@@ -429,9 +429,9 @@ export default function CatalogPage({
                 {normalizedQuery ? (
                   <>
                     {isBangla ? "সার্চের ফলাফল" : "Search results"}:{" "}
-                    <span className="search-query">
-                      "{String(query).trim()}"
-                    </span>
+                    <bdi dir="ltr" style={{ unicodeBidi: "isolate" }}>
+                      {`“${String(query).trim()}”`}
+                    </bdi>
                   </>
                 ) : (
                   isBangla ? "সব পণ্য" : "All Products"
