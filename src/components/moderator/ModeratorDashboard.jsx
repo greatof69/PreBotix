@@ -451,6 +451,88 @@ export default function ModeratorDashboard({
     }
   }
 
+  // -------------------- Verify / Reject bKash & Nagad --------------------
+
+  async function updateModeratorPaymentStatus(order, paymentStatus) {
+    const orderId = idOf(order);
+    const paymentMethod = String(order?.paymentMethod || "").toLowerCase();
+    const currentPaymentStatus = String(
+      order?.paymentStatus || "unpaid"
+    ).toLowerCase();
+
+    if (
+      !orderId ||
+      !["bkash", "nagad"].includes(paymentMethod) ||
+      currentPaymentStatus !== "pending" ||
+      !["paid", "failed"].includes(paymentStatus)
+    ) {
+      setError(t(
+        "Only pending bKash/Nagad payments can be verified or rejected.",
+        "শুধু Pending bKash/Nagad পেমেন্ট Verify অথবা Reject করা যাবে।"
+      ));
+      return;
+    }
+
+    if (saving || historyActionId) return;
+
+    let reason = "";
+
+    if (paymentStatus === "failed") {
+      const enteredReason = window.prompt(
+        t(
+          "Enter payment rejection reason (1–500 characters):",
+          "পেমেন্ট Reject করার কারণ লিখুন (১–৫০০ অক্ষর):"
+        )
+      );
+
+      if (enteredReason === null) return;
+
+      reason = enteredReason.trim();
+
+      if (!reason || reason.length > 500) {
+        setError(t(
+          "Rejection reason must contain 1–500 characters.",
+          "Reject করার কারণ ১–৫০০ অক্ষরের মধ্যে হতে হবে।"
+        ));
+        return;
+      }
+    }
+
+    setSaving(true);
+    setError("");
+    setNotice("");
+
+    try {
+      await request(`/orders/${orderId}/payment`, {
+        method: "PATCH",
+        body: JSON.stringify({
+          paymentStatus,
+          ...(paymentStatus === "failed" ? { reason } : {}),
+        }),
+      });
+
+      setNotice(
+        paymentStatus === "paid"
+          ? t(
+              "Payment verified successfully. Admin and Moderator dashboards will show the updated status.",
+              "পেমেন্ট Verify হয়েছে। Admin ও Moderator Dashboard-এ আপডেটেড স্ট্যাটাস দেখা যাবে।"
+            )
+          : t(
+              "Payment rejected successfully. The rejection reason has been saved.",
+              "পেমেন্ট Reject হয়েছে। Reject করার কারণ সংরক্ষণ করা হয়েছে।"
+            )
+      );
+
+      await loadOrders();
+    } catch (err) {
+      setError(err.message || t(
+        "Could not update payment status.",
+        "পেমেন্ট স্ট্যাটাস আপডেট করা যায়নি।"
+      ));
+    } finally {
+      setSaving(false);
+    }
+  }
   // -------------------- Delete History Entry --------------------
 
   async function deleteHistoryEntry(historyId) {
@@ -1494,6 +1576,24 @@ export default function ModeratorDashboard({
                           >
                             {paymentStatus.toUpperCase()}
                           </p>
+
+                          {paymentStatus === "failed" &&
+                            order?.paymentRejectionReason && (
+                              <p
+                                style={{
+                                  margin: "6px 0",
+                                  color: "#dc2626",
+                                  fontSize: 13,
+                                  whiteSpace: "pre-wrap",
+                                  overflowWrap: "anywhere",
+                                }}
+                              >
+                                <strong>
+                                  {t("Rejection Reason:", "Reject করার কারণ:")}
+                                </strong>{" "}
+                                {order.paymentRejectionReason}
+                              </p>
+                            )}
                         </div>
                       </div>
 
@@ -1684,21 +1784,33 @@ export default function ModeratorDashboard({
                           </button>
                         )}
 
-                        {status === "delivered" && paymentStatus !== "paid" &&
-                          String(order?.paymentMethod || "").toLowerCase() !== "cod" && (
-                            <span
-                              style={{
-                                color: "#b45309",
-                                fontSize: 13,
-                                alignSelf: "center",
-                              }}
+                        {["bkash", "nagad"].includes(
+                          String(order?.paymentMethod || "").toLowerCase()
+                        ) && paymentStatus === "pending" && (
+                          <>
+                            <button
+                              type="button"
+                              style={successButton}
+                              disabled={saving || Boolean(historyActionId)}
+                              onClick={() =>
+                                updateModeratorPaymentStatus(order, "paid")
+                              }
                             >
-                              {t(
-                                "Payment must be verified before Done.",
-                                "Done করার আগে পেমেন্ট যাচাই করতে হবে।"
-                              )}
-                            </span>
-                          )}
+                              {t("Verify Payment", "পেমেন্ট Verify করুন")}
+                            </button>
+
+                            <button
+                              type="button"
+                              style={dangerButton}
+                              disabled={saving || Boolean(historyActionId)}
+                              onClick={() =>
+                                updateModeratorPaymentStatus(order, "failed")
+                              }
+                            >
+                              {t("Reject Payment", "পেমেন্ট Reject করুন")}
+                            </button>
+                          </>
+                        )}
                       
                         <button
                           type="button"
@@ -2364,4 +2476,5 @@ export default function ModeratorDashboard({
     </DashboardLayout>
   );
 }
+
 
