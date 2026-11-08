@@ -1478,13 +1478,20 @@ const removeItem = (cartKey) => {
           rememberMe,
         });
 
-        if (!data.accessToken || !data.user) {
+        if (!data.accessToken || !data.refreshToken || !data.user) {
           throw new Error(
-            "The login response is missing the access token or user details."
+            "Login response is missing access token, refresh token or user details."
           );
         }
 
-        saveAuthSession(data.accessToken, data.user, rememberMe);
+        saveAuthSession(
+          data.accessToken,
+          data.user,
+          rememberMe,
+          data.refreshToken
+        );
+
+        setAccountUser(data.user);
         setAccountUser(data.user);
 
         // Login done: close the modal and never open the dashboard.
