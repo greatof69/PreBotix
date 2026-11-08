@@ -4714,7 +4714,7 @@ body img:not([data-allow-image-copy]) {
 
   .product-tag {
     font-size: 7px !important;
-    padding: 1px 4px !important;
+    padding: 1px 2px !important;
     line-height: 1 !important;
 }
 }
