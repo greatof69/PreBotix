@@ -4711,4 +4711,9 @@ body img:not([data-allow-image-copy]) {
   html body .hero-visual .hero-slide-image {
     height: 60% !important;
   }
+
+  .product-tag {
+    font-size: 10px !important;
+    padding: 3px 7px !important;
+  }
 }
