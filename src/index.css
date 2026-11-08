@@ -4689,3 +4689,19 @@ body img:not([data-allow-image-copy]) {
   }
 }
 
+
+/* MOBILE HERO: Extra Small Height */
+@media (max-width: 560px) {
+  .hero-visual,
+  .hero-visual.hero-visual-slide-2 {
+    height: 90px !important;
+    min-height: 90px !important;
+  }
+
+  .hero-visual .hero-slide-image {
+    height: 100% !important;
+    width: 100% !important;
+    object-fit: contain !important;
+    mask-image: none !important;
+  }
+}
