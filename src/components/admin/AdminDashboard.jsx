@@ -200,6 +200,7 @@ export default function AdminDashboard({
     checkoutInstructions: "",
     checkoutInstructionsBn: "",
   });
+  
   const [loadingPaymentDelivery, setLoadingPaymentDelivery] = useState(false);
   const [generalSettings, setGeneralSettings] = useState({
     websiteName: "PreBotix",
@@ -207,6 +208,14 @@ export default function AdminDashboard({
     favicon: "",
     siteDescription: "",
   });
+  const [announcementSettings, setAnnouncementSettings] = useState({
+  announcement: "",
+  announcementBn: "",
+  announcement1: "",
+  announcement1Bn: "",
+});
+
+const [savingAnnouncements, setSavingAnnouncements] = useState(false);
   const [loadingGeneralSettings, setLoadingGeneralSettings] = useState(false);
   const [savingGeneralSettings, setSavingGeneralSettings] = useState(false);
   const [uploadingAsset, setUploadingAsset] = useState("");
@@ -594,6 +603,12 @@ const deleteFilteredMessages = async () => {
         favicon: data?.settings?.general?.favicon || "",
         siteDescription: data?.settings?.general?.siteDescription || "",
       });
+      setAnnouncementSettings({
+        announcement: data?.settings?.announcement || "",
+        announcementBn: data?.settings?.announcementBn || "",
+        announcement1: data?.settings?.announcement1 || "",
+        announcement1Bn: data?.settings?.announcement1Bn || "",
+      });
     } catch (err) {
       setError(err.message || "Could not load general settings.");
     } finally {
@@ -625,6 +640,25 @@ const deleteFilteredMessages = async () => {
       setSavingGeneralSettings(false);
     }
   };
+
+  const saveAnnouncementSettings = async () => {
+  setSavingAnnouncements(true);
+  setError("");
+  setMessage("");
+
+  try {
+    await request("/storefront-settings", {
+      method: "PUT",
+      body: JSON.stringify(announcementSettings),
+    });
+
+    setMessage("Announcement settings saved successfully.");
+  } catch (err) {
+    setError(err.message || "Could not save announcements.");
+  } finally {
+    setSavingAnnouncements(false);
+  }
+};
 
   const uploadGeneralAsset = async (asset, file) => {
     if (!file) return;
@@ -1324,6 +1358,71 @@ const pageTitle =
                 </div>
 
                 <div>
+
+                    <div style={{
+                      borderTop: "1px solid #e5e7eb",
+                      paddingTop: 20,
+                      display: "grid",
+                      gap: 16,
+                    }}>
+                      <h3>Announcement Settings</h3>
+
+                      {[
+                        {
+                          title: "Announcement 1",
+                          fields: [
+                            ["announcement", "English Text"],
+                            ["announcementBn", "Bangla Text"],
+                          ],
+                        },
+                        {
+                          title: "Announcement 2",
+                          fields: [
+                            ["announcement1", "English Text"],
+                            ["announcement1Bn", "Bangla Text"],
+                          ],
+                        },
+                      ].map((group) => (
+                        <div key={group.title} style={{
+                          border: "1px solid #e5e7eb",
+                          borderRadius: 10,
+                          padding: 15,
+                          display: "grid",
+                          gap: 12,
+                        }}>
+                          <strong>{group.title}</strong>
+
+                          {group.fields.map(([field, label]) => (
+                            <label key={field} style={{
+                              display: "grid",
+                              gap: 6,
+                              fontSize: 13,
+                              fontWeight: 600,
+                            }}>
+                              {label}
+
+                              <textarea
+                                style={{ ...inputStyle, minHeight: 85, resize: "vertical" }}
+                                value={announcementSettings[field]}
+                                onChange={(e) => setAnnouncementSettings((current) => ({
+                                  ...current,
+                                  [field]: e.target.value,
+                                }))}
+                              />
+                            </label>
+                          ))}
+                        </div>
+                      ))}
+
+                      <button
+                        type="button"
+                        style={primaryButtonStyle}
+                        disabled={savingAnnouncements}
+                        onClick={saveAnnouncementSettings}
+                      >
+                        {savingAnnouncements ? "Saving..." : "Save Announcements"}
+                      </button>
+                    </div> 
                   <button
                     type="button"
                     style={{

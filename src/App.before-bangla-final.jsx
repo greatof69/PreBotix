@@ -1761,7 +1761,7 @@ if (routePath === "/moderator" || routePath.startsWith("/moderator/")) {
         </div>
       )}
 
-      
+
       <div className="announcement">
         <Zap className="announcement-zap" />
         <span>
@@ -1776,9 +1776,9 @@ if (routePath === "/moderator" || routePath.startsWith("/moderator/")) {
       <div className="announcement1">
         <span>
           {lang === "bn"
-            ? storefrontSettings?.announcementBn ||
+            ? storefrontSettings?.announcement1Bn ||
             "আপনারা চাইলে নিজেদের আইডিয়া শেয়ার করে প্রজেক্ট তৈরি (build-in) করতে পারবেন।"
-            : storefrontSettings?.announcement ||
+            : storefrontSettings?.announcement1 ||
             "আপনারা চাইলে নিজেদের আইডিয়া শেয়ার করে প্রজেক্ট তৈরি (build-in) করতে পারবেন।"}
         </span>
       </div>
