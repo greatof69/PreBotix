@@ -1,48 +1,4 @@
-﻿/* =====================================================================
-   PreBotix — index.css  (single consolidated stylesheet)
-
-   Rules of this file
-   - Every component is defined ONCE. Its responsive behaviour sits right
-     under it, ordered desktop -> tablet -> phone (max-width queries).
-   - Sizes come from the design tokens in section 01. Change a token and it
-     changes on every device.
-   - No override layers: !important is only used where a utility must win.
-
-   TABLE OF CONTENTS
-   01  Design tokens
-   02  Base / reset
-   03  App shell
-   04  Floating actions (back-to-top, contact widget)
-   05  Announcement bar
-   06  Header + navigation
-   07  Store search
-   08  Hero banner + slider
-   09  Trust strip
-   10  Section scaffolding
-   11  Product card + grids
-   12  Catalog page
-   13  Product detail page
-   14  Cart, checkout, success
-   15  Toast + empty states
-   16  Account (modals)
-   17  Custom-project teaser section
-   18  How-it-works section
-   19  Footer
-   20  Custom robotics project page
-   21  Contact page
-   22  Admin / Moderator workspace
-   23  Admin modals (product editor, bulk import)
-   24  Admin price-options editor
-   25  Device polish (safe areas, touch, hover, landscape, scroll lock)
-   26  Reduced motion
-
-   RESPONSIVE BREAKPOINTS USED IN THIS FILE
-   - Phone         <= 650px   (2 product columns)
-   - Large phone   <= 760px   (stacked layouts)
-   - Tablet        761-1024px (3-4 product columns, hamburger menu <= 900px)
-   - Laptop        1025px+    (5 product columns on Home)
-   - Wide          1280px+    (5 product columns on Catalog)
-   ===================================================================== */
+﻿/*Rahul PreBotix*/
 
 @import "tailwindcss";
 
