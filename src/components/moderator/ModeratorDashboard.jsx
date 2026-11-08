@@ -356,22 +356,18 @@ export default function ModeratorDashboard({
       return;
     }
 
-   const paymentMethod = String(
-  order?.paymentMethod || ""
-).toLowerCase();
-
-const paymentStatus = String(
-  order?.paymentStatus || "unpaid"
-).toLowerCase();
+    const paymentStatus = String(
+      order?.paymentStatus || "unpaid"
+    ).toLowerCase();
 
     if (
       statusOf(order) !== "delivered" ||
-      (paymentMethod !== "cod" && paymentStatus !== "paid")
+      paymentStatus !== "paid"
     ) {
       setError(
         t(
-          "Only delivered COD or paid orders can be completed.",
-          "শুধু ডেলিভারি সম্পন্ন COD অথবা Paid অর্ডার হিস্টোরিতে নেওয়া যাবে।"
+          "Only delivered and paid orders can be completed.",
+          "শুধু Delivered এবং Paid অর্ডার হিস্টোরিতে নেওয়া যাবে।"
         )
       );
       return;
@@ -410,6 +406,54 @@ const paymentStatus = String(
       );
     } finally {
       setHistoryActionId("");
+    }
+  }
+
+  // -------------------- Mark COD Cash as Paid --------------------
+
+  async function markCodAsPaid(order) {
+    const orderId = idOf(order);
+    const paymentMethod = String(order?.paymentMethod || "").toLowerCase();
+    const paymentStatus = String(order?.paymentStatus || "unpaid").toLowerCase();
+
+    if (!orderId || statusOf(order) !== "delivered" || paymentMethod !== "cod" || paymentStatus === "paid") {
+      setError(t(
+        "Only delivered unpaid COD orders can be marked as paid.",
+        "শুধু Delivered এবং Unpaid COD অর্ডার Paid করা যাবে।"
+      ));
+      return;
+    }
+
+    if (saving || historyActionId) return;
+
+    const confirmed = window.confirm(t(
+      "Confirm that the courier/customer has handed over the COD cash?",
+      "কুরিয়ার/কাস্টমারের কাছ থেকে COD-এর টাকা পেয়েছেন—নিশ্চিত করবেন?"
+    ));
+    if (!confirmed) return;
+
+    setSaving(true);
+    setError("");
+    setNotice("");
+
+    try {
+      await request(`/orders/${orderId}/payment`, {
+        method: "PATCH",
+        body: JSON.stringify({ paymentStatus: "paid" }),
+      });
+
+      setNotice(t(
+        "COD cash received. Payment marked as paid. You can now click Done.",
+        "COD-এর টাকা পাওয়া গেছে। Payment Paid হয়েছে। এখন Done চাপতে পারবেন।"
+      ));
+      await loadOrders();
+    } catch (err) {
+      setError(err.message || t(
+        "Could not mark COD payment as paid.",
+        "COD পেমেন্ট Paid করা যায়নি।"
+      ));
+    } finally {
+      setSaving(false);
     }
   }
 
@@ -1621,23 +1665,33 @@ const paymentStatus = String(
                         )}
 
                         {status === "delivered" &&
-                          (String(order?.paymentMethod || "").toLowerCase() === "cod" ||
-                            paymentStatus === "paid") && (
+                          String(order?.paymentMethod || "").toLowerCase() === "cod" &&
+                          paymentStatus !== "paid" && (
                             <button
                               type="button"
                               style={successButton}
-                              disabled={Boolean(historyActionId)}
-                              onClick={() => completeOrder(order)}
+                              disabled={saving || Boolean(historyActionId)}
+                              onClick={() => markCodAsPaid(order)}
                             >
-                              {historyActionId === String(orderId)
-                                ? t("Saving...", "সংরক্ষণ হচ্ছে...")
-                                : t("Done", "সম্পন্ন")}
+                              {t("Mark as Paid", "Paid হিসেবে চিহ্নিত করুন")}
                             </button>
                           )}
 
-                        {status === "delivered" &&
-                          String(order?.paymentMethod || "").toLowerCase() !== "cod" &&
-                          paymentStatus !== "paid" && (
+                        {status === "delivered" && paymentStatus === "paid" && (
+                          <button
+                            type="button"
+                            style={successButton}
+                            disabled={Boolean(historyActionId)}
+                            onClick={() => completeOrder(order)}
+                          >
+                            {historyActionId === String(orderId)
+                              ? t("Saving...", "সংরক্ষণ হচ্ছে...")
+                              : t("Done", "সম্পন্ন")}
+                          </button>
+                        )}
+
+                        {status === "delivered" && paymentStatus !== "paid" &&
+                          String(order?.paymentMethod || "").toLowerCase() !== "cod" && (
                             <span
                               style={{
                                 color: "#b45309",
@@ -1648,22 +1702,6 @@ const paymentStatus = String(
                               {t(
                                 "Payment must be verified before Done.",
                                 "Done করার আগে পেমেন্ট যাচাই করতে হবে।"
-                              )}
-                            </span>
-                          )}
-
-                        {status === "delivered" &&
-                          paymentStatus !== "paid" && (
-                            <span
-                              style={{
-                                color: "#b45309",
-                                fontSize: 13,
-                                alignSelf: "center",
-                              }}
-                            >
-                              {t(
-                                "Payment must be marked paid before Done.",
-                                "Done করার আগে পেমেন্ট Paid হতে হবে।"
                               )}
                             </span>
                           )}

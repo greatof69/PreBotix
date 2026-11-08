@@ -344,14 +344,13 @@ const completeOrder = async (order) => {
     return;
   }
 
-  const paymentMethod = String(order?.paymentMethod || "").toLowerCase();
   const paymentStatus = String(order?.paymentStatus || "unpaid").toLowerCase();
 
   if (
     getOrderStatus(order) !== "delivered" ||
-    (paymentMethod !== "cod" && paymentStatus !== "paid")
+    paymentStatus !== "paid"
   ) {
-    setError("Only delivered COD or paid orders can be completed.");
+    setError("Only delivered and paid orders can be completed.");
     return;
   }
 
@@ -975,17 +974,29 @@ const deleteOrder = async (order) => {
       return;
     }
 
-    if (!["bkash", "nagad"].includes(paymentMethod)) {
-      setError("Only bKash and Nagad manual payments can be verified here.");
+    const isCodCashReceipt =
+      paymentMethod === "cod" &&
+      paymentStatus === "paid" &&
+      getOrderStatus(order) === "delivered" &&
+      currentPaymentStatus !== "paid";
+
+    const isManualPaymentVerification =
+      ["bkash", "nagad"].includes(paymentMethod) &&
+      currentPaymentStatus === "pending" &&
+      ["paid", "failed"].includes(paymentStatus);
+
+    if (!isCodCashReceipt && !isManualPaymentVerification) {
+      setError(
+        "COD can be marked paid only after delivery. bKash/Nagad must be pending for verification."
+      );
       return;
     }
 
-    if (currentPaymentStatus !== "pending") {
-      setError("Only pending payments can be verified or rejected.");
-      return;
-    }
-
-    const actionLabel = paymentStatus === "paid" ? "verify this payment" : "reject this payment";
+    const actionLabel = isCodCashReceipt
+      ? "confirm that the COD cash was received"
+      : paymentStatus === "paid"
+        ? "verify this payment"
+        : "reject this payment";
     if (!window.confirm(`Are you sure you want to ${actionLabel} for order ${orderId}?`)) {
       return;
     }
@@ -1001,9 +1012,11 @@ const deleteOrder = async (order) => {
       });
 
       setMessage(
-        paymentStatus === "paid"
-          ? "Payment marked as paid after admin verification."
-          : "Payment marked as failed."
+        isCodCashReceipt
+          ? "COD cash receipt confirmed. Payment marked as paid."
+          : paymentStatus === "paid"
+            ? "Payment marked as paid after admin verification."
+            : "Payment marked as failed."
       );
 
       await loadOrders();
@@ -2397,6 +2410,8 @@ const pageTitle =
                 {courierOrders.map((order, index) => {
                   const orderId = getId(order);
                   const status = getOrderStatus(order);
+                  const paymentStatus = String(order?.paymentStatus || "unpaid").toLowerCase();
+                  const paymentMethod = String(order?.paymentMethod || "").toLowerCase();
                   const address = order?.shippingAddress || {};
                   const items = Array.isArray(order?.items) ? order.items : [];
 
@@ -2587,17 +2602,28 @@ const pageTitle =
                         )}
 
                         {status === "delivered" &&
-                          (String(order?.paymentMethod || "").toLowerCase() === "cod" ||
-                            String(order?.paymentStatus || "").toLowerCase() === "paid") && (
+                          paymentMethod === "cod" &&
+                          paymentStatus !== "paid" && (
                             <button
                               type="button"
-                              style={primaryButtonStyle}
-                              disabled={historyActionId === orderId}
-                              onClick={() => completeOrder(order)}
+                              style={successButtonStyle}
+                              disabled={saving || historyActionId === orderId}
+                              onClick={() => updateAdminPaymentStatus(order, "paid")}
                             >
-                              {historyActionId === orderId ? "Saving..." : "Done"}
+                              {saving ? "Saving..." : "Mark as Paid"}
                             </button>
                           )}
+
+                        {status === "delivered" && paymentStatus === "paid" && (
+                          <button
+                            type="button"
+                            style={primaryButtonStyle}
+                            disabled={historyActionId === orderId}
+                            onClick={() => completeOrder(order)}
+                          >
+                            {historyActionId === orderId ? "Saving..." : "Done"}
+                          </button>
+                        )}
 
                         <button
                           type="button"
