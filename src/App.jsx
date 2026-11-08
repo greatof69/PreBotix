@@ -1,4 +1,4 @@
-import React, {
+﻿import React, {
   useCallback,
   useEffect,
   useMemo,
@@ -788,7 +788,7 @@ useEffect(() => {
     if (isAdminUser || isModeratorUser) {
       showNotice(
         lang === "bn"
-          ? "এই অ্যাকাউন্টে উইশলিস্ট ব্যবহার করা যাবে না।"
+          ? "à¦à¦‡ à¦…à§à¦¯à¦¾à¦•à¦¾à¦‰à¦¨à§à¦Ÿà§‡ à¦‰à¦‡à¦¶à¦²à¦¿à¦¸à§à¦Ÿ à¦¬à§à¦¯à¦¬à¦¹à¦¾à¦° à¦•à¦°à¦¾ à¦¯à¦¾à¦¬à§‡ à¦¨à¦¾à¥¤"
           : "Wishlist is not available for this account."
       );
       return;
@@ -798,7 +798,7 @@ useEffect(() => {
 
     if (!accountUser || !token) {
       showNotice(
-        lang === "bn" ? "আগে লগইন করুন!" : "Please login first!"
+        lang === "bn" ? "à¦†à¦—à§‡ à¦²à¦—à¦‡à¦¨ à¦•à¦°à§à¦¨!" : "Please login first!"
       );
       setAccountMode("login");
       setAccountOpen(true);
@@ -820,7 +820,7 @@ useEffect(() => {
     if (isAdminUser || isModeratorUser) {
       showNotice(
         lang === "bn"
-          ? "এই অ্যাকাউন্টে উইশলিস্ট ব্যবহার করা যাবে না।"
+          ? "à¦à¦‡ à¦…à§à¦¯à¦¾à¦•à¦¾à¦‰à¦¨à§à¦Ÿà§‡ à¦‰à¦‡à¦¶à¦²à¦¿à¦¸à§à¦Ÿ à¦¬à§à¦¯à¦¬à¦¹à¦¾à¦° à¦•à¦°à¦¾ à¦¯à¦¾à¦¬à§‡ à¦¨à¦¾à¥¤"
           : "Wishlist is not available for this account."
       );
       return;
@@ -849,7 +849,7 @@ useEffect(() => {
     if (isAdminUser || isModeratorUser) {
       showNotice(
         lang === "bn"
-          ? "এই অ্যাকাউন্টে কার্ট ব্যবহার করা যাবে না।"
+          ? "à¦à¦‡ à¦…à§à¦¯à¦¾à¦•à¦¾à¦‰à¦¨à§à¦Ÿà§‡ à¦•à¦¾à¦°à§à¦Ÿ à¦¬à§à¦¯à¦¬à¦¹à¦¾à¦° à¦•à¦°à¦¾ à¦¯à¦¾à¦¬à§‡ à¦¨à¦¾à¥¤"
           : "Cart is not available for this account."
       );
       return;
@@ -875,7 +875,7 @@ useEffect(() => {
     if (optionsEnabled && !latestOption) {
       showNotice(
         lang === "bn"
-          ? "কার্টে যোগ করার আগে একটি সঠিক Price Option নির্বাচন করুন।"
+          ? "à¦•à¦¾à¦°à§à¦Ÿà§‡ à¦¯à§‹à¦— à¦•à¦°à¦¾à¦° à¦†à¦—à§‡ à¦à¦•à¦Ÿà¦¿ à¦¸à¦ à¦¿à¦• Price Option à¦¨à¦¿à¦°à§à¦¬à¦¾à¦šà¦¨ à¦•à¦°à§à¦¨à¥¤"
           : "Please select a valid price option."
       );
       return;
@@ -889,7 +889,7 @@ useEffect(() => {
     if (!Number.isFinite(selectedPrice) || selectedPrice < 0) {
       showNotice(
         lang === "bn"
-          ? "পণ্যের দাম সঠিক নয়।"
+          ? "à¦ªà¦£à§à¦¯à§‡à¦° à¦¦à¦¾à¦® à¦¸à¦ à¦¿à¦• à¦¨à§Ÿà¥¤"
           : "The product price is invalid."
       );
       return;
@@ -972,11 +972,11 @@ useEffect(() => {
 
     showNotice(
       addQty < requestedQty
-        ? `${name} — ${lang === "bn"
-          ? `মাত্র ${addQty}টি যোগ করা হয়েছে; সর্বোচ্চ স্টকের সীমায় পৌঁছেছে।`
+        ? `${name} â€” ${lang === "bn"
+          ? `à¦®à¦¾à¦¤à§à¦° ${addQty}à¦Ÿà¦¿ à¦¯à§‹à¦— à¦•à¦°à¦¾ à¦¹à¦¯à¦¼à§‡à¦›à§‡; à¦¸à¦°à§à¦¬à§‹à¦šà§à¦š à¦¸à§à¦Ÿà¦•à§‡à¦° à¦¸à§€à¦®à¦¾à¦¯à¦¼ à¦ªà§Œà¦à¦›à§‡à¦›à§‡à¥¤`
           : `only ${addQty} added; maximum stock reached.`
         }`
-        : `${name} — ${t.added}`
+        : `${name} â€” ${t.added}`
     );
   };
 
@@ -1147,7 +1147,7 @@ const removeItem = (cartKey) => {
     if (!accessToken) {
       throw new Error(
         lang === "bn"
-          ? "অর্ডার করতে প্রথমে লগইন করুন।"
+          ? "à¦…à¦°à§à¦¡à¦¾à¦° à¦•à¦°à¦¤à§‡ à¦ªà§à¦°à¦¥à¦®à§‡ à¦²à¦—à¦‡à¦¨ à¦•à¦°à§à¦¨à¥¤"
           : "Please log in before placing your order."
       );
     }
@@ -1182,7 +1182,7 @@ const removeItem = (cartKey) => {
       throw new Error(
         result.message ||
           (lang === "bn"
-            ? `অর্ডার করা যায়নি। Error: ${response.status}`
+            ? `à¦…à¦°à§à¦¡à¦¾à¦° à¦•à¦°à¦¾ à¦¯à¦¾à¦¯à¦¼à¦¨à¦¿à¥¤ Error: ${response.status}`
             : `Could not place order. Error: ${response.status}`)
       );
     }
@@ -1192,7 +1192,7 @@ const removeItem = (cartKey) => {
     if (!savedOrder?.orderNumber || !Array.isArray(savedOrder.items)) {
       throw new Error(
         lang === "bn"
-          ? "সার্ভার থেকে অর্ডারটি সঠিকভাবে নিশ্চিত করা যায়নি।"
+          ? "à¦¸à¦¾à¦°à§à¦­à¦¾à¦° à¦¥à§‡à¦•à§‡ à¦…à¦°à§à¦¡à¦¾à¦°à¦Ÿà¦¿ à¦¸à¦ à¦¿à¦•à¦­à¦¾à¦¬à§‡ à¦¨à¦¿à¦¶à§à¦šà¦¿à¦¤ à¦•à¦°à¦¾ à¦¯à¦¾à¦¯à¦¼à¦¨à¦¿à¥¤"
           : "The server did not return a valid order confirmation."
       );
     }
@@ -1280,9 +1280,7 @@ const removeItem = (cartKey) => {
 
     if (!token) {
       setMyOrders([]);
-      setOrdersError(
-        lang === "bn" ? "আবার লগইন করুন।" : "Please log in again."
-      );
+      setOrdersError("Please log in again.");
       setOrdersLoading(false);
       return;
     }
@@ -1306,22 +1304,242 @@ const removeItem = (cartKey) => {
           setAccountMode("login");
         }
 
-        throw new Error(
-          data.message ||
-            (lang === "bn"
-              ? "অর্ডার লোড করা যায়নি।"
-              : "Could not load your orders.")
-        );
+        throw new Error(data.message || "Could not load your orders.");
       }
 
-      setMyOrders(Array.isArray(data.orders) ? data.orders : []);
+      const orders = Array.isArray(data.orders) ? data.orders : [];
+      setMyOrders(orders);
+
+      // RESTORE CART ITEMS FROM CANCELLED ORDERS
+      if (productsLoaded && accountUser) {
+        const cartKey = getAccountStorageKey(
+          "prebotix-cart-v1",
+          accountUser
+        );
+
+        const identity = accountUser._id || accountUser.id || accountUser.email;
+        const restoredKey = identity
+          ? `prebotix-cart-restored-orders-v1:${encodeURIComponent(
+              String(identity).trim().toLowerCase()
+            )}`
+          : "";
+
+        if (cartKey && restoredKey) {
+          try {
+            const savedCart = JSON.parse(
+              localStorage.getItem(cartKey) || "[]"
+            );
+
+            const cart = Array.isArray(savedCart) ? savedCart : [];
+            const processed = JSON.parse(
+              localStorage.getItem(restoredKey) || "[]"
+            );
+            const processedIds = new Set(
+              Array.isArray(processed) ? processed.map(String) : []
+            );
+
+            const pendingOrders = orders.filter((order) => {
+              const orderId = String(order._id || order.id || "");
+              return (
+                order.cartRestorePending === true &&
+                orderId
+              );
+            });
+
+            const mergedCart = [...cart];
+            const acknowledgedIds = [];
+
+            for (const order of pendingOrders) {
+              const orderId = String(order._id || order.id || "");
+
+              // Already added to cart earlier: retry only backend acknowledgement.
+              if (processedIds.has(orderId)) {
+                acknowledgedIds.push(orderId);
+                continue;
+              }
+
+              const orderItems = Array.isArray(order.items) ? order.items : [];
+
+              if (!orderId || orderItems.length === 0) continue;
+
+              // Work on a temporary cart. Commit only if every item is valid.
+              const orderCart = [...mergedCart];
+              let orderComplete = true;
+
+              for (const item of orderItems) {
+                const productId = item.productId ?? item.id;
+                const product = products.find(
+                  (p) => String(p.id) === String(productId)
+                );
+
+                if (!product) {
+                  orderComplete = false;
+                  break;
+                }
+
+                const snapshot = item.selectedPriceOption || {};
+                let optionId = String(
+                  snapshot.optionId || item.priceOptionId || ""
+                );
+
+                let selectedOption = optionId
+                  ? (product.priceOptions || []).find(
+                      (option) => String(option.id) === optionId
+                    )
+                  : null;
+
+                if (!selectedOption && snapshot.optionText) {
+                  selectedOption = (product.priceOptions || []).find(
+                    (option) =>
+                      String(option.text || "") ===
+                        String(snapshot.optionText) &&
+                      Number(option.price) === Number(snapshot.selectedPrice)
+                  );
+
+                  if (selectedOption) {
+                    optionId = String(selectedOption.id);
+                  }
+                }
+
+                if (optionId && !selectedOption) {
+                  orderComplete = false;
+                  break;
+                }
+
+                if (product.priceOptionsEnabled && !selectedOption) {
+                  orderComplete = false;
+                  break;
+                }
+
+                const quantity = Math.max(1, Number(item.quantity) || 1);
+
+                const existingIndex = orderCart.findIndex((saved) => {
+                  return (
+                    String(saved.id) === String(product.id) &&
+                    String(saved.priceOptionId || "") === optionId
+                  );
+                });
+
+                if (existingIndex >= 0) {
+                  orderCart[existingIndex] = {
+                    ...orderCart[existingIndex],
+                    quantity:
+                      (Number(orderCart[existingIndex].quantity) || 0) +
+                      quantity,
+                  };
+                } else {
+                  orderCart.push({
+                    id: product.id,
+                    quantity,
+                    priceOptionId: optionId,
+                  });
+                }
+              }
+
+              if (orderComplete) {
+                mergedCart.splice(0, mergedCart.length, ...orderCart);
+                acknowledgedIds.push(orderId);
+              } else {
+                console.warn(
+                  "Cart restoration skipped because an order item is unavailable:",
+                  orderId
+                );
+              }
+            }
+
+            if (acknowledgedIds.length > 0) {
+              // Save cart first, then mark these orders as processed.
+              localStorage.setItem(cartKey, JSON.stringify(mergedCart));
+
+              const updatedProcessed = [
+                ...processedIds,
+                ...acknowledgedIds,
+              ];
+
+              localStorage.setItem(
+                restoredKey,
+                JSON.stringify([...new Set(updatedProcessed)])
+              );
+
+              // Rebuild the in-memory cart from the saved cart.
+              const restoredItems = mergedCart
+                .map((saved) => {
+                  const product = products.find(
+                    (p) => String(p.id) === String(saved.id)
+                  );
+
+                  if (!product) return null;
+
+                  const savedOptionId = String(saved.priceOptionId || "");
+                  const option = savedOptionId
+                    ? (product.priceOptions || []).find(
+                        (entry) => String(entry.id) === savedOptionId
+                      )
+                    : null;
+
+                  if (savedOptionId && !option) return null;
+                  if (product.priceOptionsEnabled && !option) return null;
+
+                  const quantity = Math.max(
+                    1,
+                    Number(saved.quantity) || 1
+                  );
+
+                  return {
+                    ...product,
+                    price: option
+                      ? Number(option.price)
+                      : Number(product.price),
+                    quantity,
+                    selectedPriceOption: option
+                      ? {
+                          optionId: String(option.id),
+                          groupTitle: product.priceOptionsTitle || "",
+                          optionText: option.text || "",
+                          selectedPrice: Number(option.price),
+                        }
+                      : null,
+                    cartKey: `${product.id}:${savedOptionId || "default"}`,
+                  };
+                })
+                .filter(Boolean);
+
+              setCartItems(restoredItems);
+
+              // Acknowledge restoration to the backend.
+              for (const orderId of acknowledgedIds) {
+                try {
+                  await fetch(
+                    `${API_BASE_URL}/api/orders/${encodeURIComponent(
+                      orderId
+                    )}/cart-restored`,
+                    {
+                      method: "POST",
+                      headers: {
+                        Authorization: `Bearer ${token}`,
+                      },
+                    }
+                  );
+                } catch (ackError) {
+                  console.error(
+                    "Cart restoration acknowledgement failed:",
+                    ackError
+                  );
+                }
+              }
+            }
+          } catch (restoreError) {
+            console.error("Cart restoration failed:", restoreError);
+          }
+        }
+      }
     } catch (error) {
       console.error("Loading orders failed:", error);
       setOrdersError(error.message || "Could not load your orders.");
     } finally {
       setOrdersLoading(false);
     }
-  }, [lang]);
+  }, [lang, accountUser, products, productsLoaded]);
 
   // OPEN ACCOUNT (navbar account icon, user clicks on purpose)
   const openAccount = () => {
@@ -1394,7 +1612,7 @@ const removeItem = (cartKey) => {
     ) {
       setAccountMessage(
         lang === "bn"
-          ? "সব প্রয়োজনীয় তথ্য পূরণ করুন।"
+          ? "à¦¸à¦¬ à¦ªà§à¦°à¦¯à¦¼à§‹à¦œà¦¨à§€à¦¯à¦¼ à¦¤à¦¥à§à¦¯ à¦ªà§‚à¦°à¦£ à¦•à¦°à§à¦¨à¥¤"
           : "Please fill in all required fields."
       );
       return;
@@ -1418,7 +1636,7 @@ const removeItem = (cartKey) => {
         setAccountMessage(
           data.message ||
             (lang === "bn"
-              ? "ইমেইলে পাঠানো OTP দিয়ে যাচাই করুন।"
+              ? "à¦‡à¦®à§‡à¦‡à¦²à§‡ à¦ªà¦¾à¦ à¦¾à¦¨à§‹ OTP à¦¦à¦¿à¦¯à¦¼à§‡ à¦¯à¦¾à¦šà¦¾à¦‡ à¦•à¦°à§à¦¨à¥¤"
               : "Check your email for the verification code.")
         );
       } else if (accountMode === "login") {
@@ -1435,7 +1653,7 @@ const removeItem = (cartKey) => {
         setAccountMessage(
           data.message ||
             (lang === "bn"
-              ? "ইমেইলে পাঠানো OTP দিয়ে লগইন সম্পন্ন করুন।"
+              ? "à¦‡à¦®à§‡à¦‡à¦²à§‡ à¦ªà¦¾à¦ à¦¾à¦¨à§‹ OTP à¦¦à¦¿à¦¯à¦¼à§‡ à¦²à¦—à¦‡à¦¨ à¦¸à¦®à§à¦ªà¦¨à§à¦¨ à¦•à¦°à§à¦¨à¥¤"
               : "Check your email for the login code.")
         );
       }
@@ -1468,7 +1686,7 @@ const removeItem = (cartKey) => {
         setAccountMessage(
           data.message ||
             (lang === "bn"
-              ? "ইমেইল যাচাই সম্পন্ন হয়েছে। এখন লগইন করুন।"
+              ? "à¦‡à¦®à§‡à¦‡à¦² à¦¯à¦¾à¦šà¦¾à¦‡ à¦¸à¦®à§à¦ªà¦¨à§à¦¨ à¦¹à¦¯à¦¼à§‡à¦›à§‡à¥¤ à¦à¦–à¦¨ à¦²à¦—à¦‡à¦¨ à¦•à¦°à§à¦¨à¥¤"
               : "Email verified. You can now log in.")
         );
       } else if (accountMode === "verify-login") {
@@ -1510,7 +1728,7 @@ const removeItem = (cartKey) => {
 
         showNotice(
           data.message ||
-            (lang === "bn" ? "লগইন সফল হয়েছে।" : "Login successful.")
+            (lang === "bn" ? "à¦²à¦—à¦‡à¦¨ à¦¸à¦«à¦² à¦¹à¦¯à¦¼à§‡à¦›à§‡à¥¤" : "Login successful.")
         );
       }
     } catch (error) {
@@ -1539,7 +1757,7 @@ const removeItem = (cartKey) => {
       setAccountMessage(
         data.message ||
           (lang === "bn"
-            ? "যোগ্য অ্যাকাউন্ট থাকলে ইমেইলে OTP পাঠানো হবে।"
+            ? "à¦¯à§‹à¦—à§à¦¯ à¦…à§à¦¯à¦¾à¦•à¦¾à¦‰à¦¨à§à¦Ÿ à¦¥à¦¾à¦•à¦²à§‡ à¦‡à¦®à§‡à¦‡à¦²à§‡ OTP à¦ªà¦¾à¦ à¦¾à¦¨à§‹ à¦¹à¦¬à§‡à¥¤"
             : "If an eligible account exists, a reset code will be sent.")
       );
     } catch (error) {
@@ -1572,7 +1790,7 @@ const removeItem = (cartKey) => {
       setAccountMessage(
         data.message ||
           (lang === "bn"
-            ? "যোগ্য অ্যাকাউন্ট থাকলে নতুন OTP পাঠানো হবে।"
+            ? "à¦¯à§‹à¦—à§à¦¯ à¦…à§à¦¯à¦¾à¦•à¦¾à¦‰à¦¨à§à¦Ÿ à¦¥à¦¾à¦•à¦²à§‡ à¦¨à¦¤à§à¦¨ OTP à¦ªà¦¾à¦ à¦¾à¦¨à§‹ à¦¹à¦¬à§‡à¥¤"
             : "If eligible, a new OTP will be sent.")
       );
 
@@ -1594,7 +1812,7 @@ const removeItem = (cartKey) => {
     if (accountNewPassword.length < 8 || accountNewPassword.length > 72) {
       setAccountMessage(
         lang === "bn"
-          ? "পাসওয়ার্ড ৮ থেকে ৭২ অক্ষরের মধ্যে হতে হবে।"
+          ? "à¦ªà¦¾à¦¸à¦“à¦¯à¦¼à¦¾à¦°à§à¦¡ à§® à¦¥à§‡à¦•à§‡ à§­à§¨ à¦…à¦•à§à¦·à¦°à§‡à¦° à¦®à¦§à§à¦¯à§‡ à¦¹à¦¤à§‡ à¦¹à¦¬à§‡à¥¤"
           : "Password must be between 8 and 72 characters."
       );
       return;
@@ -1617,7 +1835,7 @@ const removeItem = (cartKey) => {
       setAccountMessage(
         data.message ||
           (lang === "bn"
-            ? "পাসওয়ার্ড পরিবর্তন হয়েছে। এখন লগইন করুন।"
+            ? "à¦ªà¦¾à¦¸à¦“à¦¯à¦¼à¦¾à¦°à§à¦¡ à¦ªà¦°à¦¿à¦¬à¦°à§à¦¤à¦¨ à¦¹à¦¯à¦¼à§‡à¦›à§‡à¥¤ à¦à¦–à¦¨ à¦²à¦—à¦‡à¦¨ à¦•à¦°à§à¦¨à¥¤"
             : "Password reset successful. Please log in.")
       );
     } catch (error) {
@@ -1679,7 +1897,7 @@ const logoutAccount = () => {
   if (routePath !== "/admin") return <NotFoundPage />;
 
   return (
-    <Suspense fallback={<div className="pb-route-loading" role="status">Loading dashboard…</div>}>
+    <Suspense fallback={<div className="pb-route-loading" role="status">Loading dashboardâ€¦</div>}>
       <>
       <RoleGuard allowedRoles={["admin"]}>
         <AdminDashboard
@@ -1711,7 +1929,7 @@ if (routePath === "/moderator" || routePath.startsWith("/moderator/")) {
   if (routePath !== "/moderator") return <NotFoundPage />;
 
   return (
-    <Suspense fallback={<div className="pb-route-loading" role="status">Loading dashboard…</div>}>
+    <Suspense fallback={<div className="pb-route-loading" role="status">Loading dashboardâ€¦</div>}>
       <>
       <RoleGuard allowedRoles={["moderator"]}>
         <ModeratorDashboard
@@ -1748,17 +1966,17 @@ if (routePath === "/moderator" || routePath.startsWith("/moderator/")) {
       {productsError && (
         <div role="alert" className="toast-notice">
           {lang === "bn"
-            ? "প্রোডাক্ট লোড করা যায়নি। Backend চালু আছে কি না দেখুন।"
+            ? "à¦ªà§à¦°à§‹à¦¡à¦¾à¦•à§à¦Ÿ à¦²à§‹à¦¡ à¦•à¦°à¦¾ à¦¯à¦¾à¦¯à¦¼à¦¨à¦¿à¥¤ Backend à¦šà¦¾à¦²à§ à¦†à¦›à§‡ à¦•à¦¿ à¦¨à¦¾ à¦¦à§‡à¦–à§à¦¨à¥¤"
             : "Could not load products. Check whether the backend is running."}{" "}
           <button type="button" onClick={() => window.location.reload()}>
-            {lang === "bn" ? "আবার চেষ্টা করুন" : "Retry"}
+            {lang === "bn" ? "à¦†à¦¬à¦¾à¦° à¦šà§‡à¦·à§à¦Ÿà¦¾ à¦•à¦°à§à¦¨" : "Retry"}
           </button>
         </div>
       )}
 
       {!productsLoaded && !productsError && (
         <div className="toast-notice" role="status">
-          {lang === "bn" ? "প্রোডাক্ট লোড হচ্ছে..." : "Loading products..."}
+          {lang === "bn" ? "à¦ªà§à¦°à§‹à¦¡à¦¾à¦•à§à¦Ÿ à¦²à§‹à¦¡ à¦¹à¦šà§à¦›à§‡..." : "Loading products..."}
         </div>
       )}
 
@@ -1774,9 +1992,9 @@ if (routePath === "/moderator" || routePath.startsWith("/moderator/")) {
         <span>
           {lang === "bn"
             ? storefrontSettings?.announcementBn ||
-            "আপনারা যদি প্রজেক্ট অর্ডার দেন, তবে শুধু কম্পোনেন্টই (উপাদান) পাবেন না, বরং সম্পূর্ণ তৈরি (build in) অবস্থায় পাবেন। প্রজেক্ট তৈরি করার জন্য আমরা কোনো পারিশ্রমিক লাগবে না।"
+            "à¦†à¦ªà¦¨à¦¾à¦°à¦¾ à¦¯à¦¦à¦¿ à¦ªà§à¦°à¦œà§‡à¦•à§à¦Ÿ à¦…à¦°à§à¦¡à¦¾à¦° à¦¦à§‡à¦¨, à¦¤à¦¬à§‡ à¦¶à§à¦§à§ à¦•à¦®à§à¦ªà§‹à¦¨à§‡à¦¨à§à¦Ÿà¦‡ (à¦‰à¦ªà¦¾à¦¦à¦¾à¦¨) à¦ªà¦¾à¦¬à§‡à¦¨ à¦¨à¦¾, à¦¬à¦°à¦‚ à¦¸à¦®à§à¦ªà§‚à¦°à§à¦£ à¦¤à§ˆà¦°à¦¿ (build in) à¦…à¦¬à¦¸à§à¦¥à¦¾à§Ÿ à¦ªà¦¾à¦¬à§‡à¦¨à¥¤ à¦ªà§à¦°à¦œà§‡à¦•à§à¦Ÿ à¦¤à§ˆà¦°à¦¿ à¦•à¦°à¦¾à¦° à¦œà¦¨à§à¦¯ à¦†à¦®à¦°à¦¾ à¦•à§‹à¦¨à§‹ à¦ªà¦¾à¦°à¦¿à¦¶à§à¦°à¦®à¦¿à¦• à¦²à¦¾à¦—à¦¬à§‡ à¦¨à¦¾à¥¤"
             : storefrontSettings?.announcement ||
-            "আপনারা যদি প্রজেক্ট অর্ডার দেন, তবে শুধু কম্পোনেন্টই (উপাদান) পাবেন না, বরং সম্পূর্ণ তৈরি (build in) অবস্থায় পাবেন। প্রজেক্ট তৈরি করার জন্য আমরা কোনো পারিশ্রমিক লাগবে না।"}
+            "à¦†à¦ªà¦¨à¦¾à¦°à¦¾ à¦¯à¦¦à¦¿ à¦ªà§à¦°à¦œà§‡à¦•à§à¦Ÿ à¦…à¦°à§à¦¡à¦¾à¦° à¦¦à§‡à¦¨, à¦¤à¦¬à§‡ à¦¶à§à¦§à§ à¦•à¦®à§à¦ªà§‹à¦¨à§‡à¦¨à§à¦Ÿà¦‡ (à¦‰à¦ªà¦¾à¦¦à¦¾à¦¨) à¦ªà¦¾à¦¬à§‡à¦¨ à¦¨à¦¾, à¦¬à¦°à¦‚ à¦¸à¦®à§à¦ªà§‚à¦°à§à¦£ à¦¤à§ˆà¦°à¦¿ (build in) à¦…à¦¬à¦¸à§à¦¥à¦¾à¦¯à¦¼ à¦ªà¦¾à¦¬à§‡à¦¨à¥¤ à¦ªà§à¦°à¦œà§‡à¦•à§à¦Ÿ à¦¤à§ˆà¦°à¦¿ à¦•à¦°à¦¾à¦° à¦œà¦¨à§à¦¯ à¦†à¦®à¦°à¦¾ à¦•à§‹à¦¨à§‹ à¦ªà¦¾à¦°à¦¿à¦¶à§à¦°à¦®à¦¿à¦• à¦²à¦¾à¦—à¦¬à§‡ à¦¨à¦¾à¥¤"}
         </span>
       </div>
 
@@ -1784,9 +2002,9 @@ if (routePath === "/moderator" || routePath.startsWith("/moderator/")) {
         <span>
           {lang === "bn"
             ? storefrontSettings?.announcementBn ||
-            "আপনারা চাইলে নিজেদের আইডিয়া শেয়ার করে প্রজেক্ট তৈরি (build-in) করতে পারবেন।"
+            "à¦†à¦ªà¦¨à¦¾à¦°à¦¾ à¦šà¦¾à¦‡à¦²à§‡ à¦¨à¦¿à¦œà§‡à¦¦à§‡à¦° à¦†à¦‡à¦¡à¦¿à§Ÿà¦¾ à¦¶à§‡à§Ÿà¦¾à¦° à¦•à¦°à§‡ à¦ªà§à¦°à¦œà§‡à¦•à§à¦Ÿ à¦¤à§ˆà¦°à¦¿ (build-in) à¦•à¦°à¦¤à§‡ à¦ªà¦¾à¦°à¦¬à§‡à¦¨à¥¤"
             : storefrontSettings?.announcement ||
-            "আপনারা চাইলে নিজেদের আইডিয়া শেয়ার করে প্রজেক্ট তৈরি (build-in) করতে পারবেন।"}
+            "à¦†à¦ªà¦¨à¦¾à¦°à¦¾ à¦šà¦¾à¦‡à¦²à§‡ à¦¨à¦¿à¦œà§‡à¦¦à§‡à¦° à¦†à¦‡à¦¡à¦¿à§Ÿà¦¾ à¦¶à§‡à§Ÿà¦¾à¦° à¦•à¦°à§‡ à¦ªà§à¦°à¦œà§‡à¦•à§à¦Ÿ à¦¤à§ˆà¦°à¦¿ (build-in) à¦•à¦°à¦¤à§‡ à¦ªà¦¾à¦°à¦¬à§‡à¦¨à¥¤"}
         </span>
       </div>
 
@@ -1840,7 +2058,7 @@ if (routePath === "/moderator" || routePath.startsWith("/moderator/")) {
 
 
       <main className={showCatalogPage ? "catalog-route-main" : ""}>
-        <Suspense fallback={<div className="pb-route-loading" role="status">Loading page…</div>}>
+        <Suspense fallback={<div className="pb-route-loading" role="status">Loading pageâ€¦</div>}>
         {routePath === "/contact" ? (
           <ContactPage
             onBack={() => {
@@ -2081,3 +2299,6 @@ if (routePath === "/moderator" || routePath.startsWith("/moderator/")) {
     </div>
   );
 }
+
+
+
