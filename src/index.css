@@ -1,6 +1,4 @@
-﻿/*Rahul PreBotix*/
-
-@import "tailwindcss";
+﻿@import "tailwindcss";
 
 /* ---------------------------------------------------------------------
    01  DESIGN TOKENS
@@ -2718,7 +2716,7 @@ body:has(.pb-contact-page) .search-panel { display: none; }
 .modal-backdrop {
   position: fixed;
   inset: 0;
-  z-index: 400;
+  z-index: 100;
   display: flex;
   justify-content: flex-end;
   background: rgba(1, 7, 15, .76);
@@ -4640,4 +4638,20 @@ body img:not([data-allow-image-copy]) {
   user-select: none !important;
   -webkit-touch-callout: none !important;
   pointer-events: auto;
+}
+/* FIX: Checkout & Login overlay above navbar and floating buttons */
+.modal-backdrop,
+.account-overlay {
+  z-index: 10000 !important;
+}
+
+/* Keep navbar behind checkout/login */
+.site-header {
+  z-index: 40 !important;
+}
+
+/* Keep floating AI and back-to-top buttons behind overlay */
+.pb-back-to-top,
+.pb-float-contact {
+  z-index: 39 !important;
 }
