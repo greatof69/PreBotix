@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+﻿import { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import DashboardLayout from "../shared/DashboardLayout";
 import { clearAuthSession, getAccessToken } from "../../utils/authSession";
@@ -295,29 +295,59 @@ const [savingAnnouncements, setSavingAnnouncements] = useState(false);
   }, [request]);
 
   const deleteCourierOrder = useCallback(async (orderId) => {
-  try {
-    await request(`/courier-orders/${encodeURIComponent(orderId)}`, {
-      method: "DELETE",
-    });
+    if (!orderId) return;
 
-    await loadOrders();
-  } catch (err) {
-    setError(err.message || "Could not delete courier order.");
-  }
-}, [request, loadOrders]);
+    const confirmed = window.confirm(
+      t(
+        "Delete this courier order? This cannot be undone.",
+        "এই কুরিয়ার অর্ডারটি মুছবেন? এটি ফিরিয়ে আনা যাবে না।"
+      )
+    );
+    if (!confirmed) return;
+
+    setError("");
+    setMessage("");
+
+    try {
+      await request(`/courier-orders/${encodeURIComponent(orderId)}`, {
+        method: "DELETE",
+      });
+
+      setMessage(t("Courier order deleted.", "কুরিয়ার অর্ডার মুছে ফেলা হয়েছে।"));
+      await loadOrders();
+    } catch (err) {
+      setError(err.message || "Could not delete courier order.");
+    }
+  }, [request, loadOrders, lang]);
 
   const deleteAllCourierOrders = useCallback(async () => {
+    const typed = window.prompt(
+      t(
+        "You are about to permanently delete ALL courier orders. Type DELETE to confirm.",
+        "আপনি সব কুরিয়ার অর্ডার স্থায়ীভাবে মুছতে যাচ্ছেন। নিশ্চিত করতে DELETE লিখুন।"
+      )
+    );
+    if (String(typed || "").trim() !== "DELETE") return;
+
+    setError("");
+    setMessage("");
+
     try {
       await request("/courier-orders", {
         method: "DELETE",
       });
 
-      window.alert("All courier orders deleted successfully.");
+      setMessage(
+        t(
+          "All courier orders deleted successfully.",
+          "সব কুরিয়ার অর্ডার মুছে ফেলা হয়েছে।"
+        )
+      );
       await loadOrders();
     } catch (err) {
       setError(err.message || "Could not delete courier orders.");
     }
-  }, [request, loadOrders, orders]);
+  }, [request, loadOrders, lang]);
 
   const loadOrderHistory = useCallback(async () => {
   setHistoryLoading(true);
@@ -1147,43 +1177,43 @@ const deleteOrder = async (order) => {
       id: "orders",
       label: "Order Management",
       labelBn: "অর্ডার ম্যানেজমেন্ট",
-      icon: "ðŸ“‹",
+      icon: "📋",
     },
     {
       id: "users",
       label: "Account Management",
       labelBn: "অ্যাকাউন্ট ম্যানেজমেন্ট",
-      icon: "ðŸ‘¥",
+      icon: "👥",
     },
     {
       id: "generalSettings",
       label: "General Settings",
       labelBn: "সাধারণ সেটিংস",
-      icon: "âš™ï¸",
+      icon: "⚙️",
     },
     {
       id: "messages",
       label: "Customer Messages",
       labelBn: "গ্রাহকের মেসেজ",
-      icon: "ðŸ’¬",
+      icon: "💬",
     },
     {
       id: "paymentDelivery",
       label: "Payment & Delivery Settings",
       labelBn: "পেমেন্ট ও ডেলিভারি সেটিংস",
-      icon: "ðŸ’³",
+      icon: "💳",
     },
     {
       id: "courier",
       label: "Courier Orders",
       labelBn: "কুরিয়ার অর্ডার",
-      icon: "ðŸ“¦",
+      icon: "📦",
     },
     {
       id: "history",
       label: "Order History",
       labelBn: "অর্ডার হিস্টোরি",
-      icon: "ðŸ—‚ï¸",
+      icon: "🗂️",
     },
   ];
 
@@ -1382,6 +1412,20 @@ const pageTitle =
                 </div>
 
                 <div>
+                  <button
+                    type="button"
+                    style={{
+                      ...primaryButtonStyle,
+                      opacity: savingGeneralSettings ? 0.7 : 1,
+                    }}
+                    disabled={savingGeneralSettings || uploadingAsset !== ""}
+                    onClick={saveGeneralSettings}
+                  >
+                    {savingGeneralSettings
+                      ? t("Saving...", "সেভ হচ্ছে...")
+                      : t("Save General Settings", "সাধারণ সেটিংস সেভ করুন")}
+                  </button>
+                </div>
 
                     <div style={{
                       borderTop: "1px solid #e5e7eb",
@@ -1389,7 +1433,7 @@ const pageTitle =
                       display: "grid",
                       gap: 16,
                     }}>
-                      <h3>Announcement Settings</h3>
+                      <h3>{t("Announcement Settings", "ঘোষণা সেটিংস")}</h3>
 
                       {[
                         {
@@ -1447,20 +1491,6 @@ const pageTitle =
                         {savingAnnouncements ? "Saving..." : "Save Announcements"}
                       </button>
                     </div> 
-                  <button
-                    type="button"
-                    style={{
-                      ...primaryButtonStyle,
-                      opacity: savingGeneralSettings ? 0.7 : 1,
-                    }}
-                    disabled={savingGeneralSettings || uploadingAsset !== ""}
-                    onClick={saveGeneralSettings}
-                  >
-                    {savingGeneralSettings
-                      ? t("Saving...", "সেভ হচ্ছে...")
-                      : t("Save General Settings", "সাধারণ সেটিংস সেভ করুন")}
-                  </button>
-                </div>
               </div>
             )}
           </section>
@@ -2826,4 +2856,3 @@ const pageTitle =
     
   );
 }
-

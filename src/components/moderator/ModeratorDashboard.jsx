@@ -1,5 +1,4 @@
-﻿
-import { createPortal } from "react-dom";
+﻿import { createPortal } from "react-dom";
 import { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import DashboardLayout from "../shared/DashboardLayout";
@@ -297,30 +296,61 @@ export default function ModeratorDashboard({
   }, [request]);
 
   const deleteCourierOrder = useCallback(async (orderId) => {
-  try {
-    await request(`/courier-orders/${encodeURIComponent(orderId)}`, {
-      method: "DELETE",
-    });
+    if (!orderId) return;
 
-  
-    await loadOrders();
-  } catch (err) {
-    setError(err.message || "Could not delete courier order.");
-  }
-}, [request, loadOrders]);
+    const confirmed = window.confirm(
+      t(
+        "Delete this courier order? This cannot be undone.",
+        "এই কুরিয়ার অর্ডারটি মুছবেন? এটি ফিরিয়ে আনা যাবে না।"
+      )
+    );
+    if (!confirmed) return;
+
+    setError("");
+    setNotice("");
+
+    try {
+      await request(`/courier-orders/${encodeURIComponent(orderId)}`, {
+        method: "DELETE",
+      });
+
+      setNotice(t("Courier order deleted.", "কুরিয়ার অর্ডার মুছে ফেলা হয়েছে।"));
+      await loadOrders();
+    } catch (err) {
+      setError(err.message || "Could not delete courier order.");
+    }
+  }, [request, loadOrders, lang]);
 
   const deleteAllCourierOrders = useCallback(async () => {
+    const typed = window.prompt(
+      t(
+        "You are about to permanently delete ALL courier orders. Type DELETE to confirm.",
+        "আপনি সব কুরিয়ার অর্ডার স্থায়ীভাবে মুছতে যাচ্ছেন। নিশ্চিত করতে DELETE লিখুন।"
+      )
+    );
+    if (String(typed || "").trim() !== "DELETE") return;
+
+    setError("");
+    setNotice("");
+
     try {
       await request("/courier-orders", {
         method: "DELETE",
       });
 
-     
+      setNotice(
+        t(
+          "All courier orders deleted successfully.",
+          "সব কুরিয়ার অর্ডার মুছে ফেলা হয়েছে।"
+        )
+      );
       await loadOrders();
     } catch (err) {
       setError(err.message || "Could not delete courier orders.");
     }
-  }, [request, loadOrders, orders]);
+  }, [request, loadOrders, lang]);
+
+
   // -------------------- Load History --------------------
 
   const loadOrderHistory = useCallback(async () => {
@@ -2476,5 +2506,3 @@ export default function ModeratorDashboard({
     </DashboardLayout>
   );
 }
-
-
