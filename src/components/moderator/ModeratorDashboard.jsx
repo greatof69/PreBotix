@@ -426,12 +426,6 @@ export default function ModeratorDashboard({
 
     if (saving || historyActionId) return;
 
-    const confirmed = window.confirm(t(
-      "Confirm that the courier/customer has handed over the COD cash?",
-      "কুরিয়ার/কাস্টমারের কাছ থেকে COD-এর টাকা পেয়েছেন—নিশ্চিত করবেন?"
-    ));
-    if (!confirmed) return;
-
     setSaving(true);
     setError("");
     setNotice("");

@@ -997,9 +997,6 @@ const deleteOrder = async (order) => {
       : paymentStatus === "paid"
         ? "verify this payment"
         : "reject this payment";
-    if (!window.confirm(`Are you sure you want to ${actionLabel} for order ${orderId}?`)) {
-      return;
-    }
 
     setSaving(true);
     setError("");
