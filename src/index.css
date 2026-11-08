@@ -4705,21 +4705,9 @@ body img:not([data-allow-image-copy]) {
   }
 }
 
-/* MOBILE HERO: Fit Full Image Inside Container */
+/* MOBILE: Reduce Only Image Height */
 @media (max-width: 560px) {
-  .hero-visual,
-  .hero-visual.hero-visual-slide-2 {
-    height: 130px !important;
-    overflow: hidden !important;
-  }
-
-  .hero-visual .hero-slide-image {
-    height: 100% !important;
-    max-height: 100% !important;
-    width: auto !important;
-    max-width: 100% !important;
-    object-fit: contain !important;
-    object-position: center center !important;
-    mask-image: none !important;
+  html body .hero-visual .hero-slide-image {
+    height: 70% !important;
   }
 }
