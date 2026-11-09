@@ -335,8 +335,7 @@ export default function InlineProductEditor({
   setError("");
   setSuccess("");
   setLoadingId(!product);
-}, [product?.id, editing]);
-
+}, [product]);
 
   // Find the smallest unused positive Product ID.
   useEffect(() => {
