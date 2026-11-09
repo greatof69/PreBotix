@@ -41,7 +41,9 @@ import {
   getAuthUser,
   saveAuthSession,
   clearAuthSession,
+  authFetch,
 } from "./utils/authSession";
+
 const ProductBulkImport = lazy(() => import("./components/ProductBulkImport"));
 
 const API_BASE_URL =
@@ -243,13 +245,13 @@ export default function App() {
       }
 
       try {
-        const response = await fetch(
+        const response = await authFetch(
           `${API_BASE_URL}/api/admin/products/${Number(productId)}`,
           {
             method: "DELETE",
-            headers: { Authorization: `Bearer ${token}` },
           }
         );
+
         const data = await response.json().catch(() => ({}));
         if (!response.ok) {
           throw new Error(data.message || "Product could not be deleted.");
@@ -510,6 +512,44 @@ const skipNextCartSaveRef = useRef(true);
   const [myOrders, setMyOrders] = useState([]);
   const [ordersLoading, setOrdersLoading] = useState(false);
   const [ordersError, setOrdersError] = useState("");
+
+  
+  // Keep React state in sync when authFetch detects an expired session.
+  useEffect(() => {
+    const handleSessionExpired = () => {
+      cartStorageAccountRef.current = "";
+      skipNextCartSaveRef.current = true;
+
+      setAccountUser(null);
+      setCartItems([]);
+      setFavoriteIds([]);
+      setMyOrders([]);
+      setOrdersError("Your session has expired. Please log in again.");
+
+      setAccountMode("login");
+      setAccountPassword("");
+      setAccountOtp("");
+      setAccountNewPassword("");
+      setAccountMessage("");
+      setAccountOpen(false);
+
+      setCartOpen(false);
+      setCheckoutOpen(false);
+    };
+
+    window.addEventListener(
+      "prebotix:session-expired",
+      handleSessionExpired
+    );
+
+    return () => {
+      window.removeEventListener(
+        "prebotix:session-expired",
+        handleSessionExpired
+      );
+    };
+  }, []);
+
 
   const t = copy[lang];
 
@@ -1152,11 +1192,10 @@ const removeItem = (cartKey) => {
       );
     }
 
-    const response = await fetch(`${API_BASE_URL}/api/orders`, {
+    const response = await authFetch(`${API_BASE_URL}/api/orders`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${accessToken}`,
       },
       body: JSON.stringify({
         form: payload.form,
@@ -1289,10 +1328,8 @@ const removeItem = (cartKey) => {
     setOrdersError("");
 
     try {
-      const response = await fetch(`${API_BASE_URL}/api/orders/my`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+      const response = await authFetch(`${API_BASE_URL}/api/orders/my`, {
+        method: "GET",
       });
 
       const data = await response.json().catch(() => ({}));
@@ -1509,15 +1546,12 @@ const removeItem = (cartKey) => {
               // Acknowledge restoration to the backend.
               for (const orderId of acknowledgedIds) {
                 try {
-                  await fetch(
+                  await authFetch(
                     `${API_BASE_URL}/api/orders/${encodeURIComponent(
                       orderId
                     )}/cart-restored`,
                     {
                       method: "POST",
-                      headers: {
-                        Authorization: `Bearer ${token}`,
-                      },
                     }
                   );
                 } catch (ackError) {
@@ -1709,7 +1743,6 @@ const removeItem = (cartKey) => {
           data.refreshToken
         );
 
-        setAccountUser(data.user);
         setAccountUser(data.user);
 
         // Login done: close the modal and never open the dashboard.

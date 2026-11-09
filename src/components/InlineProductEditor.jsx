@@ -7,7 +7,10 @@ import {
   Trash2,
   Plus,
 } from "lucide-react";
-import { getAccessToken } from "../utils/authSession";
+import {
+  getAccessToken,
+  authFetch,
+} from "../utils/authSession";
 
 const API = (
   import.meta.env.VITE_API_URL || "http://localhost:5000"
@@ -349,11 +352,8 @@ export default function InlineProductEditor({
           throw new Error("Please log in again as Admin.");
         }
 
-        const response = await fetch(`${API}/api/admin/products`, {
+        const response = await authFetch(`${API}/api/admin/products`, {
           method: "GET",
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
         });
 
         const data = await readResponse(response);
@@ -924,14 +924,11 @@ export default function InlineProductEditor({
         ? `${API}/api/admin/products/${productId}`
         : `${API}/api/admin/products`;
 
-      const response = await fetch(url, {
+      const response = await authFetch(url, {
         method: editing ? "PATCH" : "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
         body,
       });
-
+      
       const data = await readResponse(response);
 
       if (!data.product) {

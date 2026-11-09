@@ -8,7 +8,10 @@ import {
   AlertCircle,
   Database,
 } from "lucide-react";
-import { getAccessToken } from "../utils/authSession";
+import {
+  getAccessToken,
+  authFetch,
+} from "../utils/authSession";
 
 const API = (
   import.meta.env.VITE_API_URL || "http://localhost:5000"
@@ -156,12 +159,10 @@ export default function ProductBulkImport({ onClose, onImported }) {
     const importedResults = [];
 
     try {
-      const existingResponse = await fetch(
+      const existingResponse = await authFetch(
         `${API}/api/admin/products`,
         {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+          method: "GET",
         }
       );
 
@@ -255,13 +256,10 @@ export default function ProductBulkImport({ onClose, onImported }) {
         }
 
         try {
-          const response = await fetch(
+          const response = await authFetch(
             `${API}/api/admin/products`,
             {
               method: "POST",
-              headers: {
-                Authorization: `Bearer ${token}`,
-              },
               body,
             }
           );

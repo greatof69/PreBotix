@@ -1,12 +1,18 @@
-﻿const TOKEN_KEY = "prebotix-access-token-v1";
+﻿
+const TOKEN_KEY = "prebotix-access-token-v1";
 const REFRESH_KEY = "prebotix-refresh-token-v1";
 const USER_KEY = "prebotix-auth-user-v1";
 
 let refreshPromise = null;
 
+const API =
+  import.meta.env.VITE_API_URL || "http://localhost:5000";
+
 function getStorage() {
-  return localStorage.getItem(TOKEN_KEY) !== null ||
+  return (
+    localStorage.getItem(TOKEN_KEY) !== null ||
     localStorage.getItem(REFRESH_KEY) !== null
+  )
     ? localStorage
     : sessionStorage;
 }
@@ -48,7 +54,9 @@ export function saveAuthSession(
   refreshToken = ""
 ) {
   if (!accessToken || !user || !refreshToken) {
-    throw new Error("Access token, refresh token and user information are required.");
+    throw new Error(
+      "Access token, refresh token and user information are required."
+    );
   }
 
   clearAuthSession();
@@ -81,41 +89,81 @@ export function clearAuthSession() {
   }
 }
 
-async function refreshAccessToken() {
+function dispatchSessionExpired() {
+  window.dispatchEvent(
+    new Event("prebotix:session-expired")
+  );
+}
+
+async function performRefresh(failedAccessToken) {
+  // Another request or browser tab may already have refreshed.
+  const currentToken = getAccessToken();
+
+  if (currentToken && currentToken !== failedAccessToken) {
+    return currentToken;
+  }
+
+  const refreshToken = getRefreshToken();
+
+  if (!refreshToken) {
+    const error = new Error("Refresh token is missing.");
+    error.authExpired = true;
+    throw error;
+  }
+
+  const response = await fetch(`${API}/api/auth/refresh`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ refreshToken }),
+  });
+
+  const data = await response.json().catch(() => ({}));
+
+  if (response.status === 401) {
+    const error = new Error(
+      data.message || "Your session has expired. Please log in again."
+    );
+    error.authExpired = true;
+    throw error;
+  }
+
+  if (!response.ok) {
+    // Server/network problem: do not destroy the user's session.
+    throw new Error(
+      data.message || `Refresh failed (${response.status}).`
+    );
+  }
+
+  if (!data.accessToken || !data.refreshToken) {
+    throw new Error("Refresh response is incomplete.");
+  }
+
+  updateTokens(data.accessToken, data.refreshToken);
+
+  return data.accessToken;
+}
+
+async function refreshAccessToken(failedAccessToken) {
   if (refreshPromise) return refreshPromise;
 
-  refreshPromise = (async () => {
-    const refreshToken = getRefreshToken();
-
-    if (!refreshToken) {
-      throw new Error("Refresh token is missing.");
-    }
-
-    const response = await fetch(
-      `${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/auth/refresh`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ refreshToken }),
-      }
-    );
-
-    const data = await response.json().catch(() => ({}));
-
+  const runRefresh = async () => {
+    // Coordinate refreshes between tabs where Web Locks are supported.
     if (
-      !response.ok ||
-      !data.accessToken ||
-      !data.refreshToken
+      getStorage() === localStorage &&
+      navigator.locks?.request
     ) {
-      throw new Error(data.message || "Session refresh failed.");
+      return navigator.locks.request(
+        "prebotix-auth-refresh",
+        () => performRefresh(failedAccessToken)
+      );
     }
 
-    updateTokens(data.accessToken, data.refreshToken);
+    return performRefresh(failedAccessToken);
+  };
 
-    return data.accessToken;
-  })();
+  refreshPromise = runRefresh();
 
   try {
     return await refreshPromise;
@@ -125,7 +173,7 @@ async function refreshAccessToken() {
 }
 
 export async function authFetch(url, options = {}) {
-  let token = getAccessToken();
+  const token = getAccessToken();
 
   if (!token) {
     throw new Error("Please log in to continue.");
@@ -141,19 +189,32 @@ export async function authFetch(url, options = {}) {
     });
   };
 
-  let response = await makeRequest(token);
+  const response = await makeRequest(token);
 
   if (response.status !== 401) {
     return response;
   }
 
+  let newToken;
+
   try {
-    token = await refreshAccessToken();
-    response = await makeRequest(token);
-    return response;
-  } catch {
-    clearAuthSession();
-    window.dispatchEvent(new Event("prebotix:session-expired"));
-    return response;
+    newToken = await refreshAccessToken(token);
+  } catch (error) {
+    if (error.authExpired) {
+      clearAuthSession();
+      dispatchSessionExpired();
+    }
+
+    // Network/500 errors do not automatically log the user out.
+    throw error;
   }
+
+  const retryResponse = await makeRequest(newToken);
+
+  if (retryResponse.status === 401) {
+    clearAuthSession();
+    dispatchSessionExpired();
+  }
+
+  return retryResponse;
 }
