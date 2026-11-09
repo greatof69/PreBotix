@@ -323,14 +323,6 @@ export default function InlineProductEditor({
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
-  useEffect(() => {
-    if (!file) return undefined;
-
-    const objectUrl = URL.createObjectURL(file);
-    setPreview(objectUrl);
-
-    return () => URL.revokeObjectURL(objectUrl);
-  }, [file]);
 
   // Find the smallest unused positive Product ID.
   useEffect(() => {
@@ -501,13 +493,14 @@ export default function InlineProductEditor({
   }
 
   function handleFileChange(event) {
-    const selected = event.target.files?.[0] || null;
+    const input = event.target;
+    const selected = input.files?.[0] || null;
 
     if (!selected) return;
 
     if (selected.size > 5 * 1024 * 1024) {
       setError("Image must be 5 MB or smaller.");
-      event.target.value = "";
+      input.value = "";
       return;
     }
 
@@ -520,7 +513,7 @@ export default function InlineProductEditor({
 
     if (!allowedTypes.includes(selected.type)) {
       setError("Please select a JPG, PNG, WEBP or GIF image.");
-      event.target.value = "";
+      input.value = "";
       return;
     }
 
@@ -528,6 +521,22 @@ export default function InlineProductEditor({
     setSuccess("");
     setImageDeleted(false);
     setFile(selected);
+
+    const reader = new FileReader();
+
+    reader.onload = () => {
+      setPreview(String(reader.result || ""));
+    };
+
+    reader.onerror = () => {
+      setPreview("");
+      setError("Could not generate image preview. Please select again.");
+    };
+
+    reader.readAsDataURL(selected);
+
+    // Allow selecting the same image again.
+    input.value = "";
   }
 
   function handleDeleteImage() {
@@ -542,14 +551,6 @@ export default function InlineProductEditor({
 
     setError("");
     setSuccess("");
-
-    const input = document.querySelector(
-      '.pb-inline-editor input[name="image"]'
-    );
-
-    if (input) {
-      input.value = "";
-    }
   }
 
   async function save(event) {
@@ -1404,36 +1405,35 @@ export default function InlineProductEditor({
 
           </div>
 
-          {imageSrc && (
+          {(file || imageSrc) && (
             <div className="pb-inline-preview">
-              <img
-                key={imageSrc}
-                src={imageSrc}
-                alt="Product preview"
-                onError={(event) => {
-                  event.currentTarget.style.display = "none";
+              {imageSrc ? (
+                <img
+                  key={imageSrc}
+                  src={imageSrc}
+                  alt="Product preview"
+                  onError={() => {
+                    setError("Could not display this image. Please select another image.");
+                  }}
+                />
+              ) : (
+                <span>Preparing image preview...</span>
+              )}
 
-                  setError(
-                    "Could not display this image. Please select another image or check the existing image path."
-                  );
-                }}
-                onLoad={(event) => {
-                  event.currentTarget.style.display = "block";
-                }}
-              />
+              <div>
+                <span>
+                  {file ? "New image preview" : "Current image"}
+                </span>
 
-              <span>
-                {file ? "New image preview" : "Current image"}
-              </span>
-
-              <button
-                type="button"
-                className="pb-inline-delete-image"
-                onClick={handleDeleteImage}
-              >
-                <Trash2 size={16} />
-                Delete Image
-              </button>
+                <button
+                  type="button"
+                  className="pb-inline-delete-image"
+                  onClick={handleDeleteImage}
+                >
+                  <Trash2 size={16} />
+                  Delete Image
+                </button>
+              </div>
             </div>
           )}
 
