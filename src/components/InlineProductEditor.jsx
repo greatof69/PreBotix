@@ -326,6 +326,17 @@ export default function InlineProductEditor({
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
+  // Reload the selected product's existing data whenever editing changes.
+  useEffect(() => {
+    setForm(getInitialForm(product));
+    setFile(null);
+    setPreview(product?.image || "");
+    setImageDeleted(false);
+    setError("");
+    setSuccess("");
+    setLoadingId(!product);
+  }, [product]);
+
 
   // Find the smallest unused positive Product ID.
   useEffect(() => {
@@ -928,7 +939,7 @@ export default function InlineProductEditor({
         method: editing ? "PATCH" : "POST",
         body,
       });
-      
+
       const data = await readResponse(response);
 
       if (!data.product) {
