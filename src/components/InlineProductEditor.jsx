@@ -328,14 +328,14 @@ export default function InlineProductEditor({
 
   // Reload the selected product's existing data whenever editing changes.
   useEffect(() => {
-    setForm(getInitialForm(product));
-    setFile(null);
-    setPreview(product?.image || "");
-    setImageDeleted(false);
-    setError("");
-    setSuccess("");
-    setLoadingId(!product);
-  }, [product]);
+  setForm(getInitialForm(product));
+  setFile(null);
+  setPreview(product?.image || "");
+  setImageDeleted(false);
+  setError("");
+  setSuccess("");
+  setLoadingId(!product);
+}, [product?.id, editing]);
 
 
   // Find the smallest unused positive Product ID.
