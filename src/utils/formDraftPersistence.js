@@ -25,6 +25,9 @@ function canUseStorage() {
 }
 
 function isPersistableField(field) {
+  if (field.closest("[data-pb-no-global-draft]")) return false;
+
+  if (!(field instanceof HTMLElement) || field.disabled) return false;
   if (!(field instanceof HTMLElement) || field.disabled) return false;
   if (!(field instanceof HTMLInputElement || field instanceof HTMLTextAreaElement || field instanceof HTMLSelectElement)) return false;
 

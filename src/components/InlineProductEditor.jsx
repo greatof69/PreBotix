@@ -1324,7 +1324,7 @@ export default function InlineProductEditor({
           </div>
         )}
 
-        <form onSubmit={save}>
+        <form onSubmit={save} data-pb-no-global-draft>
           <div className="pb-inline-editor-grid">
             <label>
               Product ID
