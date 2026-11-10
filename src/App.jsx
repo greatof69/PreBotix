@@ -62,22 +62,17 @@ function getHomePathForRole(role) {
   return "/";
 }
 
-const [productEditor, setProductEditor] = useState(undefined);
-const [productEditorKey, setProductEditorKey] = useState(0);
-const [productDraftToRestore, setProductDraftToRestore] = useState(null);
-
-const openProductEditor = (product) => {
-  setProductEditorKey((key) => key + 1);
-  setProductEditor(product || null);
-};
 
 export default function App() {
   const location = useLocation();
   const navigate = useNavigate();
+  
 
   // NOTICE (declared early so every handler below can use showNotice)
   const [notice, setNotice] = useState("");
   const noticeTimer = useRef(null);
+
+  
 
   const showNotice = useCallback((message, duration = 2600) => {
     setNotice(message);
