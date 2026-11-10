@@ -28,18 +28,35 @@ export default function ProductCard({
   isModerator = false,
   onEditProduct,
   onDeleteProduct,
+  imagePriority = false,
 }) {
   const isBangla = lang === "bn";
 
   const [now, setNow] = useState(() => Date.now());
 
   useEffect(() => {
-    const timer = setInterval(() => {
-      setNow(Date.now());
+    const endTime = product.discountEndsAt
+      ? new Date(product.discountEndsAt).getTime()
+      : NaN;
+
+    // Countdown না থাকলে কোনো interval চালানোর দরকার নেই।
+    if (!Number.isFinite(endTime) || endTime <= Date.now()) {
+      return undefined;
+    }
+
+    const timer = window.setInterval(() => {
+      const currentTime = Date.now();
+
+      setNow(currentTime);
+
+      // Offer শেষ হলে interval বন্ধ।
+      if (currentTime >= endTime) {
+        window.clearInterval(timer);
+      }
     }, 1000);
 
-    return () => clearInterval(timer);
-  }, []);
+    return () => window.clearInterval(timer);
+  }, [product.discountEndsAt]);
 
   const title = getTitle(product, lang);
   const stock = Math.max(0, Number(product.stock) || 0);
@@ -188,13 +205,6 @@ export default function ProductCard({
       ? `${apiBase}${image}`
       : image;
 
-  console.log("PRODUCT IMAGE DEBUG:", {
-  productId: product.id,
-  originalImage: product.image,
-  apiBase,
-  finalImageUrl: imageSrc,
-});    
-
   const isStaff = isAdmin || isModerator;
   const canUseWishlist = !isStaff;
 
@@ -285,7 +295,9 @@ export default function ProductCard({
             key={imageSrc}
             src={imageSrc}
             alt={title}
-            loading="lazy"
+            loading={imagePriority ? "eager" : "lazy"}
+            fetchPriority={imagePriority ? "high" : "auto"}
+            decoding="async"
             draggable={false}
             onContextMenu={(event) => event.preventDefault()}
             onDragStart={(event) => event.preventDefault()}

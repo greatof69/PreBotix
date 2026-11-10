@@ -70,7 +70,7 @@ export default function HomePage({
       <div className="product-grid" id="components">
 
         {visibleProducts.length ? (
-          visibleProducts.map((product) => (
+          visibleProducts.map((product, index) => (
             <ProductCard
               key={product.id}
               product={product}
@@ -93,6 +93,7 @@ export default function HomePage({
               onAddProduct={onAddProduct}
               onEditProduct={onEditProduct}
               onDeleteProduct={onDeleteProduct}
+              imagePriority={index < 2}
             />
           ))
         ) : (

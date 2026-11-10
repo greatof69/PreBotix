@@ -1,4 +1,4 @@
-
+﻿
 import { useEffect, useMemo, useState } from "react";
 import { Search, X, ArrowLeft, Heart } from "lucide-react";
 
@@ -52,7 +52,7 @@ export default function CatalogPage({
   const isBangla = lang === "bn";
   const normalizedQuery = String(query).trim().toLowerCase();
 
-  // Props অথবা user object—যেখান থেকেই role আসুক, যাচাই করুন।
+  // Props à¦…à¦¥à¦¬à¦¾ user objectâ€”à¦¯à§‡à¦–à¦¾à¦¨ à¦¥à§‡à¦•à§‡à¦‡ role à¦†à¦¸à§à¦•, à¦¯à¦¾à¦šà¦¾à¦‡ à¦•à¦°à§à¦¨à¥¤
   const role = String(user?.role || "").toLowerCase();
 
   const adminView =
@@ -242,10 +242,10 @@ export default function CatalogPage({
           onClick={() => onBackHome?.()}
         >
           <ArrowLeft size={15} />
-          {isBangla ? "হোমে ফিরুন" : "Back to home"}
+          {isBangla ? "à¦¹à§‹à¦®à§‡ à¦«à¦¿à¦°à§à¦¨" : "Back to home"}
         </button>
 
-        <span>PREBOTIX / {isBangla ? "শপ" : "SHOP"}</span>
+        <span>PREBOTIX / {isBangla ? "à¦¶à¦ª" : "SHOP"}</span>
 
         {adminView && (
           <button
@@ -253,7 +253,7 @@ export default function CatalogPage({
             className="pb-storefront-add"
             onClick={onAddProduct}
           >
-            ＋ {isBangla ? "পণ্য যোগ করুন" : "Add Product"}
+            ï¼‹ {isBangla ? "à¦ªà¦£à§à¦¯ à¦¯à§‹à¦— à¦•à¦°à§à¦¨" : "Add Product"}
           </button>
         )}
       </div>
@@ -262,15 +262,15 @@ export default function CatalogPage({
         <aside className="catalog-sidebar">
           <div className="catalog-filter-card">
             <div className="catalog-sidebar-heading">
-              <h2>{isBangla ? "পণ্য ফিল্টার" : "Filter Products"}</h2>
+              <h2>{isBangla ? "à¦ªà¦£à§à¦¯ à¦«à¦¿à¦²à§à¦Ÿà¦¾à¦°" : "Filter Products"}</h2>
 
               <button type="button" onClick={handleResetFilters}>
-                {isBangla ? "রিসেট" : "Reset"}
+                {isBangla ? "à¦°à¦¿à¦¸à§‡à¦Ÿ" : "Reset"}
               </button>
             </div>
 
             <label className="catalog-filter-label">
-              {isBangla ? "ক্যাটাগরি" : "Category"}
+              {isBangla ? "à¦•à§à¦¯à¦¾à¦Ÿà¦¾à¦—à¦°à¦¿" : "Category"}
             </label>
 
             <div className="catalog-category-options">
@@ -279,7 +279,7 @@ export default function CatalogPage({
                 className={activeCategory === "all" ? "active" : ""}
                 onClick={() => setActiveCategory("all")}
               >
-                <span>{isBangla ? "সব পণ্য" : "All products"}</span>
+                <span>{isBangla ? "à¦¸à¦¬ à¦ªà¦£à§à¦¯" : "All products"}</span>
                 <span>{products.length}</span>
               </button>
 
@@ -308,7 +308,7 @@ export default function CatalogPage({
             <div className="catalog-filter-divider" />
 
             <label className="catalog-filter-label" htmlFor="catalog-price">
-              {isBangla ? "সর্বোচ্চ মূল্য" : "Maximum price"}
+              {isBangla ? "à¦¸à¦°à§à¦¬à§‹à¦šà§à¦š à¦®à§‚à¦²à§à¦¯" : "Maximum price"}
             </label>
 
             <div className="catalog-price-value">
@@ -329,8 +329,8 @@ export default function CatalogPage({
             />
 
             <div className="catalog-price-bounds">
-              <span>৳100</span>
-              <span>৳10,00,000</span>
+              <span>à§³100</span>
+              <span>à§³10,00,000</span>
             </div>
 
             <label className="catalog-stock-filter">
@@ -344,7 +344,7 @@ export default function CatalogPage({
 
               <span>
                 {isBangla
-                  ? "শুধু স্টকে থাকা পণ্য"
+                  ? "à¦¶à§à¦§à§ à¦¸à§à¦Ÿà¦•à§‡ à¦¥à¦¾à¦•à¦¾ à¦ªà¦£à§à¦¯"
                   : "In-stock products only"}
               </span>
             </label>
@@ -354,7 +354,7 @@ export default function CatalogPage({
               className="button button-primary catalog-apply-filter"
               onClick={handleApplyFilters}
             >
-              {isBangla ? "ফিল্টার প্রয়োগ করুন" : "Apply filters"}
+              {isBangla ? "à¦«à¦¿à¦²à§à¦Ÿà¦¾à¦° à¦ªà§à¦°à¦¯à¦¼à§‹à¦— à¦•à¦°à§à¦¨" : "Apply filters"}
             </button>
           </div>
 
@@ -362,10 +362,10 @@ export default function CatalogPage({
             <h3>
               {recentList.length
                 ? isBangla
-                  ? "সম্প্রতি দেখা"
+                  ? "à¦¸à¦®à§à¦ªà§à¦°à¦¤à¦¿ à¦¦à§‡à¦–à¦¾"
                   : "Recently viewed"
                 : isBangla
-                  ? "বিশেষ পণ্য"
+                  ? "à¦¬à¦¿à¦¶à§‡à¦· à¦ªà¦£à§à¦¯"
                   : "Featured products"}
             </h3>
 
@@ -391,7 +391,7 @@ export default function CatalogPage({
           </div>
 
           <div className="catalog-mini-card catalog-popular-card">
-            <h3>{isBangla ? "জনপ্রিয় পণ্য" : "Popular products"}</h3>
+            <h3>{isBangla ? "à¦œà¦¨à¦ªà§à¦°à¦¿à¦¯à¦¼ à¦ªà¦£à§à¦¯" : "Popular products"}</h3>
 
             {popularProducts.map((product) => (
               <button
@@ -419,16 +419,16 @@ export default function CatalogPage({
           <div className="catalog-page-heading">
             <div>
               <span className="section-kicker">
-                {t?.catalog ?? (isBangla ? "ক্যাটালগ" : "Catalog")}
-                {" · "}
+                {t?.catalog ?? (isBangla ? "à¦•à§à¦¯à¦¾à¦Ÿà¦¾à¦²à¦—" : "Catalog")}
+                {" Â· "}
                 {filteredProducts.length}{" "}
-                {t?.results ?? (isBangla ? "টি ফলাফল" : "results")}
+                {t?.results ?? (isBangla ? "à¦Ÿà¦¿ à¦«à¦²à¦¾à¦«à¦²" : "results")}
               </span>
 
               <h1>
                 {normalizedQuery ? (
                   <>
-                    {isBangla ? "সার্চের ফলাফল" : "Search results"}:{" "}
+                    {isBangla ? "à¦¸à¦¾à¦°à§à¦šà§‡à¦° à¦«à¦²à¦¾à¦«à¦²" : "Search results"}:{" "}
                     <span dir="ltr" style={{ unicodeBidi: "isolate", direction: "ltr" }}>
                       {"\u201C"}
                       {String(query).trim()}
@@ -436,19 +436,19 @@ export default function CatalogPage({
                     </span>
                   </>
                 ) : (
-                  isBangla ? "সব পণ্য" : "All Products"
+                  isBangla ? "à¦¸à¦¬ à¦ªà¦£à§à¦¯" : "All Products"
                 )}
               </h1>
 
               <p>
                 {isBangla
-                  ? "আপনার পরবর্তী প্রজেক্টের জন্য সঠিক কম্পোনেন্ট ও কিট খুঁজে নিন।"
+                  ? "à¦†à¦ªà¦¨à¦¾à¦° à¦ªà¦°à¦¬à¦°à§à¦¤à§€ à¦ªà§à¦°à¦œà§‡à¦•à§à¦Ÿà§‡à¦° à¦œà¦¨à§à¦¯ à¦¸à¦ à¦¿à¦• à¦•à¦®à§à¦ªà§‹à¦¨à§‡à¦¨à§à¦Ÿ à¦“ à¦•à¦¿à¦Ÿ à¦–à§à¦à¦œà§‡ à¦¨à¦¿à¦¨à¥¤"
                   : "Find the right components and kits for your next build."}
               </p>
             </div>
 
             <div className="catalog-heading-actions">
-              {/* Wishlist কেবল Customer-এর জন্য */}
+              {/* Wishlist à¦•à§‡à¦¬à¦² Customer-à¦à¦° à¦œà¦¨à§à¦¯ */}
               {canUseWishlist && (
                 <button
                   type="button"
@@ -456,32 +456,32 @@ export default function CatalogPage({
                   onClick={onShowWishlist}
                 >
                   <Heart size={17} />
-                  {isBangla ? "উইশলিস্ট" : "Wishlist"}
+                  {isBangla ? "à¦‰à¦‡à¦¶à¦²à¦¿à¦¸à§à¦Ÿ" : "Wishlist"}
                   <span className="ml-1">{favoriteIds.length}</span>
                 </button>
               )}
 
               <label className="catalog-sort-label">
-                {isBangla ? "সাজান" : "Sort by"}
+                {isBangla ? "à¦¸à¦¾à¦œà¦¾à¦¨" : "Sort by"}
 
                 <select
                   value={sortBy}
                   onChange={(event) => setSortBy(event.target.value)}
                 >
                   <option value="featured">
-                    {isBangla ? "বিশেষ" : "Featured"}
+                    {isBangla ? "à¦¬à¦¿à¦¶à§‡à¦·" : "Featured"}
                   </option>
 
                   <option value="price-low">
-                    {isBangla ? "দাম: কম থেকে বেশি" : "Price: low to high"}
+                    {isBangla ? "à¦¦à¦¾à¦®: à¦•à¦® à¦¥à§‡à¦•à§‡ à¦¬à§‡à¦¶à¦¿" : "Price: low to high"}
                   </option>
 
                   <option value="price-high">
-                    {isBangla ? "দাম: বেশি থেকে কম" : "Price: high to low"}
+                    {isBangla ? "à¦¦à¦¾à¦®: à¦¬à§‡à¦¶à¦¿ à¦¥à§‡à¦•à§‡ à¦•à¦®" : "Price: high to low"}
                   </option>
 
                   <option value="name">
-                    {isBangla ? "নাম অনুযায়ী" : "Name"}
+                    {isBangla ? "à¦¨à¦¾à¦® à¦…à¦¨à§à¦¯à¦¾à¦¯à¦¼à§€" : "Name"}
                   </option>
                 </select>
               </label>
@@ -490,21 +490,21 @@ export default function CatalogPage({
 
           <div className="catalog-page-meta">
             <span>
-              {isBangla ? "দেখানো হচ্ছে" : "Showing"} {startItem}–{endItem} /{" "}
+              {isBangla ? "à¦¦à§‡à¦–à¦¾à¦¨à§‹ à¦¹à¦šà§à¦›à§‡" : "Showing"} {startItem}â€“{endItem} /{" "}
               {filteredProducts.length}{" "}
-              {t?.results ?? (isBangla ? "টি ফলাফল" : "results")}
+              {t?.results ?? (isBangla ? "à¦Ÿà¦¿ à¦«à¦²à¦¾à¦«à¦²" : "results")}
             </span>
 
             {normalizedQuery && (
               <button type="button" onClick={handleClearSearch}>
-                {isBangla ? "সার্চ মুছুন" : "Clear search"}
+                {isBangla ? "à¦¸à¦¾à¦°à§à¦š à¦®à§à¦›à§à¦¨" : "Clear search"}
                 <X size={13} />
               </button>
             )}
 
             {imageSearchActive && (
               <button type="button" onClick={handleClearImageSearch}>
-                {isBangla ? "ছবির সার্চ মুছুন" : "Clear image search"}
+                {isBangla ? "à¦›à¦¬à¦¿à¦° à¦¸à¦¾à¦°à§à¦š à¦®à§à¦›à§à¦¨" : "Clear image search"}
                 <X size={13} />
               </button>
             )}
@@ -512,9 +512,10 @@ export default function CatalogPage({
 
           <div className="catalog-page-grid">
             {paginatedProducts.length > 0 ? (
-              paginatedProducts.map((product) => (
+              paginatedProducts.map((product, index) => (
                 <ProductCard
                   key={product.id}
+                  imagePriority={index < 2}
                   product={product}
                   lang={lang}
                   t={t}
@@ -544,13 +545,13 @@ export default function CatalogPage({
                 <h2>
                   {t?.emptySearch ??
                     (isBangla
-                      ? "কোনো পণ্য পাওয়া যায়নি"
+                      ? "à¦•à§‹à¦¨à§‹ à¦ªà¦£à§à¦¯ à¦ªà¦¾à¦“à¦¯à¦¼à¦¾ à¦¯à¦¾à¦¯à¦¼à¦¨à¦¿"
                       : "No products found")}
                 </h2>
 
                 <p>
                   {isBangla
-                    ? "অন্য শব্দ দিয়ে খুঁজুন অথবা ফিল্টার পরিবর্তন করুন।"
+                    ? "à¦…à¦¨à§à¦¯ à¦¶à¦¬à§à¦¦ à¦¦à¦¿à¦¯à¦¼à§‡ à¦–à§à¦à¦œà§à¦¨ à¦…à¦¥à¦¬à¦¾ à¦«à¦¿à¦²à§à¦Ÿà¦¾à¦° à¦ªà¦°à¦¿à¦¬à¦°à§à¦¤à¦¨ à¦•à¦°à§à¦¨à¥¤"
                     : "Try another search term or adjust your filters."}
                 </p>
               </div>
@@ -560,14 +561,14 @@ export default function CatalogPage({
           {filteredProducts.length > PRODUCTS_PER_PAGE && (
             <nav
               className="catalog-pagination"
-              aria-label={isBangla ? "পণ্যের পৃষ্ঠা" : "Product pagination"}
+              aria-label={isBangla ? "à¦ªà¦£à§à¦¯à§‡à¦° à¦ªà§ƒà¦·à§à¦ à¦¾" : "Product pagination"}
             >
               <button
                 type="button"
                 disabled={safeCurrentPage === 1}
                 onClick={() => handlePageChange(safeCurrentPage - 1)}
               >
-                {isBangla ? "আগের" : "Previous"}
+                {isBangla ? "à¦†à¦—à§‡à¦°" : "Previous"}
               </button>
 
               {Array.from(
@@ -592,7 +593,7 @@ export default function CatalogPage({
                 disabled={safeCurrentPage === totalPages}
                 onClick={() => handlePageChange(safeCurrentPage + 1)}
               >
-                {isBangla ? "পরের" : "Next"}
+                {isBangla ? "à¦ªà¦°à§‡à¦°" : "Next"}
               </button>
             </nav>
           )}
@@ -601,3 +602,5 @@ export default function CatalogPage({
     </section>
   );
 }
+
+
