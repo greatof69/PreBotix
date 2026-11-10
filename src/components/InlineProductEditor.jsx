@@ -521,6 +521,7 @@ export default function InlineProductEditor({
       ...current,
 
       title: "",
+      bn: "",
 
       price: "",
       priceMax: "",
