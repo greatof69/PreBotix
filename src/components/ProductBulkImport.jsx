@@ -1,6 +1,8 @@
+
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   FileUp,
+  FileText,
   X,
   Upload,
   CheckCircle2,
@@ -11,16 +13,6 @@ import {
   getAccessToken,
   authFetch,
 } from "../utils/authSession";
-import {
-  FileUp,
-  FileText,
-  X,
-  Upload,
-  CheckCircle2,
-  AlertCircle,
-  Database,
-} from "lucide-react";
-
 import { getProductDraft } from "../utils/productDraftStorage";
 
 const API = (
