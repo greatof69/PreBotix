@@ -350,6 +350,18 @@ export default function InlineProductEditor({
     return { ...blank };
   });
 
+  console.log("[PreBotix] Editor form state:", {
+  editing,
+  productId: product?.id,
+  productTitle: product?.title,
+  productPrice: product?.price,
+  formId: form.id,
+  formTitle: form.title,
+  formBn: form.bn,
+  formPrice: form.price,
+  formCategory: form.category,
+});
+
   const [file, setFile] = useState(
     () => (!editing ? initialDraft?.file || null : null)
   );
