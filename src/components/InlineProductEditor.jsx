@@ -622,14 +622,16 @@ export default function InlineProductEditor({
     const { name, value, type, checked } = event.target;
 
     console.log("[PreBotix] INPUT CHANGE:", {
-      name,
-      value,
-      productId: product?.id,
-      productTitle: product?.title,
-      currentFormTitle: form.title,
-      currentFormBn: form.bn,
-    });
-
+  name,
+  value,
+  eventType: event.type,
+  isTrusted: event.nativeEvent?.isTrusted,
+  autocomplete: event.target.autocomplete,
+  productId: product?.id,
+  productTitle: product?.title,
+  currentFormTitle: form.title,
+  currentFormBn: form.bn,
+});
     setDraftDirty(true);
 
     setForm((current) => ({
