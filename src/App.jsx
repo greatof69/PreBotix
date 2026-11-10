@@ -98,8 +98,26 @@ export default function App() {
   const [productDraftToRestore, setProductDraftToRestore] = useState(null);
 
   const openProductEditor = (product) => {
+    console.log("[PreBotix] Edit clicked:", {
+      id: product?.id,
+      title: product?.title,
+      bn: product?.bn,
+      price: product?.price,
+      product,
+    });
+
     setProductEditorKey((key) => key + 1);
-    setProductEditor(product || null);
+
+    setProductEditor(
+      product
+        ? {
+          ...product,
+          priceOptions: Array.isArray(product.priceOptions)
+            ? product.priceOptions.map((option) => ({ ...option }))
+            : [],
+        }
+        : null
+    );
   };
 
   const handleCloseProductEditor = useCallback(() => {
