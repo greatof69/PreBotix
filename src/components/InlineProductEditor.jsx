@@ -1,5 +1,4 @@
-﻿
-import { useEffect, useState } from "react";
+﻿import { useEffect, useRef, useState } from "react";
 import {
   X,
   Upload,
@@ -274,13 +273,13 @@ function PriceRangeField({
             checked={enabled}
             onChange={toggle}
           />
-          Minimum â€“ Maximum range
+          Minimum – Maximum range
         </label>
       </div>
 
       <div className="pb-range-inputs">
         <label>
-          <span>{enabled ? "Minimum (à§³)" : "Price (à§³)"}</span>
+          <span>{enabled ? "Minimum (৳)" : "Price (৳)"}</span>
 
           <input
             name={name}
@@ -296,7 +295,7 @@ function PriceRangeField({
 
         {enabled && (
           <label>
-            <span>Maximum (à§³)</span>
+            <span>Maximum (৳)</span>
 
             <input
               name={maxName}
@@ -326,6 +325,11 @@ export default function InlineProductEditor({
   onDraftRestored,
 }) {
   const editing = Boolean(product);
+
+  // Remember (only once, on mount) whether App handed us a draft to restore.
+  // This stops the "load saved draft" effect from overwriting it later,
+  // after App clears `initialDraft` via onDraftRestored.
+  const hadInitialDraftRef = useRef(Boolean(initialDraft?.form));
 
   // Initialize a fresh form for every editor instance.
   const [form, setForm] = useState(() => {
@@ -376,6 +380,7 @@ export default function InlineProductEditor({
       onDraftRestored?.();
     }
   }, [editing, initialDraft, onDraftRestored]);
+
   // Find the smallest unused positive Product ID.
   useEffect(() => {
     if (editing) {
@@ -477,9 +482,10 @@ export default function InlineProductEditor({
     };
   }, [editing]);
 
-  // Automatically load the saved New Product draft.
+  // Automatically load the saved New Product draft (only when App did not
+  // already hand us a draft to restore).
   useEffect(() => {
-    if (editing || initialDraft?.form) return undefined;
+    if (editing || hadInitialDraftRef.current) return undefined;
 
     let cancelled = false;
 
@@ -505,7 +511,7 @@ export default function InlineProductEditor({
     return () => {
       cancelled = true;
     };
-  }, [editing, initialDraft]);
+  }, [editing]);
 
   // Clear only the specifically requested draft fields.
   function handleDeleteDraftFields() {
@@ -548,6 +554,7 @@ export default function InlineProductEditor({
     setError("");
     setSuccess("Selected draft fields cleared.");
   }
+
   // Automatically save changed form data and uploaded image.
   useEffect(() => {
     if (editing || !draftDirty || saving) {
@@ -1240,7 +1247,7 @@ export default function InlineProductEditor({
       >
         <header className="pb-inline-editor-header">
           <div>
-            <small>PREBOTIX Â· PRODUCT MANAGEMENT</small>
+            <small>PREBOTIX · PRODUCT MANAGEMENT</small>
 
             <h2 id="pb-product-editor-title">
               {editing ? "Edit Product" : "Add Product"}
@@ -1508,7 +1515,7 @@ export default function InlineProductEditor({
                           </label>
 
                           <label>
-                            Selling price (à§³) *
+                            Selling price (৳) *
 
                             <input
                               type="number"
@@ -1528,7 +1535,7 @@ export default function InlineProductEditor({
                           </label>
 
                           <label>
-                            Original price (à§³)
+                            Original price (৳)
 
                             <input
                               type="number"
@@ -1625,7 +1632,7 @@ export default function InlineProductEditor({
               />
 
               <small>
-                JPG, PNG, WEBP or GIF Â· Max 5 MB.
+                JPG, PNG, WEBP or GIF · Max 5 MB.
                 {editing
                   ? " Choose a new file to replace the current image."
                   : " Select an image to see its preview."}
@@ -1670,7 +1677,7 @@ export default function InlineProductEditor({
             </label>
 
             <label className="pb-inline-wide">
-              à¦¬à¦¿à¦¸à§à¦¤à¦¾à¦°à¦¿à¦¤ à¦¬à¦¿à¦¬à¦°à¦£ (à¦¬à¦¾à¦‚à¦²à¦¾)
+              বিস্তারিত বিবরণ (বাংলা)
 
               <textarea
                 name="detailsBn"
@@ -1678,7 +1685,7 @@ export default function InlineProductEditor({
                 value={form.detailsBn}
                 onChange={change}
                 maxLength={20000}
-                placeholder="à¦ªà¦£à§à¦¯à§‡à¦° à¦¬à¦¿à¦¸à§à¦¤à¦¾à¦°à¦¿à¦¤ à¦¤à¦¥à§à¦¯ à¦²à¦¿à¦–à§à¦¨..."
+                placeholder="পণ্যের বিস্তারিত তথ্য লিখুন..."
               />
             </label>
           </div>
@@ -1757,4 +1764,3 @@ export default function InlineProductEditor({
     </div>
   );
 }
-

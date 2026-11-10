@@ -66,13 +66,13 @@ function getHomePathForRole(role) {
 export default function App() {
   const location = useLocation();
   const navigate = useNavigate();
-  
+
 
   // NOTICE (declared early so every handler below can use showNotice)
   const [notice, setNotice] = useState("");
   const noticeTimer = useRef(null);
 
-  
+
 
   const showNotice = useCallback((message, duration = 2600) => {
     setNotice(message);
@@ -92,6 +92,7 @@ export default function App() {
   const [products, setProducts] = useState([]);
   const [productsLoaded, setProductsLoaded] = useState(false);
   const [productsError, setProductsError] = useState("");
+  // undefined = editor closed, null = "Add Product", object = "Edit Product".
   const [productEditor, setProductEditor] = useState(undefined);
   const [productEditorKey, setProductEditorKey] = useState(0);
   const [productDraftToRestore, setProductDraftToRestore] = useState(null);
@@ -100,6 +101,16 @@ export default function App() {
     setProductEditorKey((key) => key + 1);
     setProductEditor(product || null);
   };
+
+  const handleCloseProductEditor = useCallback(() => {
+    setProductEditor(undefined);
+  }, []);
+
+  // Called by the editor after it has taken the incoming draft.
+  const handleDraftRestored = useCallback(() => {
+    setProductDraftToRestore(null);
+  }, []);
+
   const [productBulkImportOpen, setProductBulkImportOpen] =
     useState(false);
   const [storefrontSettings, setStorefrontSettings] = useState(null);
@@ -367,17 +378,17 @@ export default function App() {
   };
 
   const getAccountStorageKey = (baseKey, user) => {
-  const identity = user?._id || user?.id || user?.email;
+    const identity = user?._id || user?.id || user?.email;
 
-  if (!identity) return "";
+    if (!identity) return "";
 
-  return `${baseKey}:${encodeURIComponent(
-    String(identity).trim().toLowerCase()
-  )}`;
-};
+    return `${baseKey}:${encodeURIComponent(
+      String(identity).trim().toLowerCase()
+    )}`;
+  };
 
-const cartStorageAccountRef = useRef("");
-const skipNextCartSaveRef = useRef(true);
+  const cartStorageAccountRef = useRef("");
+  const skipNextCartSaveRef = useRef(true);
 
   const [cartOpen, setCartOpen] = useState(false);
   const [checkoutOpen, setCheckoutOpen] = useState(false);
@@ -524,7 +535,7 @@ const skipNextCartSaveRef = useRef(true);
   const [ordersLoading, setOrdersLoading] = useState(false);
   const [ordersError, setOrdersError] = useState("");
 
-  
+
   // Keep React state in sync when authFetch detects an expired session.
   useEffect(() => {
     const handleSessionExpired = () => {
@@ -604,129 +615,129 @@ const skipNextCartSaveRef = useRef(true);
     }
   }, [cartItems, accountUser, productsLoaded]);
 
-// SAVE WISHLIST ONLY TO THE CURRENT ACCOUNT
-useEffect(() => {
-  if (!accountUser) return;
+  // SAVE WISHLIST ONLY TO THE CURRENT ACCOUNT
+  useEffect(() => {
+    if (!accountUser) return;
 
-  const wishlistKey = getAccountStorageKey(
-    "prebotix-wishlist-v1",
-    accountUser
-  );
-
-  const cartKey = getAccountStorageKey(
-    "prebotix-cart-v1",
-    accountUser
-  );
-
-  if (
-    !wishlistKey ||
-    cartStorageAccountRef.current !== cartKey
-  ) {
-    return;
-  }
-
-  try {
-    localStorage.setItem(
-      wishlistKey,
-      JSON.stringify(favoriteIds)
-    );
-  } catch {
-    // Wishlist remains usable in the current session.
-  }
-}, [favoriteIds, accountUser]);
-
-// LOAD CART FOR THE CURRENT ACCOUNT
-useEffect(() => {
-  if (!productsLoaded) return;
-
-  if (!accountUser) {
-    cartStorageAccountRef.current = "";
-    skipNextCartSaveRef.current = true;
-    setCartItems([]);
-    return;
-  }
-
-  const storageKey = getAccountStorageKey(
-    "prebotix-cart-v1",
-    accountUser
-  );
-
-  if (!storageKey) return;
-
-  cartStorageAccountRef.current = storageKey;
-  skipNextCartSaveRef.current = true;
-
-  try {
-    const savedItems = JSON.parse(
-      localStorage.getItem(storageKey) || "[]"
+    const wishlistKey = getAccountStorageKey(
+      "prebotix-wishlist-v1",
+      accountUser
     );
 
-    if (!Array.isArray(savedItems)) {
+    const cartKey = getAccountStorageKey(
+      "prebotix-cart-v1",
+      accountUser
+    );
+
+    if (
+      !wishlistKey ||
+      cartStorageAccountRef.current !== cartKey
+    ) {
+      return;
+    }
+
+    try {
+      localStorage.setItem(
+        wishlistKey,
+        JSON.stringify(favoriteIds)
+      );
+    } catch {
+      // Wishlist remains usable in the current session.
+    }
+  }, [favoriteIds, accountUser]);
+
+  // LOAD CART FOR THE CURRENT ACCOUNT
+  useEffect(() => {
+    if (!productsLoaded) return;
+
+    if (!accountUser) {
+      cartStorageAccountRef.current = "";
+      skipNextCartSaveRef.current = true;
       setCartItems([]);
       return;
     }
 
-    const restoredItems = savedItems
-      .map((saved) => {
-        const product = products.find(
-          (item) => String(item.id) === String(saved.id)
-        );
+    const storageKey = getAccountStorageKey(
+      "prebotix-cart-v1",
+      accountUser
+    );
 
-        if (!product) return null;
+    if (!storageKey) return;
 
-        const quantity = Math.max(
-          1,
-          Math.min(
-            Number(product.stock) || 1,
-            Number(saved.quantity) || 1
-          )
-        );
+    cartStorageAccountRef.current = storageKey;
+    skipNextCartSaveRef.current = true;
 
-        const optionId = String(saved.priceOptionId || "");
+    try {
+      const savedItems = JSON.parse(
+        localStorage.getItem(storageKey) || "[]"
+      );
 
-        const selectedOption = optionId
-          ? (product.priceOptions || []).find(
-              (option) => String(option.id) === optionId
+      if (!Array.isArray(savedItems)) {
+        setCartItems([]);
+        return;
+      }
+
+      const restoredItems = savedItems
+        .map((saved) => {
+          const product = products.find(
+            (item) => String(item.id) === String(saved.id)
+          );
+
+          if (!product) return null;
+
+          const quantity = Math.max(
+            1,
+            Math.min(
+              Number(product.stock) || 1,
+              Number(saved.quantity) || 1
             )
-          : null;
+          );
 
-        // An option-based cart line must still have a valid option.
-        if (optionId && !selectedOption) return null;
+          const optionId = String(saved.priceOptionId || "");
 
-        if (product.priceOptionsEnabled && !selectedOption) {
-          return null;
-        }
+          const selectedOption = optionId
+            ? (product.priceOptions || []).find(
+                (option) => String(option.id) === optionId
+              )
+            : null;
 
-        const selectedPriceOption = selectedOption
-          ? {
-              optionId: String(selectedOption.id),
-              groupTitle: product.priceOptionsTitle || "",
-              optionText: selectedOption.text || "",
-              selectedPrice: Number(selectedOption.price),
-            }
-          : null;
+          // An option-based cart line must still have a valid option.
+          if (optionId && !selectedOption) return null;
 
-        const cartKey = `${product.id}:${
-          optionId || "default"
-        }`;
+          if (product.priceOptionsEnabled && !selectedOption) {
+            return null;
+          }
 
-        return {
-          ...product,
-          price: selectedOption
-            ? Number(selectedOption.price)
-            : Number(product.price),
-          quantity,
-          selectedPriceOption,
-          cartKey,
-        };
-      })
-      .filter(Boolean);
+          const selectedPriceOption = selectedOption
+            ? {
+                optionId: String(selectedOption.id),
+                groupTitle: product.priceOptionsTitle || "",
+                optionText: selectedOption.text || "",
+                selectedPrice: Number(selectedOption.price),
+              }
+            : null;
 
-    setCartItems(restoredItems);
-  } catch {
-    setCartItems([]);
-  }
-}, [productsLoaded, products, accountUser]);
+          const cartKey = `${product.id}:${
+            optionId || "default"
+          }`;
+
+          return {
+            ...product,
+            price: selectedOption
+              ? Number(selectedOption.price)
+              : Number(product.price),
+            quantity,
+            selectedPriceOption,
+            cartKey,
+          };
+        })
+        .filter(Boolean);
+
+      setCartItems(restoredItems);
+    } catch {
+      setCartItems([]);
+    }
+  }, [productsLoaded, products, accountUser]);
 
   // PRODUCT FILTERING
   const visibleProducts = useMemo(() => {
@@ -839,7 +850,7 @@ useEffect(() => {
     if (isAdminUser || isModeratorUser) {
       showNotice(
         lang === "bn"
-          ? "à¦à¦‡ à¦…à§à¦¯à¦¾à¦•à¦¾à¦‰à¦¨à§à¦Ÿà§‡ à¦‰à¦‡à¦¶à¦²à¦¿à¦¸à§à¦Ÿ à¦¬à§à¦¯à¦¬à¦¹à¦¾à¦° à¦•à¦°à¦¾ à¦¯à¦¾à¦¬à§‡ à¦¨à¦¾à¥¤"
+          ? "এই অ্যাকাউন্টে উইশলিস্ট ব্যবহার করা যাবে না।"
           : "Wishlist is not available for this account."
       );
       return;
@@ -849,7 +860,7 @@ useEffect(() => {
 
     if (!accountUser || !token) {
       showNotice(
-        lang === "bn" ? "à¦†à¦—à§‡ à¦²à¦—à¦‡à¦¨ à¦•à¦°à§à¦¨!" : "Please login first!"
+        lang === "bn" ? "আগে লগইন করুন!" : "Please login first!"
       );
       setAccountMode("login");
       setAccountOpen(true);
@@ -871,7 +882,7 @@ useEffect(() => {
     if (isAdminUser || isModeratorUser) {
       showNotice(
         lang === "bn"
-          ? "à¦à¦‡ à¦…à§à¦¯à¦¾à¦•à¦¾à¦‰à¦¨à§à¦Ÿà§‡ à¦‰à¦‡à¦¶à¦²à¦¿à¦¸à§à¦Ÿ à¦¬à§à¦¯à¦¬à¦¹à¦¾à¦° à¦•à¦°à¦¾ à¦¯à¦¾à¦¬à§‡ à¦¨à¦¾à¥¤"
+          ? "এই অ্যাকাউন্টে উইশলিস্ট ব্যবহার করা যাবে না।"
           : "Wishlist is not available for this account."
       );
       return;
@@ -900,7 +911,7 @@ useEffect(() => {
     if (isAdminUser || isModeratorUser) {
       showNotice(
         lang === "bn"
-          ? "à¦à¦‡ à¦…à§à¦¯à¦¾à¦•à¦¾à¦‰à¦¨à§à¦Ÿà§‡ à¦•à¦¾à¦°à§à¦Ÿ à¦¬à§à¦¯à¦¬à¦¹à¦¾à¦° à¦•à¦°à¦¾ à¦¯à¦¾à¦¬à§‡ à¦¨à¦¾à¥¤"
+          ? "এই অ্যাকাউন্টে কার্ট ব্যবহার করা যাবে না।"
           : "Cart is not available for this account."
       );
       return;
@@ -926,7 +937,7 @@ useEffect(() => {
     if (optionsEnabled && !latestOption) {
       showNotice(
         lang === "bn"
-          ? "à¦•à¦¾à¦°à§à¦Ÿà§‡ à¦¯à§‹à¦— à¦•à¦°à¦¾à¦° à¦†à¦—à§‡ à¦à¦•à¦Ÿà¦¿ à¦¸à¦ à¦¿à¦• Price Option à¦¨à¦¿à¦°à§à¦¬à¦¾à¦šà¦¨ à¦•à¦°à§à¦¨à¥¤"
+          ? "কার্টে যোগ করার আগে একটি সঠিক Price Option নির্বাচন করুন।"
           : "Please select a valid price option."
       );
       return;
@@ -940,7 +951,7 @@ useEffect(() => {
     if (!Number.isFinite(selectedPrice) || selectedPrice < 0) {
       showNotice(
         lang === "bn"
-          ? "à¦ªà¦£à§à¦¯à§‡à¦° à¦¦à¦¾à¦® à¦¸à¦ à¦¿à¦• à¦¨à§Ÿà¥¤"
+          ? "পণ্যের দাম সঠিক নয়।"
           : "The product price is invalid."
       );
       return;
@@ -1023,11 +1034,11 @@ useEffect(() => {
 
     showNotice(
       addQty < requestedQty
-        ? `${name} â€” ${lang === "bn"
-          ? `à¦®à¦¾à¦¤à§à¦° ${addQty}à¦Ÿà¦¿ à¦¯à§‹à¦— à¦•à¦°à¦¾ à¦¹à¦¯à¦¼à§‡à¦›à§‡; à¦¸à¦°à§à¦¬à§‹à¦šà§à¦š à¦¸à§à¦Ÿà¦•à§‡à¦° à¦¸à§€à¦®à¦¾à¦¯à¦¼ à¦ªà§Œà¦à¦›à§‡à¦›à§‡à¥¤`
+        ? `${name} — ${lang === "bn"
+          ? `মাত্র ${addQty}টি যোগ করা হয়েছে; সর্বোচ্চ স্টকের সীমায় পৌঁছেছে।`
           : `only ${addQty} added; maximum stock reached.`
         }`
-        : `${name} â€” ${t.added}`
+        : `${name} — ${t.added}`
     );
   };
 
@@ -1050,18 +1061,18 @@ useEffect(() => {
   };
 
   const handleProductBack = useCallback(() => {
-  setSelectedProduct(null);
-  setShowCatalogPage(false);
-  setShowWishlist(false);
-  setAccountOpen(false);
+    setSelectedProduct(null);
+    setShowCatalogPage(false);
+    setShowWishlist(false);
+    setAccountOpen(false);
 
-  navigate("/", { replace: true });
+    navigate("/", { replace: true });
 
-  window.scrollTo({
-    top: 0,
-    behavior: "auto",
-  });
-}, [navigate]);
+    window.scrollTo({
+      top: 0,
+      behavior: "auto",
+    });
+  }, [navigate]);
 
   const goSection = (id) => {
     setMobileOpen(false);
@@ -1153,43 +1164,43 @@ useEffect(() => {
   };
 
   // CART QUANTITY
-const changeQuantity = (cartKey, delta) => {
-  setCartItems((items) => {
-    const target = items.find(
-      (item) => (item.cartKey || getCartKey(item)) === cartKey
-    );
+  const changeQuantity = (cartKey, delta) => {
+    setCartItems((items) => {
+      const target = items.find(
+        (item) => (item.cartKey || getCartKey(item)) === cartKey
+      );
 
-    if (!target) return items;
+      if (!target) return items;
 
-    const currentProductQty = items
-      .filter((item) => Number(item.id) === Number(target.id))
-      .reduce((sum, item) => sum + Number(item.quantity || 0), 0);
+      const currentProductQty = items
+        .filter((item) => Number(item.id) === Number(target.id))
+        .reduce((sum, item) => sum + Number(item.quantity || 0), 0);
 
-    const nextQty = target.quantity + delta;
+      const nextQty = target.quantity + delta;
 
-    if (delta > 0 && currentProductQty >= Number(target.stock)) {
-      showNotice(t.maxStock);
-      return items;
-    }
+      if (delta > 0 && currentProductQty >= Number(target.stock)) {
+        showNotice(t.maxStock);
+        return items;
+      }
 
-    return items.map((item) => {
-      if ((item.cartKey || getCartKey(item)) !== cartKey) return item;
+      return items.map((item) => {
+        if ((item.cartKey || getCartKey(item)) !== cartKey) return item;
 
-      return {
-        ...item,
-        quantity: Math.max(1, Math.min(Number(item.stock), nextQty)),
-      };
+        return {
+          ...item,
+          quantity: Math.max(1, Math.min(Number(item.stock), nextQty)),
+        };
+      });
     });
-  });
-};
+  };
 
-const removeItem = (cartKey) => {
-  setCartItems((items) =>
-    items.filter(
-      (item) => (item.cartKey || getCartKey(item)) !== cartKey
-    )
-  );
-};
+  const removeItem = (cartKey) => {
+    setCartItems((items) =>
+      items.filter(
+        (item) => (item.cartKey || getCartKey(item)) !== cartKey
+      )
+    );
+  };
 
   // CHECKOUT - SAVE ORDER THROUGH AUTHENTICATED API
   const completeOrder = async (payload) => {
@@ -1198,7 +1209,7 @@ const removeItem = (cartKey) => {
     if (!accessToken) {
       throw new Error(
         lang === "bn"
-          ? "à¦…à¦°à§à¦¡à¦¾à¦° à¦•à¦°à¦¤à§‡ à¦ªà§à¦°à¦¥à¦®à§‡ à¦²à¦—à¦‡à¦¨ à¦•à¦°à§à¦¨à¥¤"
+          ? "অর্ডার করতে প্রথমে লগইন করুন।"
           : "Please log in before placing your order."
       );
     }
@@ -1232,7 +1243,7 @@ const removeItem = (cartKey) => {
       throw new Error(
         result.message ||
           (lang === "bn"
-            ? `à¦…à¦°à§à¦¡à¦¾à¦° à¦•à¦°à¦¾ à¦¯à¦¾à¦¯à¦¼à¦¨à¦¿à¥¤ Error: ${response.status}`
+            ? `অর্ডার করা যায়নি। Error: ${response.status}`
             : `Could not place order. Error: ${response.status}`)
       );
     }
@@ -1242,7 +1253,7 @@ const removeItem = (cartKey) => {
     if (!savedOrder?.orderNumber || !Array.isArray(savedOrder.items)) {
       throw new Error(
         lang === "bn"
-          ? "à¦¸à¦¾à¦°à§à¦­à¦¾à¦° à¦¥à§‡à¦•à§‡ à¦…à¦°à§à¦¡à¦¾à¦°à¦Ÿà¦¿ à¦¸à¦ à¦¿à¦•à¦­à¦¾à¦¬à§‡ à¦¨à¦¿à¦¶à§à¦šà¦¿à¦¤ à¦•à¦°à¦¾ à¦¯à¦¾à¦¯à¦¼à¦¨à¦¿à¥¤"
+          ? "সার্ভার থেকে অর্ডারটি সঠিকভাবে নিশ্চিত করা যায়নি।"
           : "The server did not return a valid order confirmation."
       );
     }
@@ -1657,7 +1668,7 @@ const removeItem = (cartKey) => {
     ) {
       setAccountMessage(
         lang === "bn"
-          ? "à¦¸à¦¬ à¦ªà§à¦°à¦¯à¦¼à§‹à¦œà¦¨à§€à¦¯à¦¼ à¦¤à¦¥à§à¦¯ à¦ªà§‚à¦°à¦£ à¦•à¦°à§à¦¨à¥¤"
+          ? "সব প্রয়োজনীয় তথ্য পূরণ করুন।"
           : "Please fill in all required fields."
       );
       return;
@@ -1681,7 +1692,7 @@ const removeItem = (cartKey) => {
         setAccountMessage(
           data.message ||
             (lang === "bn"
-              ? "à¦‡à¦®à§‡à¦‡à¦²à§‡ à¦ªà¦¾à¦ à¦¾à¦¨à§‹ OTP à¦¦à¦¿à¦¯à¦¼à§‡ à¦¯à¦¾à¦šà¦¾à¦‡ à¦•à¦°à§à¦¨à¥¤"
+              ? "ইমেইলে পাঠানো OTP দিয়ে যাচাই করুন।"
               : "Check your email for the verification code.")
         );
       } else if (accountMode === "login") {
@@ -1698,7 +1709,7 @@ const removeItem = (cartKey) => {
         setAccountMessage(
           data.message ||
             (lang === "bn"
-              ? "à¦‡à¦®à§‡à¦‡à¦²à§‡ à¦ªà¦¾à¦ à¦¾à¦¨à§‹ OTP à¦¦à¦¿à¦¯à¦¼à§‡ à¦²à¦—à¦‡à¦¨ à¦¸à¦®à§à¦ªà¦¨à§à¦¨ à¦•à¦°à§à¦¨à¥¤"
+              ? "ইমেইলে পাঠানো OTP দিয়ে লগইন সম্পন্ন করুন।"
               : "Check your email for the login code.")
         );
       }
@@ -1731,7 +1742,7 @@ const removeItem = (cartKey) => {
         setAccountMessage(
           data.message ||
             (lang === "bn"
-              ? "à¦‡à¦®à§‡à¦‡à¦² à¦¯à¦¾à¦šà¦¾à¦‡ à¦¸à¦®à§à¦ªà¦¨à§à¦¨ à¦¹à¦¯à¦¼à§‡à¦›à§‡à¥¤ à¦à¦–à¦¨ à¦²à¦—à¦‡à¦¨ à¦•à¦°à§à¦¨à¥¤"
+              ? "ইমেইল যাচাই সম্পন্ন হয়েছে। এখন লগইন করুন।"
               : "Email verified. You can now log in.")
         );
       } else if (accountMode === "verify-login") {
@@ -1772,7 +1783,7 @@ const removeItem = (cartKey) => {
 
         showNotice(
           data.message ||
-            (lang === "bn" ? "à¦²à¦—à¦‡à¦¨ à¦¸à¦«à¦² à¦¹à¦¯à¦¼à§‡à¦›à§‡à¥¤" : "Login successful.")
+            (lang === "bn" ? "লগইন সফল হয়েছে।" : "Login successful.")
         );
       }
     } catch (error) {
@@ -1801,7 +1812,7 @@ const removeItem = (cartKey) => {
       setAccountMessage(
         data.message ||
           (lang === "bn"
-            ? "à¦¯à§‹à¦—à§à¦¯ à¦…à§à¦¯à¦¾à¦•à¦¾à¦‰à¦¨à§à¦Ÿ à¦¥à¦¾à¦•à¦²à§‡ à¦‡à¦®à§‡à¦‡à¦²à§‡ OTP à¦ªà¦¾à¦ à¦¾à¦¨à§‹ à¦¹à¦¬à§‡à¥¤"
+            ? "যোগ্য অ্যাকাউন্ট থাকলে ইমেইলে OTP পাঠানো হবে।"
             : "If an eligible account exists, a reset code will be sent.")
       );
     } catch (error) {
@@ -1834,7 +1845,7 @@ const removeItem = (cartKey) => {
       setAccountMessage(
         data.message ||
           (lang === "bn"
-            ? "à¦¯à§‹à¦—à§à¦¯ à¦…à§à¦¯à¦¾à¦•à¦¾à¦‰à¦¨à§à¦Ÿ à¦¥à¦¾à¦•à¦²à§‡ à¦¨à¦¤à§à¦¨ OTP à¦ªà¦¾à¦ à¦¾à¦¨à§‹ à¦¹à¦¬à§‡à¥¤"
+            ? "যোগ্য অ্যাকাউন্ট থাকলে নতুন OTP পাঠানো হবে।"
             : "If eligible, a new OTP will be sent.")
       );
 
@@ -1856,7 +1867,7 @@ const removeItem = (cartKey) => {
     if (accountNewPassword.length < 8 || accountNewPassword.length > 72) {
       setAccountMessage(
         lang === "bn"
-          ? "à¦ªà¦¾à¦¸à¦“à¦¯à¦¼à¦¾à¦°à§à¦¡ à§® à¦¥à§‡à¦•à§‡ à§­à§¨ à¦…à¦•à§à¦·à¦°à§‡à¦° à¦®à¦§à§à¦¯à§‡ à¦¹à¦¤à§‡ à¦¹à¦¬à§‡à¥¤"
+          ? "পাসওয়ার্ড ৮ থেকে ৭২ অক্ষরের মধ্যে হতে হবে।"
           : "Password must be between 8 and 72 characters."
       );
       return;
@@ -1879,7 +1890,7 @@ const removeItem = (cartKey) => {
       setAccountMessage(
         data.message ||
           (lang === "bn"
-            ? "à¦ªà¦¾à¦¸à¦“à¦¯à¦¼à¦¾à¦°à§à¦¡ à¦ªà¦°à¦¿à¦¬à¦°à§à¦¤à¦¨ à¦¹à¦¯à¦¼à§‡à¦›à§‡à¥¤ à¦à¦–à¦¨ à¦²à¦—à¦‡à¦¨ à¦•à¦°à§à¦¨à¥¤"
+            ? "পাসওয়ার্ড পরিবর্তন হয়েছে। এখন লগইন করুন।"
             : "Password reset successful. Please log in.")
       );
     } catch (error) {
@@ -1890,116 +1901,117 @@ const removeItem = (cartKey) => {
   };
 
 
- // LOGOUT
-const logoutAccount = () => {
-  // Stop the previous account's data from being saved again.
-  cartStorageAccountRef.current = "";
-  skipNextCartSaveRef.current = true;
+  // LOGOUT
+  const logoutAccount = () => {
+    // Stop the previous account's data from being saved again.
+    cartStorageAccountRef.current = "";
+    skipNextCartSaveRef.current = true;
 
-  clearAuthSession();
+    clearAuthSession();
 
-  // Hide the previous user's private storefront state.
-  setCartItems([]);
-  setFavoriteIds([]);
-  setAccountUser(null);
+    // Hide the previous user's private storefront state.
+    setCartItems([]);
+    setFavoriteIds([]);
+    setAccountUser(null);
 
-  setCartOpen(false);
-  setCheckoutOpen(false);
-  setShowWishlist(false);
+    setCartOpen(false);
+    setCheckoutOpen(false);
+    setShowWishlist(false);
 
-  setAccountOpen(false);
-  setAccountMode("login");
-  setAccountPassword("");
-  setAccountOtp("");
-  setAccountNewPassword("");
-  setAccountMessage("");
+    setAccountOpen(false);
+    setAccountMode("login");
+    setAccountPassword("");
+    setAccountOtp("");
+    setAccountNewPassword("");
+    setAccountMessage("");
 
-  setMyOrders([]);
-  setOrdersError("");
-  setRememberMe(false);
+    setMyOrders([]);
+    setOrdersError("");
+    setRememberMe(false);
 
-  navigate("/", { replace: true });
-};
+    navigate("/", { replace: true });
+  };
+
   // ROUTE PATH: keep existing storefront components intact.
   const routePath = location.pathname.replace(/\/+$/, "") || "/";
   const isKnownStoreRoute =
-  [
-    "/",
-    "/index.html",
-    "/products",
-    "/shop",
-    "/custom",
-    "/wishlist",
-    "/login",
-    "/register",
-    "/account",
-    "/account/orders",
-    "/contact",
-  ].includes(routePath) || /^\/products\/[^/]+$/.test(routePath);
+    [
+      "/",
+      "/index.html",
+      "/products",
+      "/shop",
+      "/custom",
+      "/wishlist",
+      "/login",
+      "/register",
+      "/account",
+      "/account/orders",
+      "/contact",
+    ].includes(routePath) || /^\/products\/[^/]+$/.test(routePath);
 
   if (routePath === "/admin" || routePath.startsWith("/admin/")) {
-  if (routePath !== "/admin") return <NotFoundPage />;
+    if (routePath !== "/admin") return <NotFoundPage />;
 
-  return (
-    <Suspense fallback={<div className="pb-route-loading" role="status">Loading dashboardâ€¦</div>}>
-      <>
-      <RoleGuard allowedRoles={["admin"]}>
-        <AdminDashboard
-          lang={lang}
-          setLang={setLang}
-          mobileOpen={mobileOpen}
-          setMobileOpen={setMobileOpen}
-        />
-      </RoleGuard>
+    return (
+      <Suspense fallback={<div className="pb-route-loading" role="status">Loading dashboard…</div>}>
+        <>
+          <RoleGuard allowedRoles={["admin"]}>
+            <AdminDashboard
+              lang={lang}
+              setLang={setLang}
+              mobileOpen={mobileOpen}
+              setMobileOpen={setMobileOpen}
+            />
+          </RoleGuard>
 
-      <FloatingContactWidget
-        onOpenAI={() => setIsAIChatOpen(true)}
-      />
+          <FloatingContactWidget
+            onOpenAI={() => setIsAIChatOpen(true)}
+          />
 
-      <AIChat
-        isOpen={isAIChatOpen}
-        onClose={() => setIsAIChatOpen(false)}
-        products={products}
-        lang={lang}
-        onDetails={openProduct}
-        onAdd={addToCart}
-      />
-      </>
-    </Suspense>
-  );
-}
+          <AIChat
+            isOpen={isAIChatOpen}
+            onClose={() => setIsAIChatOpen(false)}
+            products={products}
+            lang={lang}
+            onDetails={openProduct}
+            onAdd={addToCart}
+          />
+        </>
+      </Suspense>
+    );
+  }
 
-if (routePath === "/moderator" || routePath.startsWith("/moderator/")) {
-  if (routePath !== "/moderator") return <NotFoundPage />;
+  if (routePath === "/moderator" || routePath.startsWith("/moderator/")) {
+    if (routePath !== "/moderator") return <NotFoundPage />;
 
-  return (
-    <Suspense fallback={<div className="pb-route-loading" role="status">Loading dashboardâ€¦</div>}>
-      <>
-      <RoleGuard allowedRoles={["moderator"]}>
-        <ModeratorDashboard
-          lang={lang}
-          setLang={setLang}
-          mobileOpen={mobileOpen}
-          setMobileOpen={setMobileOpen}
-        />
-      </RoleGuard>
+    return (
+      <Suspense fallback={<div className="pb-route-loading" role="status">Loading dashboard…</div>}>
+        <>
+          <RoleGuard allowedRoles={["moderator"]}>
+            <ModeratorDashboard
+              lang={lang}
+              setLang={setLang}
+              mobileOpen={mobileOpen}
+              setMobileOpen={setMobileOpen}
+            />
+          </RoleGuard>
 
-      <FloatingContactWidget
-        onOpenAI={() => setIsAIChatOpen(true)}
-      />
+          <FloatingContactWidget
+            onOpenAI={() => setIsAIChatOpen(true)}
+          />
 
-      <AIChat
-        isOpen={isAIChatOpen}
-        onClose={() => setIsAIChatOpen(false)}
-        products={products}
-        lang={lang}
-        onDetails={openProduct}
-        onAdd={addToCart}
-      />
-      </>
-    </Suspense>
-  );
-}
+          <AIChat
+            isOpen={isAIChatOpen}
+            onClose={() => setIsAIChatOpen(false)}
+            products={products}
+            lang={lang}
+            onDetails={openProduct}
+            onAdd={addToCart}
+          />
+        </>
+      </Suspense>
+    );
+  }
 
   if (!isKnownStoreRoute) {
     return <NotFoundPage />;
@@ -2010,17 +2022,17 @@ if (routePath === "/moderator" || routePath.startsWith("/moderator/")) {
       {productsError && (
         <div role="alert" className="toast-notice">
           {lang === "bn"
-            ? "à¦ªà§à¦°à§‹à¦¡à¦¾à¦•à§à¦Ÿ à¦²à§‹à¦¡ à¦•à¦°à¦¾ à¦¯à¦¾à¦¯à¦¼à¦¨à¦¿à¥¤ Backend à¦šà¦¾à¦²à§ à¦†à¦›à§‡ à¦•à¦¿ à¦¨à¦¾ à¦¦à§‡à¦–à§à¦¨à¥¤"
+            ? "প্রোডাক্ট লোড করা যায়নি। Backend চালু আছে কি না দেখুন।"
             : "Could not load products. Check whether the backend is running."}{" "}
           <button type="button" onClick={() => window.location.reload()}>
-            {lang === "bn" ? "à¦†à¦¬à¦¾à¦° à¦šà§‡à¦·à§à¦Ÿà¦¾ à¦•à¦°à§à¦¨" : "Retry"}
+            {lang === "bn" ? "আবার চেষ্টা করুন" : "Retry"}
           </button>
         </div>
       )}
 
       {!productsLoaded && !productsError && (
         <div className="toast-notice" role="status">
-          {lang === "bn" ? "à¦ªà§à¦°à§‹à¦¡à¦¾à¦•à§à¦Ÿ à¦²à§‹à¦¡ à¦¹à¦šà§à¦›à§‡..." : "Loading products..."}
+          {lang === "bn" ? "প্রোডাক্ট লোড হচ্ছে..." : "Loading products..."}
         </div>
       )}
 
@@ -2030,7 +2042,7 @@ if (routePath === "/moderator" || routePath.startsWith("/moderator/")) {
         </div>
       )}
 
-      
+
       {(lang === "bn"
         ? storefrontSettings?.announcementBn
         : storefrontSettings?.announcement) && (
@@ -2104,7 +2116,7 @@ if (routePath === "/moderator" || routePath.startsWith("/moderator/")) {
 
 
       <main className={showCatalogPage ? "catalog-route-main" : ""}>
-        <Suspense fallback={<div className="pb-route-loading" role="status">Loading pageâ€¦</div>}>
+        <Suspense fallback={<div className="pb-route-loading" role="status">Loading page…</div>}>
         {routePath === "/contact" ? (
           <ContactPage
             onBack={() => {
@@ -2122,13 +2134,13 @@ if (routePath === "/moderator" || routePath.startsWith("/moderator/")) {
             product={selectedProduct}
             products={products}
             user={accountUser}
-        storefrontSettings={storefrontSettings}
+            storefrontSettings={storefrontSettings}
             isAdmin={isAdminUser}
             isModerator={isModeratorUser}
             onSelect={openProduct}
             lang={lang}
             t={t}
-             qty={cartItems
+            qty={cartItems
               .filter(
                 (item) => String(item.id) === String(selectedProduct.id)
               )
@@ -2179,8 +2191,8 @@ if (routePath === "/moderator" || routePath.startsWith("/moderator/")) {
             onEditProduct={(product) => openProductEditor(product)}
 
             onAddProduct={() => {
-                setProductDraftToRestore(null);
-                openProductEditor(null);
+              setProductDraftToRestore(null);
+              openProductEditor(null);
             }}
 
             onDeleteProduct={handleProductDeleted}
@@ -2223,11 +2235,11 @@ if (routePath === "/moderator" || routePath.startsWith("/moderator/")) {
             onToggleFavorite={toggleFavorite}
             isAdmin={isAdminUser}
             isModerator={isModeratorUser}
-                        onEditProduct={(product) => openProductEditor(product)}
-                        onAddProduct={() => {
-                          setProductDraftToRestore(null);
-                          openProductEditor(null);
-                        }}
+            onEditProduct={(product) => openProductEditor(product)}
+            onAddProduct={() => {
+              setProductDraftToRestore(null);
+              openProductEditor(null);
+            }}
             onDeleteProduct={handleProductDeleted}
             onImportProducts={() => setProductBulkImportOpen(true)}
           />
@@ -2238,40 +2250,40 @@ if (routePath === "/moderator" || routePath.startsWith("/moderator/")) {
       <Footer t={t} />
 
       <Suspense fallback={null}>
-      {accountOpen && (
-        <AccountModal
-          lang={lang}
-          accountMode={accountMode}
-          setAccountMode={setAccountMode}
-          accountUser={accountUser}
-          accountName={accountName}
-          setAccountName={setAccountName}
-          accountEmail={accountEmail}
-          setAccountEmail={setAccountEmail}
-          accountPassword={accountPassword}
-          setAccountPassword={setAccountPassword}
-          accountOtp={accountOtp}
-          setAccountOtp={setAccountOtp}
-          accountNewPassword={accountNewPassword}
-          setAccountNewPassword={setAccountNewPassword}
-          accountMessage={accountMessage}
-          setAccountMessage={setAccountMessage}
-          accountLoading={accountLoading}
-          setAccountOpen={setAccountOpen}
-          submitAccount={submitAccount}
-          verifyAccountOtp={verifyAccountOtp}
-          resendAccountOtp={resendAccountOtp}
-          requestPasswordReset={requestPasswordReset}
-          resetAccountPassword={resetAccountPassword}
-          logoutAccount={logoutAccount}
-          myOrders={myOrders}
-          ordersLoading={ordersLoading}
-          ordersError={ordersError}
-          loadMyOrders={loadMyOrders}
-          rememberMe={rememberMe}
-          setRememberMe={setRememberMe}
-        />
-      )}
+        {accountOpen && (
+          <AccountModal
+            lang={lang}
+            accountMode={accountMode}
+            setAccountMode={setAccountMode}
+            accountUser={accountUser}
+            accountName={accountName}
+            setAccountName={setAccountName}
+            accountEmail={accountEmail}
+            setAccountEmail={setAccountEmail}
+            accountPassword={accountPassword}
+            setAccountPassword={setAccountPassword}
+            accountOtp={accountOtp}
+            setAccountOtp={setAccountOtp}
+            accountNewPassword={accountNewPassword}
+            setAccountNewPassword={setAccountNewPassword}
+            accountMessage={accountMessage}
+            setAccountMessage={setAccountMessage}
+            accountLoading={accountLoading}
+            setAccountOpen={setAccountOpen}
+            submitAccount={submitAccount}
+            verifyAccountOtp={verifyAccountOtp}
+            resendAccountOtp={resendAccountOtp}
+            requestPasswordReset={requestPasswordReset}
+            resetAccountPassword={resetAccountPassword}
+            logoutAccount={logoutAccount}
+            myOrders={myOrders}
+            ordersLoading={ordersLoading}
+            ordersError={ordersError}
+            loadMyOrders={loadMyOrders}
+            rememberMe={rememberMe}
+            setRememberMe={setRememberMe}
+          />
+        )}
 
         {productBulkImportOpen && isAdminUser && (
           <ProductBulkImport
@@ -2289,81 +2301,75 @@ if (routePath === "/moderator" || routePath.startsWith("/moderator/")) {
 
         {productEditor !== undefined && isAdminUser && (
           <InlineProductEditor
-            key={productEditorKey}
-            product={productEditor || undefined}
-            initialDraft={productDraftToRestore}
-            onDraftRestored={() => setProductDraftToRestore(null)}
-            onClose={() => {
-              setProductEditor(undefined);
-              setProductDraftToRestore(null);
-            }}
+            key={`product-editor-${productEditorKey}`}
+            product={productEditor}
+            onClose={handleCloseProductEditor}
             onSaved={handleProductSaved}
+            initialDraft={productDraftToRestore}
+            onDraftRestored={handleDraftRestored}
           />
         )}
 
-      {cartOpen && (
-        <CartPanel
-          items={cartItems}
-          lang={lang}
-          t={t}
-          onClose={() => setCartOpen(false)}
-          onQuantity={changeQuantity}
-          onRemove={removeItem}
-          onCheckout={() => {
-            setCartOpen(false);
-            setCheckoutOpen(true);
-          }}
-        />
-      )}
+        {cartOpen && (
+          <CartPanel
+            items={cartItems}
+            lang={lang}
+            t={t}
+            onClose={() => setCartOpen(false)}
+            onQuantity={changeQuantity}
+            onRemove={removeItem}
+            onCheckout={() => {
+              setCartOpen(false);
+              setCheckoutOpen(true);
+            }}
+          />
+        )}
 
-      {checkoutOpen && (
-        <CheckoutPanel
-          items={cartItems}
-          lang={lang}
-          t={t}
-          onBack={() => {
-            setCheckoutOpen(false);
-            setCartOpen(true);
-          }}
-          onComplete={completeOrder}
-        />
-      )}
+        {checkoutOpen && (
+          <CheckoutPanel
+            items={cartItems}
+            lang={lang}
+            t={t}
+            onBack={() => {
+              setCheckoutOpen(false);
+              setCartOpen(true);
+            }}
+            onComplete={completeOrder}
+          />
+        )}
 
-      
-      {order && (
-        <OrderSuccess
-          order={order}
-          lang={lang}
-          t={t}
-          onClose={closeOrder}
-        />
-      )}
 
-   
+        {order && (
+          <OrderSuccess
+            order={order}
+            lang={lang}
+            t={t}
+            onClose={closeOrder}
+          />
+        )}
+
+
       </Suspense>
 
-<BackToTop />
+      <BackToTop />
 
-{/* Floating AI robot + social contact buttons */}
-<FloatingContactWidget
-  onOpenAI={() => setIsAIChatOpen(true)}
-/>
+      {/* Floating AI robot + social contact buttons */}
+      <FloatingContactWidget
+        onOpenAI={() => setIsAIChatOpen(true)}
+      />
 
-{/* AI Chat Panel */}
-<Suspense fallback={null}>
-<AIChat
-  isOpen={isAIChatOpen}
-  onClose={() => setIsAIChatOpen(false)}
-  products={products}
-  lang={lang}
-  onDetails={openProduct}
-  onAdd={addToCart}
-/>
-</Suspense>
+      {/* AI Chat Panel */}
+      <Suspense fallback={null}>
+        <AIChat
+          isOpen={isAIChatOpen}
+          onClose={() => setIsAIChatOpen(false)}
+          products={products}
+          lang={lang}
+          onDetails={openProduct}
+          onAdd={addToCart}
+        />
+      </Suspense>
 
     </div>
   );
 }
-
-
-
