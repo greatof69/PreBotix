@@ -1,4 +1,4 @@
-
+﻿
 import { useEffect, useState } from "react";
 import {
   X,
@@ -7,7 +7,6 @@ import {
   LoaderCircle,
   Trash2,
   Plus,
-  FileText,
 } from "lucide-react";
 
 import {
@@ -275,13 +274,13 @@ function PriceRangeField({
             checked={enabled}
             onChange={toggle}
           />
-          Minimum – Maximum range
+          Minimum â€“ Maximum range
         </label>
       </div>
 
       <div className="pb-range-inputs">
         <label>
-          <span>{enabled ? "Minimum (৳)" : "Price (৳)"}</span>
+          <span>{enabled ? "Minimum (à§³)" : "Price (à§³)"}</span>
 
           <input
             name={name}
@@ -297,7 +296,7 @@ function PriceRangeField({
 
         {enabled && (
           <label>
-            <span>Maximum (৳)</span>
+            <span>Maximum (à§³)</span>
 
             <input
               name={maxName}
@@ -329,21 +328,37 @@ export default function InlineProductEditor({
   const editing = Boolean(product);
 
   // Initialize a fresh form for every editor instance.
-  const [form, setForm] = useState(() => ({
-    ...getInitialForm(product),
-    ...(initialDraft?.form || {}),
-  }));
+  const [form, setForm] = useState(() => {
+    // Edit mode: Only load the selected product's data.
+    if (product) {
+      return getInitialForm(product);
+    }
+
+    // New Product mode: Restore only the New Product draft.
+    if (initialDraft?.form) {
+      return {
+        ...blank,
+        ...initialDraft.form,
+      };
+    }
+
+    // Fresh New Product.
+    return { ...blank };
+  });
 
   const [file, setFile] = useState(
-    () => initialDraft?.file || null
+    () => (!editing ? initialDraft?.file || null : null)
   );
 
   const [preview, setPreview] = useState(
-    () => initialDraft?.preview || product?.image || ""
+    () =>
+      editing
+        ? product?.image || ""
+        : initialDraft?.preview || ""
   );
 
   const [imageDeleted, setImageDeleted] = useState(
-    () => Boolean(initialDraft?.imageDeleted)
+    () => (!editing ? Boolean(initialDraft?.imageDeleted) : false)
   );
 
   const [saving, setSaving] = useState(false);
@@ -352,16 +367,15 @@ export default function InlineProductEditor({
   const [success, setSuccess] = useState("");
 
   const [hasSavedDraft, setHasSavedDraft] = useState(false);
-  const [restoringDraft, setRestoringDraft] = useState(false);
   const [draftDirty, setDraftDirty] = useState(false);
 
   // Notify App after an incoming draft has been initialized.
   useEffect(() => {
-    if (initialDraft?.form) {
+    if (!editing && initialDraft?.form) {
+      setHasSavedDraft(true);
       onDraftRestored?.();
     }
-  }, [initialDraft, onDraftRestored]);
-
+  }, [editing, initialDraft, onDraftRestored]);
   // Find the smallest unused positive Product ID.
   useEffect(() => {
     if (editing) {
@@ -463,7 +477,7 @@ export default function InlineProductEditor({
     };
   }, [editing]);
 
-  // Check whether an unfinished New Product draft exists.
+  // Automatically load the saved New Product draft.
   useEffect(() => {
     if (editing || initialDraft?.form) return undefined;
 
@@ -471,12 +485,21 @@ export default function InlineProductEditor({
 
     getProductDraft()
       .then((draft) => {
-        if (!cancelled) {
-          setHasSavedDraft(Boolean(draft?.form));
-        }
+        if (cancelled || !draft?.form) return;
+
+        setForm({
+          ...blank,
+          ...draft.form,
+        });
+
+        setFile(draft.file || null);
+        setPreview(draft.preview || "");
+        setImageDeleted(Boolean(draft.imageDeleted));
+        setDraftDirty(false);
+        setHasSavedDraft(true);
       })
       .catch((err) => {
-        console.error("Could not check product draft:", err);
+        console.error("Could not load product draft:", err);
       });
 
     return () => {
@@ -484,49 +507,47 @@ export default function InlineProductEditor({
     };
   }, [editing, initialDraft]);
 
-  // Restore the saved New Product draft.
-  async function handleRestoreDraft() {
-    if (editing || restoringDraft || saving) return;
+  // Clear only the specifically requested draft fields.
+  function handleDeleteDraftFields() {
+    if (editing || saving) return;
 
-    setRestoringDraft(true);
+    setForm((current) => ({
+      ...current,
+
+      title: "",
+
+      price: "",
+      priceMax: "",
+      priceMaxEnabled: false,
+
+      oldPrice: "",
+      oldPriceMax: "",
+      oldPriceMaxEnabled: false,
+
+      costPrice: "",
+      costPriceMax: "",
+      costPriceMaxEnabled: false,
+
+      description: "",
+      descriptionBn: "",
+      details: "",
+      detailsBn: "",
+
+      image: "",
+    }));
+
+    setFile(null);
+    setPreview("");
+    setImageDeleted(false);
+
+    const imageInput = document.querySelector('input[name="image"]');
+    if (imageInput) imageInput.value = "";
+
+    setDraftDirty(true);
+    setHasSavedDraft(true);
     setError("");
-    setSuccess("");
-
-    try {
-      const draft = initialDraft?.form
-        ? initialDraft
-        : await getProductDraft();
-
-      if (!draft?.form) {
-        setHasSavedDraft(false);
-        setError("কোনো saved product draft পাওয়া যায়নি।");
-        return;
-      }
-
-      setForm({
-        ...blank,
-        ...draft.form,
-      });
-
-      setFile(draft.file || null);
-      setPreview(draft.preview || "");
-      setImageDeleted(Boolean(draft.imageDeleted));
-
-      setDraftDirty(false);
-      setHasSavedDraft(false);
-
-      setSuccess("Saved draft restored successfully.");
-
-      onDraftRestored?.();
-    } catch (err) {
-      setError(
-        err.message || "Draft restore করা যায়নি।"
-      );
-    } finally {
-      setRestoringDraft(false);
-    }
+    setSuccess("Selected draft fields cleared.");
   }
-
   // Automatically save changed form data and uploaded image.
   useEffect(() => {
     if (editing || !draftDirty || saving) {
@@ -1219,7 +1240,7 @@ export default function InlineProductEditor({
       >
         <header className="pb-inline-editor-header">
           <div>
-            <small>PREBOTIX · PRODUCT MANAGEMENT</small>
+            <small>PREBOTIX Â· PRODUCT MANAGEMENT</small>
 
             <h2 id="pb-product-editor-title">
               {editing ? "Edit Product" : "Add Product"}
@@ -1233,14 +1254,12 @@ export default function InlineProductEditor({
               <button
                 type="button"
                 className="pb-secondary-button"
-                onClick={handleRestoreDraft}
-                disabled={restoringDraft || saving}
+                onClick={handleDeleteDraftFields}
+                disabled={saving}
                 style={{ marginTop: 10 }}
               >
-                <FileText size={16} />
-                {restoringDraft
-                  ? "Restoring..."
-                  : "Import Draft"}
+                <Trash2 size={16} />
+                Delete Draft
               </button>
             )}
           </div>
@@ -1489,7 +1508,7 @@ export default function InlineProductEditor({
                           </label>
 
                           <label>
-                            Selling price (৳) *
+                            Selling price (à§³) *
 
                             <input
                               type="number"
@@ -1509,7 +1528,7 @@ export default function InlineProductEditor({
                           </label>
 
                           <label>
-                            Original price (৳)
+                            Original price (à§³)
 
                             <input
                               type="number"
@@ -1606,7 +1625,7 @@ export default function InlineProductEditor({
               />
 
               <small>
-                JPG, PNG, WEBP or GIF · Max 5 MB.
+                JPG, PNG, WEBP or GIF Â· Max 5 MB.
                 {editing
                   ? " Choose a new file to replace the current image."
                   : " Select an image to see its preview."}
@@ -1651,7 +1670,7 @@ export default function InlineProductEditor({
             </label>
 
             <label className="pb-inline-wide">
-              বিস্তারিত বিবরণ (বাংলা)
+              à¦¬à¦¿à¦¸à§à¦¤à¦¾à¦°à¦¿à¦¤ à¦¬à¦¿à¦¬à¦°à¦£ (à¦¬à¦¾à¦‚à¦²à¦¾)
 
               <textarea
                 name="detailsBn"
@@ -1659,7 +1678,7 @@ export default function InlineProductEditor({
                 value={form.detailsBn}
                 onChange={change}
                 maxLength={20000}
-                placeholder="পণ্যের বিস্তারিত তথ্য লিখুন..."
+                placeholder="à¦ªà¦£à§à¦¯à§‡à¦° à¦¬à¦¿à¦¸à§à¦¤à¦¾à¦°à¦¿à¦¤ à¦¤à¦¥à§à¦¯ à¦²à¦¿à¦–à§à¦¨..."
               />
             </label>
           </div>
@@ -1738,3 +1757,4 @@ export default function InlineProductEditor({
     </div>
   );
 }
+
