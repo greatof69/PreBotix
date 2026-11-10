@@ -33,13 +33,17 @@ export default function ProductCard({
   const isBangla = lang === "bn";
 
   const [now, setNow] = useState(() => Date.now());
+  const [imageFailed, setImageFailed] = useState(false);
+
+  // ==============================
+  // DISCOUNT COUNTDOWN
+  // ==============================
 
   useEffect(() => {
     const endTime = product.discountEndsAt
       ? new Date(product.discountEndsAt).getTime()
       : NaN;
 
-    // Countdown না থাকলে কোনো interval চালানোর দরকার নেই।
     if (!Number.isFinite(endTime) || endTime <= Date.now()) {
       return undefined;
     }
@@ -49,7 +53,6 @@ export default function ProductCard({
 
       setNow(currentTime);
 
-      // Offer শেষ হলে interval বন্ধ।
       if (currentTime >= endTime) {
         window.clearInterval(timer);
       }
@@ -62,13 +65,38 @@ export default function ProductCard({
   const stock = Math.max(0, Number(product.stock) || 0);
   const outOfStock = stock === 0;
 
-  // Price options enabled?
+  // ==============================
+  // PRODUCT IMAGE
+  // ==============================
+
+  const image = String(product.image ?? "").trim();
+
+  const apiBase = (
+    import.meta.env.VITE_API_URL || "http://localhost:5000"
+  )
+    .replace(/\/api\/?$/, "")
+    .replace(/\/+$/, "");
+
+  const imageSrc = !image
+    ? ""
+    : /^(https?:\/\/|blob:|data:)/i.test(image)
+      ? image
+      : `${apiBase}/${image.replace(/^\/+/, "")}`;
+
+  // Reset failed image when product image changes.
+  useEffect(() => {
+    setImageFailed(false);
+  }, [imageSrc]);
+
+  // ==============================
+  // PRICE OPTIONS
+  // ==============================
+
   const hasPriceOptions =
     product.priceOptionsEnabled === true &&
     Array.isArray(product.priceOptions) &&
     product.priceOptions.length > 0;
 
-  // Validate and sort price options.
   const validCardOptions = hasPriceOptions
     ? product.priceOptions
         .map((option) => ({
@@ -89,12 +117,15 @@ export default function ProductCard({
         .sort((a, b) => a.price - b.price)
     : [];
 
-  // Admin chooses Minimum or Maximum.
   const selectedCardOption = validCardOptions.length
     ? product.priceOptionsDisplay === "max"
       ? validCardOptions[validCardOptions.length - 1]
       : validCardOptions[0]
     : null;
+
+  // ==============================
+  // PRICE CALCULATION
+  // ==============================
 
   const regularPrice = Number(product.price);
   const regularPriceMax = Number(product.priceMax);
@@ -133,14 +164,16 @@ export default function ProductCard({
         (hasRegularRange ? regularPriceMax : regularPrice)
     );
 
-  // Selected option price takes priority.
   const displayPrice = selectedCardOption
     ? selectedCardOption.price
     : hasValidDiscountRange
       ? discountPrice
       : regularPrice;
 
-  // Show only the selected option's original price.
+  // ==============================
+  // ORIGINAL PRICE
+  // ==============================
+
   let originalPrice = null;
 
   if (selectedCardOption) {
@@ -172,7 +205,10 @@ export default function ProductCard({
     Number.isFinite(originalPrice) &&
     originalPrice > displayPrice;
 
-  // Countdown.
+  // ==============================
+  // COUNTDOWN TEXT
+  // ==============================
+
   const remainingSeconds = hasActiveDiscount
     ? Math.max(
         0,
@@ -192,23 +228,17 @@ export default function ProductCard({
       ? `${days}d ${pad(hours)}:${pad(minutes)}:${pad(seconds)}`
       : `${pad(hours)}:${pad(minutes)}:${pad(seconds)}`;
 
-  // Product image.
-  const image = String(product.image ?? "").trim();
-
-  const apiBase = (
-    import.meta.env.VITE_API_URL || "http://localhost:5000"
-  ).replace(/\/api\/?$/, "");
-
-  const imageSrc = /^https?:\/\//i.test(image)
-    ? image
-    : image.startsWith("/")
-      ? `${apiBase}${image}`
-      : image;
+  // ==============================
+  // STAFF / WISHLIST
+  // ==============================
 
   const isStaff = isAdmin || isModerator;
   const canUseWishlist = !isStaff;
 
-  // Button labels.
+  // ==============================
+  // BUTTON LABELS
+  // ==============================
+
   const detailsLabel = isBangla
     ? "বিস্তারিত দেখুন"
     : "View details";
@@ -233,12 +263,15 @@ export default function ProductCard({
         ? "কার্টে যোগ করুন"
         : "Add to cart";
 
+  // ==============================
+  // ADD TO CART
+  // ==============================
+
   const handleAdd = (event) => {
     event.stopPropagation();
 
     if (outOfStock) return;
 
-    // Customer: Price Options থাকলে Details page
     if (
       !isAdmin &&
       !isModerator &&
@@ -256,17 +289,22 @@ export default function ProductCard({
       return;
     }
 
-    // Normal product: Add to cart
     if (qty >= stock) return;
 
     onAdd?.(product);
   };
 
+  // ==============================
+  // COMPONENT UI
+  // ==============================
+
   return (
     <article
-      className={`product-card ${outOfStock ? "out-of-stock" : ""
-        } ${isStaff ? "product-card--staff" : ""
-        }`}
+      className={`product-card ${
+        outOfStock ? "out-of-stock" : ""
+      } ${
+        isStaff ? "product-card--staff" : ""
+      }`}
       onClick={() => onDetails?.(product)}
       onContextMenu={(event) => event.preventDefault()}
       onDragStart={(event) => event.preventDefault()}
@@ -278,7 +316,8 @@ export default function ProductCard({
         WebkitUserSelect: "none",
       }}
     >
-      {/* Product image */}
+      {/* PRODUCT IMAGE */}
+
       <button
         type="button"
         className="product-image product-image-button"
@@ -290,7 +329,7 @@ export default function ProductCard({
         }}
         aria-label={`${detailsLabel}: ${title}`}
       >
-        {imageSrc ? (
+        {imageSrc && !imageFailed ? (
           <img
             key={imageSrc}
             src={imageSrc}
@@ -301,13 +340,23 @@ export default function ProductCard({
             draggable={false}
             onContextMenu={(event) => event.preventDefault()}
             onDragStart={(event) => event.preventDefault()}
-            onError={(event) => {
-              event.currentTarget.style.display = "none";
+            onError={() => {
+              console.error(
+                "[PreBotix] Product image failed:",
+                {
+                  id: product.id,
+                  title: product.title,
+                  image: product.image,
+                  attemptedUrl: imageSrc,
+                }
+              );
+
+              setImageFailed(true);
             }}
           />
         ) : (
           <div className="product-image-placeholder">
-            {isBangla ? "ছবি নেই" : "No image"}
+            {isBangla ? "ছবি নেই" : "Image unavailable"}
           </div>
         )}
 
@@ -333,7 +382,8 @@ export default function ProductCard({
         </span>
       </button>
 
-      {/* Admin controls */}
+      {/* ADMIN CONTROLS */}
+
       {isAdmin && (
         <div
           className="pb-storefront-product-admin-actions"
@@ -386,8 +436,12 @@ export default function ProductCard({
         </div>
       )}
 
+      {/* PRODUCT INFO */}
+
       <div className="product-info">
-        {/* Product title */}
+
+        {/* PRODUCT TITLE */}
+
         <button
           type="button"
           className="product-title-button"
@@ -399,7 +453,8 @@ export default function ProductCard({
           <h3>{title}</h3>
         </button>
 
-        {/* Stock and countdown */}
+        {/* STOCK AND COUNTDOWN */}
+
         <div className="product-stock-offer-row">
           <div className="product-stock-text">
             {outOfStock ? (
@@ -425,13 +480,16 @@ export default function ProductCard({
                   : "Time left on offer"
               }
               aria-label={`${
-                isBangla ? "অফার শেষ হতে বাকি" : "Offer ends in"
+                isBangla
+                  ? "অফার শেষ হতে বাকি"
+                  : "Offer ends in"
               } ${countdownText}`}
             >
               <Clock3
                 size={14}
                 className="countdown-icon"
               />
+
               <span className="countdown-time">
                 {countdownText}
               </span>
@@ -439,7 +497,8 @@ export default function ProductCard({
           )}
         </div>
 
-        {/* Admin-controlled option price */}
+        {/* PRODUCT PRICE */}
+
         <div className="product-bottom">
           <div className="product-price-group">
             <strong>
@@ -471,6 +530,8 @@ export default function ProductCard({
               </>
             )}
           </div>
+
+          {/* PRODUCT ACTIONS */}
 
           <div
             className={`product-actions ${
@@ -512,7 +573,9 @@ export default function ProductCard({
                   size={18}
                   fill={isFavorite ? "#ef4444" : "none"}
                   color={
-                    isFavorite ? "#ef4444" : "currentColor"
+                    isFavorite
+                      ? "#ef4444"
+                      : "currentColor"
                   }
                   strokeWidth={2}
                 />
@@ -532,7 +595,9 @@ export default function ProductCard({
                 onClick={handleAdd}
               >
                 {qty > 0 && !outOfStock && !hasPriceOptions ? (
-                  <span className="add-count">{qty}</span>
+                  <span className="add-count">
+                    {qty}
+                  </span>
                 ) : (
                   <Plus size={18} />
                 )}
