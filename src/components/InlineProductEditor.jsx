@@ -621,6 +621,15 @@ export default function InlineProductEditor({
   function change(event) {
     const { name, value, type, checked } = event.target;
 
+    console.log("[PreBotix] INPUT CHANGE:", {
+      name,
+      value,
+      productId: product?.id,
+      productTitle: product?.title,
+      currentFormTitle: form.title,
+      currentFormBn: form.bn,
+    });
+
     setDraftDirty(true);
 
     setForm((current) => ({
