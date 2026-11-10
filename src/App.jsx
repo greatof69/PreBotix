@@ -62,6 +62,15 @@ function getHomePathForRole(role) {
   return "/";
 }
 
+const [productEditor, setProductEditor] = useState(undefined);
+const [productEditorKey, setProductEditorKey] = useState(0);
+const [productDraftToRestore, setProductDraftToRestore] = useState(null);
+
+const openProductEditor = (product) => {
+  setProductEditorKey((key) => key + 1);
+  setProductEditor(product || null);
+};
+
 export default function App() {
   const location = useLocation();
   const navigate = useNavigate();
@@ -89,6 +98,13 @@ export default function App() {
   const [productsLoaded, setProductsLoaded] = useState(false);
   const [productsError, setProductsError] = useState("");
   const [productEditor, setProductEditor] = useState(undefined);
+  const [productEditorKey, setProductEditorKey] = useState(0);
+  const [productDraftToRestore, setProductDraftToRestore] = useState(null);
+
+  const openProductEditor = (product) => {
+    setProductEditorKey((key) => key + 1);
+    setProductEditor(product || null);
+  };
   const [productBulkImportOpen, setProductBulkImportOpen] =
     useState(false);
   const [storefrontSettings, setStorefrontSettings] = useState(null);
@@ -2164,9 +2180,14 @@ if (routePath === "/moderator" || routePath.startsWith("/moderator/")) {
             isAdmin={isAdminUser}
             isModerator={isModeratorUser}
             user={accountUser}
-        storefrontSettings={storefrontSettings}
-            onEditProduct={(product) => setProductEditor(product)}
-            onAddProduct={() => setProductEditor(null)}
+            storefrontSettings={storefrontSettings}
+            onEditProduct={(product) => openProductEditor(product)}
+
+            onAddProduct={() => {
+                setProductDraftToRestore(null);
+                openProductEditor(null);
+            }}
+
             onDeleteProduct={handleProductDeleted}
             onBackHome={(clear = false) => {
               if (clear) {
@@ -2207,8 +2228,11 @@ if (routePath === "/moderator" || routePath.startsWith("/moderator/")) {
             onToggleFavorite={toggleFavorite}
             isAdmin={isAdminUser}
             isModerator={isModeratorUser}
-            onEditProduct={(product) => setProductEditor(product)}
-            onAddProduct={() => setProductEditor(null)}
+                        onEditProduct={(product) => openProductEditor(product)}
+                        onAddProduct={() => {
+                          setProductDraftToRestore(null);
+                          openProductEditor(null);
+                        }}
             onDeleteProduct={handleProductDeleted}
             onImportProducts={() => setProductBulkImportOpen(true)}
           />
@@ -2254,22 +2278,33 @@ if (routePath === "/moderator" || routePath.startsWith("/moderator/")) {
         />
       )}
 
-      {productBulkImportOpen && isAdminUser && (
-        <ProductBulkImport
-          onClose={() => setProductBulkImportOpen(false)}
-          onImported={async () => {
-            await handleProductSaved();
-          }}
-        />
-      )}
+        {productBulkImportOpen && isAdminUser && (
+          <ProductBulkImport
+            onClose={() => setProductBulkImportOpen(false)}
+            onImported={async () => {
+              await handleProductSaved();
+            }}
+            onRestoreDraft={(draft) => {
+              setProductBulkImportOpen(false);
+              setProductDraftToRestore(draft);
+              openProductEditor(null);
+            }}
+          />
+        )}
 
-      {productEditor !== undefined && isAdminUser && (
-        <InlineProductEditor
-          product={productEditor || undefined}
-          onClose={() => setProductEditor(undefined)}
-          onSaved={handleProductSaved}
-        />
-      )}
+        {productEditor !== undefined && isAdminUser && (
+          <InlineProductEditor
+            key={productEditorKey}
+            product={productEditor || undefined}
+            initialDraft={productDraftToRestore}
+            onDraftRestored={() => setProductDraftToRestore(null)}
+            onClose={() => {
+              setProductEditor(undefined);
+              setProductDraftToRestore(null);
+            }}
+            onSaved={handleProductSaved}
+          />
+        )}
 
       {cartOpen && (
         <CartPanel

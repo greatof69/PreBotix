@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import {
   X,
@@ -6,11 +7,19 @@ import {
   LoaderCircle,
   Trash2,
   Plus,
+  FileText,
 } from "lucide-react";
+
 import {
   getAccessToken,
   authFetch,
 } from "../utils/authSession";
+
+import {
+  getProductDraft,
+  saveProductDraft,
+  deleteProductDraft,
+} from "../utils/productDraftStorage";
 
 const API = (
   import.meta.env.VITE_API_URL || "http://localhost:5000"
@@ -213,14 +222,14 @@ function getInitialForm(product) {
     active: product?.active !== false,
 
     priceOptionsDisplay:
-    product?.priceOptionsDisplay === "max" ? "max" : "min",
+      product?.priceOptionsDisplay === "max" ? "max" : "min",
   };
 }
 
 /**
- * One price field.
- *  - checkbox OFF -> a single normal price input.
- *  - checkbox ON  -> Minimum and Maximum inputs side by side on ONE line.
+ * Price field:
+ * Checkbox OFF -> single price input.
+ * Checkbox ON  -> Minimum and Maximum inputs on one line.
  */
 function PriceRangeField({
   label,
@@ -314,28 +323,44 @@ export default function InlineProductEditor({
   product,
   onClose,
   onSaved,
+  initialDraft = null,
+  onDraftRestored,
 }) {
   const editing = Boolean(product);
 
-  const [form, setForm] = useState(() => getInitialForm(product));
-  const [file, setFile] = useState(null);
-  const [preview, setPreview] = useState(product?.image || "");
-  const [imageDeleted, setImageDeleted] = useState(false);
+  // Initialize a fresh form for every editor instance.
+  const [form, setForm] = useState(() => ({
+    ...getInitialForm(product),
+    ...(initialDraft?.form || {}),
+  }));
+
+  const [file, setFile] = useState(
+    () => initialDraft?.file || null
+  );
+
+  const [preview, setPreview] = useState(
+    () => initialDraft?.preview || product?.image || ""
+  );
+
+  const [imageDeleted, setImageDeleted] = useState(
+    () => Boolean(initialDraft?.imageDeleted)
+  );
+
   const [saving, setSaving] = useState(false);
   const [loadingId, setLoadingId] = useState(!editing);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
-  // Reload the selected product's existing data whenever editing changes.
+  const [hasSavedDraft, setHasSavedDraft] = useState(false);
+  const [restoringDraft, setRestoringDraft] = useState(false);
+  const [draftDirty, setDraftDirty] = useState(false);
+
+  // Notify App after an incoming draft has been initialized.
   useEffect(() => {
-    setForm(getInitialForm(product));
-    setFile(null);
-    setPreview(product?.image || "");
-    setImageDeleted(false);
-    setError("");
-    setSuccess("");
-    setLoadingId(!product);
-  }, [product?.id, editing]);
+    if (initialDraft?.form) {
+      onDraftRestored?.();
+    }
+  }, [initialDraft, onDraftRestored]);
 
   // Find the smallest unused positive Product ID.
   useEffect(() => {
@@ -350,11 +375,6 @@ export default function InlineProductEditor({
       setLoadingId(true);
       setError("");
 
-      setForm((current) => ({
-        ...current,
-        id: "",
-      }));
-
       try {
         const token = getAccessToken();
 
@@ -362,9 +382,12 @@ export default function InlineProductEditor({
           throw new Error("Please log in again as Admin.");
         }
 
-        const response = await authFetch(`${API}/api/admin/products`, {
-          method: "GET",
-        });
+        const response = await authFetch(
+          `${API}/api/admin/products`,
+          {
+            method: "GET",
+          }
+        );
 
         const data = await readResponse(response);
 
@@ -394,24 +417,37 @@ export default function InlineProductEditor({
           nextId += 1;
 
           if (!Number.isSafeInteger(nextId)) {
-            throw new Error("Could not find an available Product ID.");
+            throw new Error(
+              "Could not find an available Product ID."
+            );
           }
         }
 
         if (!cancelled) {
-          setForm((current) => ({
-            ...current,
-            id: String(nextId),
-          }));
+          setForm((current) => {
+            const currentId = Number(current.id);
+
+            // Keep the draft ID if it is still available.
+            if (
+              Number.isSafeInteger(currentId) &&
+              currentId > 0 &&
+              !usedIds.has(currentId)
+            ) {
+              return current;
+            }
+
+            // Otherwise use the smallest available ID.
+            return {
+              ...current,
+              id: String(nextId),
+            };
+          });
         }
       } catch (err) {
         if (!cancelled) {
-          setForm((current) => ({
-            ...current,
-            id: "",
-          }));
-
-          setError(err.message || "Could not prepare Product ID.");
+          setError(
+            err.message || "Could not prepare Product ID."
+          );
         }
       } finally {
         if (!cancelled) {
@@ -427,6 +463,106 @@ export default function InlineProductEditor({
     };
   }, [editing]);
 
+  // Check whether an unfinished New Product draft exists.
+  useEffect(() => {
+    if (editing || initialDraft?.form) return undefined;
+
+    let cancelled = false;
+
+    getProductDraft()
+      .then((draft) => {
+        if (!cancelled) {
+          setHasSavedDraft(Boolean(draft?.form));
+        }
+      })
+      .catch((err) => {
+        console.error("Could not check product draft:", err);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [editing, initialDraft]);
+
+  // Restore the saved New Product draft.
+  async function handleRestoreDraft() {
+    if (editing || restoringDraft || saving) return;
+
+    setRestoringDraft(true);
+    setError("");
+    setSuccess("");
+
+    try {
+      const draft = initialDraft?.form
+        ? initialDraft
+        : await getProductDraft();
+
+      if (!draft?.form) {
+        setHasSavedDraft(false);
+        setError("কোনো saved product draft পাওয়া যায়নি।");
+        return;
+      }
+
+      setForm({
+        ...blank,
+        ...draft.form,
+      });
+
+      setFile(draft.file || null);
+      setPreview(draft.preview || "");
+      setImageDeleted(Boolean(draft.imageDeleted));
+
+      setDraftDirty(false);
+      setHasSavedDraft(false);
+
+      setSuccess("Saved draft restored successfully.");
+
+      onDraftRestored?.();
+    } catch (err) {
+      setError(
+        err.message || "Draft restore করা যায়নি।"
+      );
+    } finally {
+      setRestoringDraft(false);
+    }
+  }
+
+  // Automatically save changed form data and uploaded image.
+  useEffect(() => {
+    if (editing || !draftDirty || saving) {
+      return undefined;
+    }
+
+    const timeout = window.setTimeout(async () => {
+      try {
+        await saveProductDraft({
+          form,
+          file,
+          preview,
+          imageDeleted,
+        });
+
+        setHasSavedDraft(true);
+      } catch (err) {
+        console.error(
+          "PreBotix draft save failed:",
+          err
+        );
+      }
+    }, 500);
+
+    return () => window.clearTimeout(timeout);
+  }, [
+    editing,
+    draftDirty,
+    form,
+    file,
+    preview,
+    imageDeleted,
+    saving,
+  ]);
+
+  // Close editor with Escape key.
   useEffect(() => {
     const handleKey = (event) => {
       if (event.key === "Escape" && !saving) {
@@ -444,6 +580,8 @@ export default function InlineProductEditor({
   function change(event) {
     const { name, value, type, checked } = event.target;
 
+    setDraftDirty(true);
+
     setForm((current) => ({
       ...current,
       [name]: type === "checkbox" ? checked : value,
@@ -453,11 +591,19 @@ export default function InlineProductEditor({
     setSuccess("");
   }
 
+  // Use this setter for PriceRangeField changes too.
+  function updateEditorForm(updater) {
+    setDraftDirty(true);
+    setForm(updater);
+  }
+
   function addPriceOption() {
     if (form.priceOptions.length >= 30) {
       setError("You can add a maximum of 30 price options.");
       return;
     }
+
+    setDraftDirty(true);
 
     setForm((current) => ({
       ...current,
@@ -477,6 +623,8 @@ export default function InlineProductEditor({
   }
 
   function updatePriceOption(index, field, value) {
+    setDraftDirty(true);
+
     setForm((current) => ({
       ...current,
       priceOptions: current.priceOptions.map(
@@ -492,6 +640,8 @@ export default function InlineProductEditor({
   }
 
   function removePriceOption(index) {
+    setDraftDirty(true);
+
     setForm((current) => ({
       ...current,
       priceOptions: current.priceOptions.filter(
@@ -522,11 +672,14 @@ export default function InlineProductEditor({
     ];
 
     if (!allowedTypes.includes(selected.type)) {
-      setError("Please select a JPG, PNG, WEBP or GIF image.");
+      setError(
+        "Please select a JPG, PNG, WEBP or GIF image."
+      );
       input.value = "";
       return;
     }
 
+    setDraftDirty(true);
     setError("");
     setSuccess("");
     setImageDeleted(false);
@@ -536,11 +689,14 @@ export default function InlineProductEditor({
 
     reader.onload = () => {
       setPreview(String(reader.result || ""));
+      setDraftDirty(true);
     };
 
     reader.onerror = () => {
       setPreview("");
-      setError("Could not generate image preview. Please select again.");
+      setError(
+        "Could not generate image preview. Please select again."
+      );
     };
 
     reader.readAsDataURL(selected);
@@ -550,6 +706,7 @@ export default function InlineProductEditor({
   }
 
   function handleDeleteImage() {
+    setDraftDirty(true);
     setFile(null);
     setPreview("");
     setImageDeleted(true);
@@ -574,14 +731,20 @@ export default function InlineProductEditor({
     const token = getAccessToken();
 
     if (!token) {
-      setError("Your session expired. Please log in again.");
+      setError(
+        "Your session expired. Please log in again."
+      );
       return;
     }
 
     if (!editing) {
       const id = Number(form.id);
 
-      if (!form.id || !Number.isSafeInteger(id) || id < 1) {
+      if (
+        !form.id ||
+        !Number.isSafeInteger(id) ||
+        id < 1
+      ) {
         setError(
           "A valid Product ID is required. Please reopen Add Product."
         );
@@ -632,13 +795,17 @@ export default function InlineProductEditor({
 
     if (form.discountPrice !== "") {
       if (Number(form.discountPrice) >= Number(form.price)) {
-        setError("Discount price must be lower than selling price.");
+        setError(
+          "Discount price must be lower than selling price."
+        );
         return;
       }
 
       // Discount end time is optional.
       if (form.discountEndsAt) {
-        const discountEnd = new Date(form.discountEndsAt).getTime();
+        const discountEnd = new Date(
+          form.discountEndsAt
+        ).getTime();
 
         if (Number.isNaN(discountEnd)) {
           setError("Enter a valid discount end date.");
@@ -646,7 +813,9 @@ export default function InlineProductEditor({
         }
 
         if (discountEnd <= Date.now()) {
-          setError("Discount end time must be in the future.");
+          setError(
+            "Discount end time must be in the future."
+          );
           return;
         }
       }
@@ -661,7 +830,9 @@ export default function InlineProductEditor({
       ],
       [
         form.oldPrice,
-        form.oldPriceMaxEnabled ? form.oldPriceMax : "",
+        form.oldPriceMaxEnabled
+          ? form.oldPriceMax
+          : "",
         "Original price",
         form.oldPriceMaxEnabled,
       ],
@@ -675,13 +846,20 @@ export default function InlineProductEditor({
       ],
       [
         form.costPrice,
-        form.costPriceMaxEnabled ? form.costPriceMax : "",
+        form.costPriceMaxEnabled
+          ? form.costPriceMax
+          : "",
         "Cost price",
         form.costPriceMaxEnabled,
       ],
     ];
 
-    for (const [minValue, maxValue, label, maxEnabled] of rangeChecks) {
+    for (const [
+      minValue,
+      maxValue,
+      label,
+      maxEnabled,
+    ] of rangeChecks) {
       if (
         minValue === "" &&
         label === "Original price" &&
@@ -715,7 +893,9 @@ export default function InlineProductEditor({
       form.discountPrice !== "" &&
       Number(form.discountPrice) >= Number(form.price)
     ) {
-      setError("Discount minimum must be lower than selling minimum.");
+      setError(
+        "Discount minimum must be lower than selling minimum."
+      );
       return;
     }
 
@@ -729,7 +909,9 @@ export default function InlineProductEditor({
             : form.price
         )
     ) {
-      setError("Discount maximum must be lower than selling maximum.");
+      setError(
+        "Discount maximum must be lower than selling maximum."
+      );
       return;
     }
 
@@ -761,14 +943,18 @@ export default function InlineProductEditor({
         }
 
         if (optionIds.has(option.id)) {
-          setError("Every Price Option must have a unique ID.");
+          setError(
+            "Every Price Option must have a unique ID."
+          );
           return;
         }
 
         optionIds.add(option.id);
 
         if (option.originalPrice !== "") {
-          const originalPrice = Number(option.originalPrice);
+          const originalPrice = Number(
+            option.originalPrice
+          );
 
           if (
             !Number.isSafeInteger(originalPrice) ||
@@ -792,15 +978,23 @@ export default function InlineProductEditor({
 
     const costPrice = Number(form.costPrice || 0);
 
-    if (!Number.isFinite(costPrice) || costPrice < 0) {
+    if (
+      !Number.isFinite(costPrice) ||
+      costPrice < 0
+    ) {
       setError("Enter a valid cost price.");
       return;
     }
 
     const stock = Number(form.stock || 0);
 
-    if (!Number.isSafeInteger(stock) || stock < 0) {
-      setError("Stock must be a whole number of zero or more.");
+    if (
+      !Number.isSafeInteger(stock) ||
+      stock < 0
+    ) {
+      setError(
+        "Stock must be a whole number of zero or more."
+      );
       return;
     }
 
@@ -830,7 +1024,8 @@ export default function InlineProductEditor({
 
     body.append(
       "oldPriceMax",
-      form.oldPriceMaxEnabled && form.oldPriceMax !== ""
+      form.oldPriceMaxEnabled &&
+        form.oldPriceMax !== ""
         ? String(Number(form.oldPriceMax))
         : ""
     );
@@ -847,7 +1042,8 @@ export default function InlineProductEditor({
 
     body.append(
       "costPriceMax",
-      form.costPriceMaxEnabled && form.costPriceMax !== ""
+      form.costPriceMaxEnabled &&
+        form.costPriceMax !== ""
         ? String(Number(form.costPriceMax))
         : ""
     );
@@ -867,12 +1063,16 @@ export default function InlineProductEditor({
       JSON.stringify(
         form.priceOptionsEnabled
           ? form.priceOptions.map((option) => ({
-              id: String(option.id || makeOptionId()),
+              id: String(
+                option.id || makeOptionId()
+              ),
               text: option.text.trim(),
               price: Number(option.price),
               ...(option.originalPrice !== ""
                 ? {
-                    originalPrice: Number(option.originalPrice),
+                    originalPrice: Number(
+                      option.originalPrice
+                    ),
                   }
                 : {}),
             }))
@@ -883,7 +1083,9 @@ export default function InlineProductEditor({
     // Save Admin's Minimum / Maximum card price selection.
     body.append(
       "priceOptionsDisplay",
-      form.priceOptionsDisplay === "max" ? "max" : "min"
+      form.priceOptionsDisplay === "max"
+        ? "max"
+        : "min"
     );
 
     body.append("stock", String(stock));
@@ -905,8 +1107,11 @@ export default function InlineProductEditor({
 
     body.append(
       "discountEndsAt",
-      form.discountPrice !== "" && form.discountEndsAt
-        ? new Date(form.discountEndsAt).toISOString()
+      form.discountPrice !== "" &&
+        form.discountEndsAt
+        ? new Date(
+            form.discountEndsAt
+          ).toISOString()
         : ""
     );
 
@@ -925,9 +1130,14 @@ export default function InlineProductEditor({
 
       if (
         editing &&
-        (!Number.isSafeInteger(productId) || productId < 1)
+        (
+          !Number.isSafeInteger(productId) ||
+          productId < 1
+        )
       ) {
-        throw new Error("This product has no valid numeric ID.");
+        throw new Error(
+          "This product has no valid numeric ID."
+        );
       }
 
       const url = editing
@@ -947,6 +1157,20 @@ export default function InlineProductEditor({
         );
       }
 
+      // MongoDB confirmed the save. Clear the New Product draft.
+      if (!editing) {
+        try {
+          await deleteProductDraft();
+          setHasSavedDraft(false);
+          setDraftDirty(false);
+        } catch (draftError) {
+          console.error(
+            "Could not clear saved product draft:",
+            draftError
+          );
+        }
+      }
+
       setSuccess(
         editing
           ? "Product updated successfully."
@@ -956,7 +1180,9 @@ export default function InlineProductEditor({
       await onSaved?.(data.product);
       onClose?.();
     } catch (err) {
-      setError(err.message || "Could not save product.");
+      setError(
+        err.message || "Could not save product."
+      );
     } finally {
       setSaving(false);
     }
@@ -1002,6 +1228,21 @@ export default function InlineProductEditor({
             <p>
               Changes are saved through the Admin API to MongoDB.
             </p>
+
+            {!editing && hasSavedDraft && (
+              <button
+                type="button"
+                className="pb-secondary-button"
+                onClick={handleRestoreDraft}
+                disabled={restoringDraft || saving}
+                style={{ marginTop: 10 }}
+              >
+                <FileText size={16} />
+                {restoringDraft
+                  ? "Restoring..."
+                  : "Import Draft"}
+              </button>
+            )}
           </div>
 
           <button
@@ -1016,13 +1257,19 @@ export default function InlineProductEditor({
         </header>
 
         {error && (
-          <div className="pb-editor-alert error" role="alert">
+          <div
+            className="pb-editor-alert error"
+            role="alert"
+          >
             {error}
           </div>
         )}
 
         {success && (
-          <div className="pb-editor-alert success" role="status">
+          <div
+            className="pb-editor-alert success"
+            role="status"
+          >
             {success}
           </div>
         )}
@@ -1093,7 +1340,7 @@ export default function InlineProductEditor({
               />
             </label>
 
-            {/* PRICES: tick the box to get Minimum + Maximum on one line */}
+            {/* PRICES */}
             <PriceRangeField
               label="Selling price"
               hint="Regular selling price, before any discount."
@@ -1101,7 +1348,7 @@ export default function InlineProductEditor({
               maxName="priceMax"
               enabledName="priceMaxEnabled"
               form={form}
-              setForm={setForm}
+              setForm={updateEditorForm}
               onChange={change}
               required
               maxRequired
@@ -1114,7 +1361,7 @@ export default function InlineProductEditor({
               maxName="oldPriceMax"
               enabledName="oldPriceMaxEnabled"
               form={form}
-              setForm={setForm}
+              setForm={updateEditorForm}
               onChange={change}
               placeholder="Optional"
             />
@@ -1126,7 +1373,7 @@ export default function InlineProductEditor({
               maxName="discountPriceMax"
               enabledName="discountPriceMaxEnabled"
               form={form}
-              setForm={setForm}
+              setForm={updateEditorForm}
               onChange={change}
               maxDisabled={!form.discountPrice}
               placeholder="Optional"
@@ -1154,7 +1401,7 @@ export default function InlineProductEditor({
               maxName="costPriceMax"
               enabledName="costPriceMaxEnabled"
               form={form}
-              setForm={setForm}
+              setForm={updateEditorForm}
               onChange={change}
             />
 
@@ -1168,7 +1415,11 @@ export default function InlineProductEditor({
             >
               <label
                 className="pb-inline-check"
-                style={{ display: "flex", alignItems: "center", gap: 8 }}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 8,
+                }}
               >
                 <input
                   name="priceOptionsEnabled"
@@ -1301,6 +1552,7 @@ export default function InlineProductEditor({
                 </>
               )}
             </div>
+
             {form.priceOptionsEnabled && (
               <label>
                 Product Card Price Display
@@ -1315,6 +1567,7 @@ export default function InlineProductEditor({
                 </select>
               </label>
             )}
+
             <label>
               Stock quantity
 
@@ -1409,7 +1662,6 @@ export default function InlineProductEditor({
                 placeholder="পণ্যের বিস্তারিত তথ্য লিখুন..."
               />
             </label>
-
           </div>
 
           {(file || imageSrc) && (
@@ -1420,7 +1672,9 @@ export default function InlineProductEditor({
                   src={imageSrc}
                   alt="Product preview"
                   onError={() => {
-                    setError("Could not display this image. Please select another image.");
+                    setError(
+                      "Could not display this image. Please select another image."
+                    );
                   }}
                 />
               ) : (

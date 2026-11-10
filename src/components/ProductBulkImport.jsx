@@ -1,5 +1,4 @@
-
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   FileUp,
   X,
@@ -12,6 +11,17 @@ import {
   getAccessToken,
   authFetch,
 } from "../utils/authSession";
+import {
+  FileUp,
+  FileText,
+  X,
+  Upload,
+  CheckCircle2,
+  AlertCircle,
+  Database,
+} from "lucide-react";
+
+import { getProductDraft } from "../utils/productDraftStorage";
 
 const API = (
   import.meta.env.VITE_API_URL || "http://localhost:5000"
@@ -22,7 +32,11 @@ const toText = (value) => (value == null ? "" : String(value));
 const getFileName = (value) =>
   toText(value).split(/[\\/]/).pop().toLowerCase();
 
-export default function ProductBulkImport({ onClose, onImported }) {
+export default function ProductBulkImport({
+  onClose,
+  onImported,
+  onRestoreDraft,
+}) {
   const inputRef = useRef(null);
 
   const [jsonFile, setJsonFile] = useState(null);
@@ -33,6 +47,32 @@ export default function ProductBulkImport({ onClose, onImported }) {
   const [progress, setProgress] = useState({ done: 0, total: 0 });
   const [error, setError] = useState("");
   const [results, setResults] = useState([]);
+  const [savedDraft, setSavedDraft] = useState(null);
+const [checkingDraft, setCheckingDraft] = useState(true);
+
+useEffect(() => {
+  let cancelled = false;
+
+  getProductDraft()
+    .then((draft) => {
+      if (!cancelled) setSavedDraft(draft);
+    })
+    .catch(() => {
+      if (!cancelled) setSavedDraft(null);
+    })
+    .finally(() => {
+      if (!cancelled) setCheckingDraft(false);
+    });
+
+  return () => {
+    cancelled = true;
+  };
+}, []);
+
+function restoreSavedDraft() {
+  if (!savedDraft || busy) return;
+  onRestoreDraft?.(savedDraft);
+}
 
   const imageLookup = useMemo(
     () =>
@@ -352,6 +392,37 @@ export default function ProductBulkImport({ onClose, onImported }) {
             <X />
           </button>
         </header>
+
+        {!checkingDraft && savedDraft && (
+          <div className="pb-bulk-format">
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                gap: 12,
+                flexWrap: "wrap",
+              }}
+            >
+              <div>
+                <strong>Saved New Product Draft পাওয়া গেছে</strong>
+                <p style={{ margin: "5px 0 0" }}>
+                  আগের অসমাপ্ত product form এবং uploaded image ফিরিয়ে আনতে পারবে।
+                </p>
+              </div>
+
+              <button
+                type="button"
+                className="pb-primary-button"
+                onClick={restoreSavedDraft}
+                disabled={busy}
+              >
+                <FileText size={16} />
+                Import Draft
+              </button>
+            </div>
+          </div>
+        )}
 
         <div
           className={`pb-bulk-drop ${
