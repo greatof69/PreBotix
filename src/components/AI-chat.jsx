@@ -450,17 +450,25 @@ export default function AIChat({
   };
 
   // Image (+ optional text) ekshathe pathay, product PreBotix-e ache kina bole
+
   const sendImageMessage = async (event) => {
     event?.preventDefault();
 
     if (!imageFile || loading) return;
 
-    setLoading(true);
+    // Keep a reference before clearing the preview
+    const selectedFile = imageFile;
+    const caption = input.trim();
+
+    // Hide preview immediately after Send
+    setImagePreview("");
+    setImageFile(null);
+    setInput("");
     setError("");
+    setLoading(true);
     setMenuOpen(false);
 
     const myRequestId = ++requestIdRef.current;
-    const caption = input.trim();
 
     try {
       const imageUrl = await new Promise((resolve, reject) => {
@@ -505,7 +513,7 @@ export default function AIChat({
           reject(new Error("Could not read the selected image."));
         };
 
-        reader.readAsDataURL(imageFile);
+        reader.readAsDataURL(selectedFile);
       });
 
       const response = await fetch(`${API}/api/image-search`, {
@@ -558,7 +566,7 @@ export default function AIChat({
 
       const userMessage = {
         role: "user",
-        text: caption, // auto text nei: user ja likhbe shudhu seta
+        text: caption,
         image: imageUrl,
       };
 
@@ -574,10 +582,11 @@ export default function AIChat({
         products: recommendations,
       };
 
-      setMessages((current) => [...current, userMessage, assistantMessage]);
-
-      setInput("");
-      removeSelectedImage();
+      setMessages((current) => [
+        ...current,
+        userMessage,
+        assistantMessage,
+      ]);
     } catch (err) {
       if (myRequestId !== requestIdRef.current) return;
 
@@ -587,10 +596,13 @@ export default function AIChat({
           : err.message
       );
     } finally {
-      setLoading(false);
-      inputRef.current?.focus();
+      if (myRequestId === requestIdRef.current) {
+        setLoading(false);
+        inputRef.current?.focus();
+      }
     }
   };
+
 
   const handleComposerSubmit = (event) => {
     if (imageFile) {
