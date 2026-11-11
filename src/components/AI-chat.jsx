@@ -1292,8 +1292,8 @@ const styles = {
   attachmentMenuOuter: {
     position: "absolute",
     left: "0",
-    bottom: "42px",
-    paddingBottom: "62px", // box ta button theke 42px upore uthbe (aro upore chaile eta baran)
+    bottom: "62px",
+    paddingBottom: "18px", // box ta button theke 18px upore uthbe
     zIndex: 100002,
   },
 
