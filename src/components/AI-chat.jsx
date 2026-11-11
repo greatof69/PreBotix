@@ -1293,7 +1293,7 @@ const styles = {
     position: "absolute",
     left: "0",
     bottom: "42px",
-    paddingBottom: "42px", // box ta button theke 42px upore uthbe (aro upore chaile eta baran)
+    paddingBottom: "62px", // box ta button theke 42px upore uthbe (aro upore chaile eta baran)
     zIndex: 100002,
   },
 
