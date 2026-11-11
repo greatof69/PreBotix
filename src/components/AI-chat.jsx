@@ -80,20 +80,23 @@ export default function AIChat({
     if (isOpen) inputRef.current?.focus();
   }, [isOpen]);
 
-  if (!isOpen) return null;
 
 
-const stopCamera = () => {
-  if (cameraStreamRef.current) {
-    cameraStreamRef.current.getTracks().forEach((track) => {
-      track.stop();
-    });
+  const stopCamera = () => {
+    if (cameraStreamRef.current) {
+      cameraStreamRef.current.getTracks().forEach((track) => {
+        track.stop();
+      });
 
-    cameraStreamRef.current = null;
-  }
+      cameraStreamRef.current = null;
+    }
 
-  setCameraOpen(false);
-};
+    if (videoRef.current) {
+      videoRef.current.srcObject = null;
+    }
+
+    setCameraOpen(false);
+  };
 
 const startCamera = async () => {
   setMenuOpen(false);
@@ -1148,7 +1151,6 @@ const styles = {
     border: "1px solid #355168",
     borderRadius: "10px",
     fontSize: "28px",
-    cursor: "pointer",
     cursor: "pointer",
     flexShrink: 0,
   },
