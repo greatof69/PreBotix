@@ -498,400 +498,418 @@ const sendImageMessage = async (event) => {
   };
 
   return (
-    <section
-      role="dialog"
-      aria-label="PreBotix AI chat"
-      aria-modal="false"
-      style={styles.panel}
-    >
-      <header style={styles.header}>
-        <div>
-          <strong style={styles.brand}>PreBotix AI</strong>
-          <div style={styles.subtitle}>
-            {lang === "bn"
-              ? "রোবটিক্স ও ইলেকট্রনিক্স সহকারী"
-              : "Robotics & Electronics Assistant"}
-          </div>
-          <div style={styles.status}>
-            <span style={styles.statusDot} />
-            {lang === "bn"
-              ? "পণ্য সাজেশনের জন্য প্রস্তুত"
-              : "Product recommendations"}
-          </div>
-        </div>
+    <>
+      <div
+        onClick={onClose}
+        style={{
+          position: "fixed",
+          inset: 0,
+          zIndex: 99998,
+          background: "rgba(0,0,0,0.35)",
+        }}
+      />
 
-        <button
-          type="button"
-          onClick={onClose}
-          aria-label="Close chat"
-          style={styles.closeButton}
-        >
-          ✕
-        </button>
-      </header>
+      <section
+        onClick={(event) => event.stopPropagation()}
+        role="dialog"
+        aria-label="PreBotix AI chat"
+        aria-modal="false"
+        style={styles.panel}
+      >
+        <header style={styles.header}>
+          <div>
+            <strong style={styles.brand}>PreBotix AI</strong>
+            <div style={styles.subtitle}>
+              {lang === "bn"
+                ? "রোবটিক্স ও ইলেকট্রনিক্স সহকারী"
+                : "Robotics & Electronics Assistant"}
+            </div>
+            <div style={styles.status}>
+              <span style={styles.statusDot} />
+              {lang === "bn"
+                ? "পণ্য সাজেশনের জন্য প্রস্তুত"
+                : "Product recommendations"}
+            </div>
+          </div>
 
-      <div aria-live="polite" style={styles.conversation}>
-        {messages.map((message, index) => (
-          <div
-            key={`${index}-${message.role}`}
-            style={{
-              alignSelf:
-                message.role === "user" ? "flex-end" : "flex-start",
-              width: message.products?.length ? "100%" : "auto",
-              maxWidth: message.role === "user" ? "88%" : "100%",
+          <button
+            type="button"
+            onClick={(event) => {
+              event.stopPropagation();
+              stopCamera();
+              setMenuOpen(false);
+              onClose?.();
             }}
+            aria-label="Close chat"
+            style={styles.closeButton}
           >
+            ✕
+          </button>
+        </header>
+
+        <div aria-live="polite" style={styles.conversation}>
+          {messages.map((message, index) => (
             <div
+              key={`${index}-${message.role}`}
               style={{
-                ...styles.bubble,
-                background:
-                  message.role === "user" ? "#164e63" : "#172b40",
-                borderColor:
-                  message.role === "user" ? "#267c91" : "#2a4054",
+                alignSelf:
+                  message.role === "user" ? "flex-end" : "flex-start",
+                width: message.products?.length ? "100%" : "auto",
+                maxWidth: message.role === "user" ? "88%" : "100%",
               }}
             >
-              {message.image && (
-                <img
-                  src={message.image}
-                  alt="Uploaded image"
-                  style={styles.userImage}
-                />
-              )}
+              <div
+                style={{
+                  ...styles.bubble,
+                  background:
+                    message.role === "user" ? "#164e63" : "#172b40",
+                  borderColor:
+                    message.role === "user" ? "#267c91" : "#2a4054",
+                }}
+              >
+                {message.image && (
+                  <img
+                    src={message.image}
+                    alt="Uploaded image"
+                    style={styles.userImage}
+                  />
+                )}
 
-              {message.text}
-            </div>
+                {message.text}
+              </div>
 
-            {message.role === "assistant" &&
-              message.products?.length > 0 && (
-                <div style={styles.recommendations}>
-                  <div style={styles.recommendationHeading}>
-                    <span>✦</span>
-                    {lang === "bn"
-                      ? "আপনার জন্য সাজেস্ট করা পণ্য"
-                      : "Recommended products"}
-                  </div>
+              {message.role === "assistant" &&
+                message.products?.length > 0 && (
+                  <div style={styles.recommendations}>
+                    <div style={styles.recommendationHeading}>
+                      <span>✦</span>
+                      {lang === "bn"
+                        ? "আপনার জন্য সাজেস্ট করা পণ্য"
+                        : "Recommended products"}
+                    </div>
 
-                  {message.products.map((recommendation) => {
-                    const product = products.find(
-                      (item) =>
-                        String(item.id) === String(recommendation.id)
-                    );
+                    {message.products.map((recommendation) => {
+                      const product = products.find(
+                        (item) =>
+                          String(item.id) === String(recommendation.id)
+                      );
 
-                    const title = getProductTitle(
-                      product || recommendation,
-                      lang
-                    );
+                      const title = getProductTitle(
+                        product || recommendation,
+                        lang
+                      );
 
-                    const image = getProductImage(
-                      product?.image || recommendation.image
-                    );
+                      const image = getProductImage(
+                        product?.image || recommendation.image
+                      );
 
-                    const currentPrice = Number(
-                      recommendation.currentPrice ??
-                      recommendation.price ??
-                      product?.price
-                    );
+                      const currentPrice = Number(
+                        recommendation.currentPrice ??
+                        recommendation.price ??
+                        product?.price
+                      );
 
-                    console.log("PreBotix AI PRICE DEBUG:", {
-                      productId: recommendation.id,
-                      recommendationTitle: recommendation.title,
-                      backendPrice: recommendation.price,
-                      backendCurrentPrice: recommendation.currentPrice,
-                      frontendProductTitle: product?.title,
-                      frontendProductPrice: product?.price,
-                      displayedPrice: currentPrice,
-                    });
+                      console.log("PreBotix AI PRICE DEBUG:", {
+                        productId: recommendation.id,
+                        recommendationTitle: recommendation.title,
+                        backendPrice: recommendation.price,
+                        backendCurrentPrice: recommendation.currentPrice,
+                        frontendProductTitle: product?.title,
+                        frontendProductPrice: product?.price,
+                        displayedPrice: currentPrice,
+                      });
 
-                    const stock = Number(
-                      product?.stock ?? recommendation.stock ?? 0
-                    );
+                      const stock = Number(
+                        product?.stock ?? recommendation.stock ?? 0
+                      );
 
-                    const oldPrice = Number(
-                      recommendation.oldPrice ??
-                      product?.oldPrice
-                    );
+                      const oldPrice = Number(
+                        recommendation.oldPrice ??
+                        product?.oldPrice
+                      );
 
-                    const inStock =
-                      stock > 0 &&
-                      recommendation.inStock !== false;
+                      const inStock =
+                        stock > 0 &&
+                        recommendation.inStock !== false;
 
-                    return (
-                      <article
-                        key={recommendation.id}
-                        style={styles.productCard}
-                      >
-                        <button
-                          type="button"
-                          onClick={() =>
-                            openRecommendedProduct(recommendation)
-                          }
-                          style={styles.productDetailsButton}
-                          aria-label={
-                            lang === "bn"
-                              ? `${title} পণ্যের বিস্তারিত দেখুন`
-                              : `View details for ${title}`
-                          }
+                      return (
+                        <article
+                          key={recommendation.id}
+                          style={styles.productCard}
                         >
-                          <div style={styles.imageWrap}>
-                            {image ? (
-                              <img
-                                src={image}
-                                alt={title}
-                                loading="lazy"
-                                style={styles.productImage}
-                                onError={(event) => {
-                                  event.currentTarget.style.display = "none";
-                                }}
-                              />
-                            ) : (
-                              <span style={styles.imagePlaceholder}>
-                                <span style={{ fontSize: "25px" }}>⚙</span>
-                                <span>
-                                  {lang === "bn" ? "ছবি নেই" : "No image"}
+                          <button
+                            type="button"
+                            onClick={() =>
+                              openRecommendedProduct(recommendation)
+                            }
+                            style={styles.productDetailsButton}
+                            aria-label={
+                              lang === "bn"
+                                ? `${title} পণ্যের বিস্তারিত দেখুন`
+                                : `View details for ${title}`
+                            }
+                          >
+                            <div style={styles.imageWrap}>
+                              {image ? (
+                                <img
+                                  src={image}
+                                  alt={title}
+                                  loading="lazy"
+                                  style={styles.productImage}
+                                  onError={(event) => {
+                                    event.currentTarget.style.display = "none";
+                                  }}
+                                />
+                              ) : (
+                                <span style={styles.imagePlaceholder}>
+                                  <span style={{ fontSize: "25px" }}>⚙</span>
+                                  <span>
+                                    {lang === "bn" ? "ছবি নেই" : "No image"}
+                                  </span>
                                 </span>
-                              </span>
-                            )}
-                          </div>
-
-                          <div style={styles.productInfo}>
-                            <span style={styles.category}>
-                              {product?.category ||
-                                recommendation.category ||
-                                "PreBotix"}
-                            </span>
-
-                            <strong style={styles.productTitle}>
-                              {title}
-                            </strong>
-
-                            <div style={styles.priceRow}>
-                              <strong style={styles.currentPrice}>
-                                {formatPrice(currentPrice, lang)}
-                              </strong>
-
-                              {Number.isFinite(oldPrice) &&
-                                oldPrice > currentPrice && (
-                                  <del style={styles.oldPrice}>
-                                    {formatPrice(oldPrice, lang)}
-                                  </del>
-                                )}
+                              )}
                             </div>
 
-                            <span
-                              style={{
-                                ...styles.stock,
-                                color: inStock ? "#7ce9b0" : "#ffaaaa",
-                              }}
-                            >
-                              {inStock
-                                ? lang === "bn"
-                                  ? `স্টকে আছে · ${stock}টি`
-                                  : `In stock · ${stock}`
-                                : lang === "bn"
-                                  ? "স্টকে নেই"
-                                  : "Out of stock"}
-                            </span>
+                            <div style={styles.productInfo}>
+                              <span style={styles.category}>
+                                {product?.category ||
+                                  recommendation.category ||
+                                  "PreBotix"}
+                              </span>
 
-                            <span style={styles.detailsHint}>
-                              {lang === "bn"
-                                ? "বিস্তারিত দেখুন →"
-                                : "View details →"}
-                            </span>
-                          </div>
-                        </button>
+                              <strong style={styles.productTitle}>
+                                {title}
+                              </strong>
 
-                        <button
-                          type="button"
-                          disabled={!inStock}
-                          onClick={() =>
-                            addRecommendedProduct(recommendation)
-                          }
-                          style={{
-                            ...styles.addButton,
-                            opacity: inStock ? 1 : 0.45,
-                            cursor: inStock ? "pointer" : "not-allowed",
-                          }}
-                        >
-                          {inStock
-                            ? lang === "bn"
-                              ? "＋ কার্টে যোগ করুন"
-                              : "＋ Add to cart"
-                            : lang === "bn"
-                              ? "স্টকে নেই"
-                              : "Out of stock"}
-                        </button>
-                      </article>
-                    );
-                  })}
-                </div>
-              )}
-          </div>
-        ))}
+                              <div style={styles.priceRow}>
+                                <strong style={styles.currentPrice}>
+                                  {formatPrice(currentPrice, lang)}
+                                </strong>
 
-        {loading && (
-          <div style={styles.typing}>
-            <span style={styles.statusDot} />
-            {lang === "bn"
-              ? "PreBotix AI উত্তর তৈরি করছে..."
-              : "PreBotix AI is thinking..."}
+                                {Number.isFinite(oldPrice) &&
+                                  oldPrice > currentPrice && (
+                                    <del style={styles.oldPrice}>
+                                      {formatPrice(oldPrice, lang)}
+                                    </del>
+                                  )}
+                              </div>
+
+                              <span
+                                style={{
+                                  ...styles.stock,
+                                  color: inStock ? "#7ce9b0" : "#ffaaaa",
+                                }}
+                              >
+                                {inStock
+                                  ? lang === "bn"
+                                    ? `স্টকে আছে · ${stock}টি`
+                                    : `In stock · ${stock}`
+                                  : lang === "bn"
+                                    ? "স্টকে নেই"
+                                    : "Out of stock"}
+                              </span>
+
+                              <span style={styles.detailsHint}>
+                                {lang === "bn"
+                                  ? "বিস্তারিত দেখুন →"
+                                  : "View details →"}
+                              </span>
+                            </div>
+                          </button>
+
+                          <button
+                            type="button"
+                            disabled={!inStock}
+                            onClick={() =>
+                              addRecommendedProduct(recommendation)
+                            }
+                            style={{
+                              ...styles.addButton,
+                              opacity: inStock ? 1 : 0.45,
+                              cursor: inStock ? "pointer" : "not-allowed",
+                            }}
+                          >
+                            {inStock
+                              ? lang === "bn"
+                                ? "＋ কার্টে যোগ করুন"
+                                : "＋ Add to cart"
+                              : lang === "bn"
+                                ? "স্টকে নেই"
+                                : "Out of stock"}
+                          </button>
+                        </article>
+                      );
+                    })}
+                  </div>
+                )}
+            </div>
+          ))}
+
+          {loading && (
+            <div style={styles.typing}>
+              <span style={styles.statusDot} />
+              {lang === "bn"
+                ? "PreBotix AI উত্তর তৈরি করছে..."
+                : "PreBotix AI is thinking..."}
+            </div>
+          )}
+
+          <div ref={bottomRef} />
+        </div>
+
+        {error && (
+          <p role="alert" style={styles.error}>
+            {error}
+          </p>
+        )}
+
+        {imagePreview && (
+          <div style={styles.previewBar}>
+            <img
+              src={imagePreview}
+              alt="Selected image"
+              style={styles.previewImage}
+            />
+
+            <button
+              type="button"
+              onClick={removeSelectedImage}
+              style={styles.removeImageButton}
+              aria-label="Remove image"
+            >
+              ×
+            </button>
           </div>
         )}
 
-        <div ref={bottomRef} />
-      </div>
+        <form onSubmit={handleComposerSubmit} style={styles.form}>
+          <div
+            style={styles.menuWrap}
+            onMouseEnter={() => setMenuOpen(true)}
+            onMouseLeave={() => setMenuOpen(false)}
+          >
+            <button
+              type="button"
+              style={styles.menuButton}
+              onClick={() => setMenuOpen((previous) => !previous)}
+              disabled={loading}
+              aria-label="Add image"
+            >
+              +
+            </button>
 
-      {error && (
-        <p role="alert" style={styles.error}>
-          {error}
-        </p>
-      )}
+            {menuOpen && (
+              <div style={styles.attachmentMenu}>
+                <button
+                  type="button"
+                  style={styles.attachmentItem}
+                  onClick={() => {
+                    setMenuOpen(false);
+                    startCamera();
+                  }}
+                >
+                  📷 {lang === "bn" ? "ক্যামেরা ইনপুট" : "Camera Input"}
+                </button>
 
-      {imagePreview && (
-        <div style={styles.previewBar}>
-          <img
-            src={imagePreview}
-            alt="Selected image"
-            style={styles.previewImage}
+                <button
+                  type="button"
+                  style={styles.attachmentItem}
+                  onClick={() => {
+                    setMenuOpen(false);
+                    fileInputRef.current?.click();
+                  }}
+                >
+                  📁 {lang === "bn" ? "ফাইল ইনপুট" : "File Input"}
+                </button>
+              </div>
+            )}
+          </div>
+
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/jpeg,image/png,image/webp"
+            onChange={handleFileInput}
+            style={styles.hiddenInput}
+          />
+
+          <input
+            ref={inputRef}
+            value={input}
+            onChange={(event) => setInput(event.target.value)}
+            placeholder={
+              lang === "bn"
+                ? "পণ্য বা প্রজেক্ট সম্পর্কে জিজ্ঞেস করুন..."
+                : "Ask about a product or project..."
+            }
+            aria-label="Type your message"
+            maxLength={2000}
+            disabled={loading}
+            style={styles.input}
           />
 
           <button
-            type="button"
-            onClick={removeSelectedImage}
-            style={styles.removeImageButton}
-            aria-label="Remove image"
+            type="submit"
+            disabled={loading || (!input.trim() && !imageFile)}
+            style={{
+              ...styles.sendButton,
+              opacity:
+                loading || (!input.trim() && !imageFile) ? 0.55 : 1,
+            }}
           >
-            ×
+            {loading ? "…" : lang === "bn" ? "পাঠান" : "Send"}
           </button>
-        </div>
-      )}
-
-      <form onSubmit={handleComposerSubmit} style={styles.form}>
-        <div
-          style={styles.menuWrap}
-          onMouseEnter={() => setMenuOpen(true)}
-          onMouseLeave={() => setMenuOpen(false)}
-        >
-          <button
-            type="button"
-            style={styles.menuButton}
-            onClick={() => setMenuOpen((previous) => !previous)}
-            disabled={loading}
-            aria-label="Add image"
-          >
-            +
-          </button>
-
-          {menuOpen && (
-            <div style={styles.attachmentMenu}>
-              <button
-                type="button"
-                style={styles.attachmentItem}
-                onClick={() => {
-                  setMenuOpen(false);
-                  startCamera();
-                }}
-              >
-                📷 {lang === "bn" ? "ক্যামেরা ইনপুট" : "Camera Input"}
-              </button>
-
-              <button
-                type="button"
-                style={styles.attachmentItem}
-                onClick={() => {
-                  setMenuOpen(false);
-                  fileInputRef.current?.click();
-                }}
-              >
-                📁 {lang === "bn" ? "ফাইল ইনপুট" : "File Input"}
-              </button>
-            </div>
-          )}
-        </div>
-
-        <input
-          ref={fileInputRef}
-          type="file"
-          accept="image/jpeg,image/png,image/webp"
-          onChange={handleFileInput}
-          style={styles.hiddenInput}
-        />
-
-        <input
-          ref={inputRef}
-          value={input}
-          onChange={(event) => setInput(event.target.value)}
-          placeholder={
-            lang === "bn"
-              ? "পণ্য বা প্রজেক্ট সম্পর্কে জিজ্ঞেস করুন..."
-              : "Ask about a product or project..."
-          }
-          aria-label="Type your message"
-          maxLength={2000}
-          disabled={loading}
-          style={styles.input}
-        />
-
-        <button
-          type="submit"
-          disabled={loading || (!input.trim() && !imageFile)}
-          style={{
-            ...styles.sendButton,
-            opacity:
-              loading || (!input.trim() && !imageFile) ? 0.55 : 1,
-          }}
-        >
-          {loading ? "…" : lang === "bn" ? "পাঠান" : "Send"}
-        </button>
-      </form> 
+        </form>
 
 
-      {cameraOpen && (
-        <div style={styles.cameraOverlay}>
-          <div style={styles.cameraDialog}>
-            <div style={styles.cameraHeader}>
-              <strong>
-                {lang === "bn" ? "ক্যামেরা" : "Camera Input"}
-              </strong>
+        {cameraOpen && (
+          <div style={styles.cameraOverlay}>
+            <div style={styles.cameraDialog}>
+              <div style={styles.cameraHeader}>
+                <strong>
+                  {lang === "bn" ? "ক্যামেরা" : "Camera Input"}
+                </strong>
 
-              <button
-                type="button"
-                onClick={stopCamera}
-                style={styles.removeImageButton}
-              >
-                ✕
-              </button>
-            </div>
+                <button
+                  type="button"
+                  onClick={stopCamera}
+                  style={styles.removeImageButton}
+                >
+                  ✕
+                </button>
+              </div>
 
-            <video
-              ref={videoRef}
-              autoPlay
-              muted
-              playsInline
-              style={styles.cameraVideo}
-            />
+              <video
+                ref={videoRef}
+                autoPlay
+                muted
+                playsInline
+                style={styles.cameraVideo}
+              />
 
-            <div style={styles.cameraActions}>
-              <button
-                type="button"
-                onClick={stopCamera}
-                style={styles.cameraCancelButton}
-              >
-                Cancel
-              </button>
+              <div style={styles.cameraActions}>
+                <button
+                  type="button"
+                  onClick={stopCamera}
+                  style={styles.cameraCancelButton}
+                >
+                  Cancel
+                </button>
 
-              <button
-                type="button"
-                onClick={captureCameraImage}
-                style={styles.cameraCaptureButton}
-              >
-                📷 Capture
-              </button>
+                <button
+                  type="button"
+                  onClick={captureCameraImage}
+                  style={styles.cameraCaptureButton}
+                >
+                  📷 Capture
+                </button>
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        )}
 
-    </section>
+      </section>
+    </>
   );
 }
 
@@ -1158,7 +1176,7 @@ const styles = {
   attachmentMenu: {
     position: "absolute",
     left: "5px",
-    bottom: "52px",
+    bottom: "42px",
     width: "190px",
     padding: "7px",
     display: "flex",
