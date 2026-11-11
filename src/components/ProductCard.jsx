@@ -1,4 +1,4 @@
-
+﻿
 import { useEffect, useState } from "react";
 import {
   ArrowRight,
@@ -489,7 +489,10 @@ export default function ProductCard({
             )}
           </div>
 
-          {outOfStock && (
+          {outOfStock &&
+            !isAdmin &&
+            String(user?.role || "").toLowerCase() !== "admin" &&
+            user?.isAdmin !== true && (
             <NotifyMeButton
               product={product}
               lang={lang}

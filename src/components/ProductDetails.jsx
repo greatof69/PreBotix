@@ -796,7 +796,7 @@ export default function ProductDetails({
               : soldOut}
           </div>
 
-          {stock <= 0 && (
+          {stock <= 0 && !adminView && (
             <NotifyMeButton
               product={product}
               lang={lang}
