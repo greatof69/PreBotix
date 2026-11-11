@@ -23,6 +23,7 @@ import {
 
 import { formatPrice } from "../utils/formatPrice";
 import { products as defaultProducts } from "../data/products";
+import NotifyMeButton from "./NotifyMeButton";
 
 const API = (
   import.meta.env.VITE_API_URL || "http://localhost:5000"
@@ -794,6 +795,14 @@ export default function ProductDetails({
                 }`
               : soldOut}
           </div>
+
+          {stock <= 0 && (
+            <NotifyMeButton
+              product={product}
+              lang={lang}
+              user={user}
+            />
+          )}
 
           {/* QUANTITY */}
           <div className="detail-quantity">

@@ -1,4 +1,4 @@
-﻿@import "tailwindcss";
+@import "tailwindcss";
 
 /* ---------------------------------------------------------------------
    01  DESIGN TOKENS
@@ -4803,4 +4803,125 @@ body img:not([data-allow-image-copy]) {
   direction: ltr;
   unicode-bidi: isolate;
   margin-left: 4px;
+}
+
+
+/* Product back-in-stock notification */
+.pb-notify-wrap {
+  display: grid;
+  gap: 8px;
+  width: fit-content;
+  max-width: 100%;
+  margin: 10px 0;
+  min-width: 0;
+}
+
+.pb-notify-trigger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  min-height: 38px;
+  padding: 8px 13px;
+  border: 1px solid #2563eb;
+  border-radius: 9px;
+  background: #eff6ff;
+  color: #1d4ed8;
+  font-size: 13px;
+  font-weight: 750;
+  cursor: pointer;
+  transition: background .18s ease, color .18s ease, border-color .18s ease;
+}
+
+.pb-notify-trigger:hover {
+  background: #2563eb;
+  color: #fff;
+}
+
+.pb-notify-compact {
+  margin: 0 0 0 auto;
+  flex: 0 0 auto;
+}
+
+.pb-notify-compact .pb-notify-trigger {
+  min-height: 30px;
+  padding: 5px 9px;
+  border-radius: 7px;
+  font-size: 11px;
+  white-space: nowrap;
+}
+
+.pb-notify-form {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 7px;
+  width: min(100%, 390px);
+  padding: 10px;
+  border: 1px solid #dbeafe;
+  border-radius: 10px;
+  background: #f8fbff;
+}
+
+.pb-notify-form input {
+  min-width: 0;
+  width: 100%;
+  min-height: 38px;
+  padding: 8px 10px;
+  border: 1px solid #cbd5e1;
+  border-radius: 7px;
+  background: #fff;
+  color: #0f172a;
+  font: inherit;
+  font-size: 13px;
+  box-sizing: border-box;
+}
+
+.pb-notify-form input:first-child:not(:last-child) {
+  grid-column: 1 / -1;
+}
+
+.pb-notify-form button {
+  min-height: 38px;
+  padding: 8px 12px;
+  border: 0;
+  border-radius: 7px;
+  background: #2563eb;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.pb-notify-form button:disabled {
+  opacity: .65;
+  cursor: wait;
+}
+
+.pb-notify-success,
+.pb-notify-feedback {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  max-width: 100%;
+  color: #047857;
+  font-size: 12px;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+
+.pb-notify-feedback {
+  color: #b91c1c;
+}
+
+.product-stock-offer-row .pb-notify-compact {
+  margin-left: auto;
+}
+
+@media (max-width: 480px) {
+  .pb-notify-form {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .pb-notify-form button {
+    width: 100%;
+  }
 }

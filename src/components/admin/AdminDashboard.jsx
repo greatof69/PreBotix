@@ -1,4 +1,4 @@
-﻿import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import DashboardLayout from "../shared/DashboardLayout";
 import { clearAuthSession, getAccessToken } from "../../utils/authSession";
@@ -190,6 +190,9 @@ export default function AdminDashboard({
   const [deletingAllHistory, setDeletingAllHistory] = useState(false);
   const [users, setUsers] = useState([]);
   const [messages, setMessages] = useState([]);
+  const [stockProducts, setStockProducts] = useState([]);
+  const [stockNotifications, setStockNotifications] = useState([]);
+  const [loadingStock, setLoadingStock] = useState(false);
   const [paymentDeliverySettings, setPaymentDeliverySettings] = useState({
     paymentMethods: [],
     deliveryZones: [],
@@ -455,6 +458,32 @@ const deleteAllHistory = async () => {
       setError(err.message || "Could not load messages.");
     } finally {
       setLoadingMessages(false);
+    }
+  }, [request]);
+
+  const loadStockNotifications = useCallback(async () => {
+    try {
+      const data = await request("/stock-notifications");
+      setStockNotifications(Array.isArray(data.notifications) ? data.notifications : []);
+    } catch (err) {
+      setError(err.message || "Could not load stock notifications.");
+    }
+  }, [request]);
+
+  const loadStockCatalog = useCallback(async () => {
+    setLoadingStock(true);
+    setError("");
+    try {
+      const [productData, notificationData] = await Promise.all([
+        request("/products"),
+        request("/stock-notifications"),
+      ]);
+      setStockProducts(Array.isArray(productData.products) ? productData.products : []);
+      setStockNotifications(Array.isArray(notificationData.notifications) ? notificationData.notifications : []);
+    } catch (err) {
+      setError(err.message || "Could not load product stock catalog.");
+    } finally {
+      setLoadingStock(false);
     }
   }, [request]);
 
@@ -846,6 +875,9 @@ useEffect(() => {
     loadUsers();
   } else if (tab === "messages") {
     loadMessages();
+    loadStockNotifications();
+  } else if (tab === "stock") {
+    loadStockCatalog();
   } else if (tab === "history") {
     loadOrderHistory();
   }
@@ -854,6 +886,8 @@ useEffect(() => {
   loadOrders,
   loadUsers,
   loadMessages,
+  loadStockNotifications,
+  loadStockCatalog,
   loadOrderHistory,
   loadPaymentDeliverySettings,
   loadGeneralSettings,
@@ -1192,6 +1226,12 @@ const deleteOrder = async (order) => {
       icon: "⚙️",
     },
     {
+      id: "stock",
+      label: "Product Stock",
+      labelBn: "পণ্যের স্টক",
+      icon: "📦",
+    },
+    {
       id: "messages",
       label: "Customer Messages",
       labelBn: "গ্রাহকের মেসেজ",
@@ -1223,7 +1263,9 @@ const pageTitle =
     ? t("Account Management", "অ্যাকাউন্ট ম্যানেজমেন্ট")
     : tab === "generalSettings"
       ? t("General Settings", "সাধারণ সেটিংস")
-      : tab === "messages"
+      : tab === "stock"
+        ? t("Product Stock Catalog", "পণ্যের স্টক ক্যাটালগ")
+        : tab === "messages"
         ? t("Customer Messages", "গ্রাহকের মেসেজ")
         : tab === "paymentDelivery"
           ? t("Payment & Delivery Settings", "পেমেন্ট ও ডেলিভারি সেটিংস")
@@ -1639,6 +1681,101 @@ const pageTitle =
           </section>
         )}
 
+        {tab === "stock" && (
+          <section style={cardStyle}>
+            <SectionTitle
+              right={
+                <button type="button" style={buttonStyle} onClick={loadStockCatalog} disabled={loadingStock}>
+                  {loadingStock ? t("Loading...", "লোড হচ্ছে...") : t("Refresh", "রিফ্রেশ")}
+                </button>
+              }
+            >
+              {t("Product Stock Catalog", "পণ্যের স্টক ক্যাটালগ")}
+            </SectionTitle>
+
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(150px,1fr))", gap: 12, marginBottom: 18 }}>
+              <div style={{ ...cardStyle, padding: 14 }}>
+                <small style={{ color: "#64748b" }}>{t("Total products", "মোট পণ্য")}</small>
+                <div style={{ fontSize: 25, fontWeight: 800 }}>{stockProducts.length}</div>
+              </div>
+              <div style={{ ...cardStyle, padding: 14 }}>
+                <small style={{ color: "#059669" }}>{t("In stock", "স্টকে আছে")}</small>
+                <div style={{ fontSize: 25, fontWeight: 800 }}>{stockProducts.filter((p) => Number(p.stock) > 0).length}</div>
+              </div>
+              <div style={{ ...cardStyle, padding: 14 }}>
+                <small style={{ color: "#dc2626" }}>{t("Out of stock", "স্টক শেষ")}</small>
+                <div style={{ fontSize: 25, fontWeight: 800 }}>{stockProducts.filter((p) => Number(p.stock) <= 0).length}</div>
+              </div>
+              <div style={{ ...cardStyle, padding: 14 }}>
+                <small style={{ color: "#2563eb" }}>{t("Pending notify requests", "অপেক্ষমাণ নোটিফিকেশন")}</small>
+                <div style={{ fontSize: 25, fontWeight: 800 }}>{stockNotifications.filter((n) => n.status === "pending").length}</div>
+              </div>
+            </div>
+
+            {loadingStock ? (
+              <EmptyState>{t("Loading product catalog...", "পণ্যের তালিকা লোড হচ্ছে...")}</EmptyState>
+            ) : (
+              <div style={{ overflowX: "auto" }}>
+                <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 620 }}>
+                  <thead>
+                    <tr style={{ background: "#f8fafc", textAlign: "left" }}>
+                      {["ID", t("Product", "পণ্য"), t("Category", "ক্যাটাগরি"), t("Stock quantity", "স্টক পরিমাণ"), t("Status", "অবস্থা"), t("Action", "অ্যাকশন")].map((heading) => (
+                        <th key={heading} style={{ padding: 11, borderBottom: "1px solid #e5e7eb", fontSize: 12 }}>{heading}</th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {stockProducts.map((product) => {
+                      const available = Number(product.stock) > 0;
+                      return (
+                        <tr key={product._id || product.id}>
+                          <td style={{ padding: 11, borderBottom: "1px solid #f1f5f9" }}>{product.id}</td>
+                          <td style={{ padding: 11, borderBottom: "1px solid #f1f5f9", fontWeight: 650 }}>{product.title}</td>
+                          <td style={{ padding: 11, borderBottom: "1px solid #f1f5f9" }}>{product.category}</td>
+                          <td style={{ padding: 11, borderBottom: "1px solid #f1f5f9", fontWeight: 750 }}>{Number(product.stock || 0)}</td>
+                          <td style={{ padding: 11, borderBottom: "1px solid #f1f5f9" }}>
+                            <span style={{ color: available ? "#059669" : "#dc2626", fontWeight: 700 }}>
+                              {available ? t("In Stock", "স্টকে আছে") : t("Out of Stock", "স্টক শেষ")}
+                            </span>
+                          </td>
+                          <td style={{ padding: 11, borderBottom: "1px solid #f1f5f9" }}>
+                            <button type="button" style={primaryButtonStyle} onClick={() => navigate(`/products/${encodeURIComponent(product.id)}`)}>
+                              {t("View product", "পণ্য দেখুন")}
+                            </button>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                    {!stockProducts.length && (
+                      <tr><td colSpan={6} style={{ padding: 18, textAlign: "center", color: "#64748b" }}>{t("No products found.", "কোনো পণ্য পাওয়া যায়নি।")}</td></tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            )}
+
+            <div style={{ marginTop: 26 }}>
+              <SectionTitle>{t("Notify Me Requests", "Notify Me অনুরোধ")}</SectionTitle>
+              {stockNotifications.length ? (
+                <div style={{ display: "grid", gap: 9 }}>
+                  {stockNotifications.map((item) => (
+                    <div key={item._id} style={{ border: "1px solid #e5e7eb", borderRadius: 10, padding: 12, display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(150px,1fr))", gap: 8, alignItems: "center" }}>
+                      <strong>{item.productTitle}</strong>
+                      <span style={{ fontSize: 13 }}>{item.customerName || "Customer"} · {item.email}</span>
+                      <span style={{ fontSize: 12, color: "#64748b" }}>{new Date(item.createdAt).toLocaleString()}</span>
+                      <span style={{ fontSize: 12, fontWeight: 700, color: item.status === "notified" ? "#059669" : "#d97706" }}>
+                        {item.status === "notified" ? t("Email sent", "ইমেইল পাঠানো হয়েছে") : t("Pending", "অপেক্ষমাণ")}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <EmptyState>{t("No stock notification requests yet.", "এখনো কোনো Notify Me অনুরোধ নেই।")}</EmptyState>
+              )}
+            </div>
+          </section>
+        )}
+
         {tab === "orders" && (
           <>
             <div
@@ -2042,6 +2179,36 @@ const pageTitle =
         
         {tab === "messages" && (
           <section style={cardStyle}>
+            <div style={{ border: "1px solid #bfdbfe", background: "#eff6ff", borderRadius: 12, padding: 14, marginBottom: 20 }}>
+              <SectionTitle
+                right={
+                  <button type="button" style={buttonStyle} onClick={loadStockNotifications}>
+                    {t("Refresh", "রিফ্রেশ")}
+                  </button>
+                }
+              >
+                {t("Stock Availability Notifications", "স্টক নোটিফিকেশন")}
+              </SectionTitle>
+              <p style={{ margin: "0 0 12px", color: "#475569", fontSize: 13 }}>
+                {t("Customers who requested an email when an out-of-stock product becomes available.", "পণ্য স্টকে এলে যেসব গ্রাহক ইমেইল পেতে চেয়েছেন।")}
+              </p>
+              {stockNotifications.length ? (
+                <div style={{ display: "grid", gap: 8 }}>
+                  {stockNotifications.map((item) => (
+                    <div key={item._id} style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(145px,1fr))", gap: 8, alignItems: "center", padding: 10, borderRadius: 8, background: "#fff", border: "1px solid #dbeafe" }}>
+                      <strong style={{ fontSize: 13 }}>{item.productTitle}</strong>
+                      <span style={{ fontSize: 12 }}>{item.customerName || "Customer"} · {item.email}</span>
+                      <span style={{ fontSize: 12, color: "#64748b" }}>{new Date(item.createdAt).toLocaleString()}</span>
+                      <strong style={{ fontSize: 12, color: item.status === "notified" ? "#059669" : "#d97706" }}>
+                        {item.status === "notified" ? t("Email sent", "ইমেইল পাঠানো হয়েছে") : t("Pending", "অপেক্ষমাণ")}
+                      </strong>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <EmptyState>{t("No stock notification requests yet.", "এখনো কোনো স্টক নোটিফিকেশন নেই।")}</EmptyState>
+              )}
+            </div>
             <SectionTitle
               right={
                 <div

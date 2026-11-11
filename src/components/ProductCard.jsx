@@ -1,4 +1,4 @@
-﻿
+
 import { useEffect, useState } from "react";
 import {
   ArrowRight,
@@ -14,6 +14,7 @@ import {
 } from "../utils/productHelpers";
 
 import { formatPrice } from "../utils/formatPrice";
+import NotifyMeButton from "./NotifyMeButton";
 
 export default function ProductCard({
   product,
@@ -26,6 +27,7 @@ export default function ProductCard({
   onToggleFavorite = () => {},
   isAdmin = false,
   isModerator = false,
+  user = null,
   onEditProduct,
   onDeleteProduct,
   imagePriority = false,
@@ -486,6 +488,15 @@ export default function ProductCard({
               </span>
             )}
           </div>
+
+          {outOfStock && (
+            <NotifyMeButton
+              product={product}
+              lang={lang}
+              user={user}
+              compact
+            />
+          )}
 
           {hasActiveDiscount && hasValidDiscountPrice && (
             <div
