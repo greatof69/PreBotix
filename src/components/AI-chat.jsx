@@ -965,7 +965,7 @@ const styles = {
     position: "fixed",
     inset: 0,
     zIndex: 99998,
-    background: "rgba(0,0,0,0.35)",
+    background: "transparent",
   },
 
   panel: {
