@@ -309,6 +309,7 @@ export default function ProductCard({
 
   return (
     <article
+      id={`product-card-${product.id}`}
       className={`product-card ${
         outOfStock ? "out-of-stock" : ""
       } ${
@@ -426,6 +427,10 @@ export default function ProductCard({
             }}
             onClick={(event) => {
               event.stopPropagation();
+              document
+                .getElementById(`product-card-${product.id}`)
+                ?.classList.remove("pb-stock-focus");
+
               onEditProduct?.(product);
             }}
           >
@@ -639,3 +644,4 @@ export default function ProductCard({
     </article>
   );
 }
+
