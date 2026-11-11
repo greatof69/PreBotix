@@ -149,8 +149,7 @@ export default function AIChat({
 
   // Menu khola thakle:
   // - menu-r bairey click korle ba Esc chapole bondho hobe
-  // - mouse menu theke onek dure (120px+) gele bondho hobe
-  // - kache thakle (button, box, majher gap) kokhono bondho hobe na
+  // - mouse soralei bondho hobe NA (hover-e khulle khola-i thake)
   useEffect(() => {
     if (!menuOpen) return undefined;
 
@@ -164,41 +163,12 @@ export default function AIChat({
       if (e.key === "Escape") setMenuOpen(false);
     };
 
-    const onMove = (e) => {
-      if (e.pointerType && e.pointerType !== "mouse") return;
-
-      const a = menuRef.current?.getBoundingClientRect();
-      const b = menuBoxRef.current?.getBoundingClientRect();
-
-      if (!a) return;
-
-      const pad = 120;
-      const left = Math.min(a.left, b?.left ?? a.left) - pad;
-      const top = Math.min(a.top, b?.top ?? a.top) - pad;
-      const right = Math.max(a.right, b?.right ?? a.right) + pad;
-      const bottom = Math.max(a.bottom, b?.bottom ?? a.bottom) + pad;
-
-      const inside =
-        e.clientX >= left &&
-        e.clientX <= right &&
-        e.clientY >= top &&
-        e.clientY <= bottom;
-
-      clearTimeout(closeTimerRef.current);
-
-      if (!inside) {
-        closeTimerRef.current = setTimeout(() => setMenuOpen(false), 300);
-      }
-    };
-
     document.addEventListener("pointerdown", onPointerDown);
     document.addEventListener("keydown", onKeyDown);
-    document.addEventListener("pointermove", onMove);
 
     return () => {
       document.removeEventListener("pointerdown", onPointerDown);
       document.removeEventListener("keydown", onKeyDown);
-      document.removeEventListener("pointermove", onMove);
       clearTimeout(closeTimerRef.current);
     };
   }, [menuOpen]);
