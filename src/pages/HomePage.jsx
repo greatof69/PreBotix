@@ -62,12 +62,6 @@ export default function HomePage({
     return () => clearTimeout(timer);
   }, [highlightedId, visibleProducts.length]);
 
-  // 4 second por red overlay shorbe
-  useEffect(() => {
-    if (!highlightedId) return;
-    const timer = setTimeout(() => setHighlightedId(null), 4000);
-    return () => clearTimeout(timer);
-  }, [highlightedId]);
   return <>
     <HeroSlider lang={lang} t={t} activeSlide={activeSlide} prevSlide={prevSlide} slideDir={slideDir} goToSlide={goToSlide} slideText={slideText} />
     <TrustStrip lang={lang} />
@@ -109,6 +103,13 @@ export default function HomePage({
             <div
               key={product.id}
               id={`product-card-${product.id}`}
+              onClickCapture={(e) => {
+                if (highlightedId === String(product.id)) {
+                  e.preventDefault();
+                  e.stopPropagation(); // ProductCard er onClick/onDetails porjonto jabe na
+                  setHighlightedId(null);
+                }
+              }}
               className={`pb-product-slot${highlightedId === String(product.id) ? " pb-product-slot--focus" : ""}`}
             >
             <ProductCard
