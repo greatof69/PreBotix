@@ -869,10 +869,10 @@ export default function AIChat({
             onPointerLeave={(e) => {
               if (e.pointerType !== "mouse") return;
               clearTimeout(closeTimerRef.current);
-              // 300ms delay: mouse box-e jawar somoy menu bondho hobe na
+              // 400ms delay: mouse box-e jawar somoy menu bondho hobe na
               closeTimerRef.current = setTimeout(
                 () => setMenuOpen(false),
-                300
+                400
               );
             }}
           >
@@ -1316,7 +1316,7 @@ const styles = {
     position: "absolute",
     left: "0",
     bottom: "42px",
-    paddingBottom: "42px", // box ta button theke 42px upore uthbe (aro upore chaile eta baran)
+    paddingBottom: "4px", // box ta button-er ekdom kache (4px upore), gap nai bolei hover hare na
     zIndex: 100002,
   },
 
