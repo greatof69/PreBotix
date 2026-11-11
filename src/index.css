@@ -483,6 +483,39 @@ footer { margin-top: auto; flex-shrink: 0; }
   }
 }
 
+/* Tooltip: hide hobe instantly, show hobe 80ms delay diye (fast mouse move-e flicker hobe na) */
+.pb-float-contact__tooltip {
+  transition: none;
+}
+
+.pb-float-contact__button:hover > .pb-float-contact__tooltip,
+.pb-float-contact__button:focus-visible > .pb-float-contact__tooltip {
+  opacity: 1;
+  visibility: visible;
+  transform: translate(0, -50%);
+  transition: opacity .15s ease .08s, transform .15s ease .08s, visibility 0s linear .08s;
+}
+
+/* Instagram tooltip-er alada position thik rakha */
+.pb-float-contact__social--instagram:hover > .pb-float-contact__tooltip,
+.pb-float-contact__social--instagram:focus-visible > .pb-float-contact__tooltip {
+  transform: translate(-50%, 0);
+}
+
+/* Kono social button hover korle AI tooltip sathe sathe hide */
+.pb-float-contact:has(.pb-float-contact__social:hover) .pb-float-contact__tooltip--ai {
+  opacity: 0;
+  visibility: hidden;
+  transition: none;
+}
+
+/* Social button-ei hover thakle onno social tooltip dekhabe na */
+.pb-float-contact:has(.pb-float-contact__social:hover) .pb-float-contact__social:not(:hover) .pb-float-contact__tooltip {
+  opacity: 0;
+  visibility: hidden;
+  transition: none;
+}
+
 /* ---------------------------------------------------------------------
    05  ANNOUNCEMENT BAR
    --------------------------------------------------------------------- */
