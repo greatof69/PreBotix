@@ -1,0 +1,32 @@
+.pb-product-slot {
+  position: relative;
+  display: flex;
+  min-width: 0;
+  scroll-margin-top: 100px;
+  border-radius: 14px;
+}
+
+.pb-product-slot > * {
+  flex: 1;
+  min-width: 0;
+}
+
+.pb-product-slot--focus {
+  outline: 2px solid rgba(239, 68, 68, 0.75);
+  outline-offset: 2px;
+}
+
+.pb-product-slot--focus::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: rgba(239, 68, 68, 0.16);
+  pointer-events: none;
+  animation: pbFocusPulse 1.2s ease-in-out 3;
+}
+
+@keyframes pbFocusPulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.35; }
+}

@@ -1,4 +1,7 @@
+import { useEffect, useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import { ArrowRight } from "lucide-react";
+import "../pb-focus.css";
 import { categoryLabel } from "../utils/productHelpers";
 import ProductCard from "../components/ProductCard";
 import HeroSlider from "../components/HeroSlider";
@@ -34,6 +37,37 @@ export default function HomePage({
   onImportProducts,
   onProductImageSettled,
 }) {
+  const location = useLocation();
+  const navigate = useNavigate();
+  const [highlightedId, setHighlightedId] = useState(null);
+  const focusId = location.state?.focusProductId;
+
+  // Admin "View product" click korle ekhane ashe
+  useEffect(() => {
+    if (focusId == null) return;
+    setSearchQuery("");
+    setCategory("all");
+    setHighlightedId(String(focusId));
+    navigate(location.pathname, { replace: true, state: null });
+  }, [focusId]);
+
+  // Card render hole scroll korbe
+  useEffect(() => {
+    if (!highlightedId) return;
+    const timer = setTimeout(() => {
+      document
+        .getElementById(`product-card-${highlightedId}`)
+        ?.scrollIntoView({ behavior: "smooth", block: "center" });
+    }, 400);
+    return () => clearTimeout(timer);
+  }, [highlightedId, visibleProducts.length]);
+
+  // 4 second por red overlay shorbe
+  useEffect(() => {
+    if (!highlightedId) return;
+    const timer = setTimeout(() => setHighlightedId(null), 4000);
+    return () => clearTimeout(timer);
+  }, [highlightedId]);
   return <>
     <HeroSlider lang={lang} t={t} activeSlide={activeSlide} prevSlide={prevSlide} slideDir={slideDir} goToSlide={goToSlide} slideText={slideText} />
     <TrustStrip lang={lang} />
@@ -72,8 +106,12 @@ export default function HomePage({
 
         {visibleProducts.length ? (
           visibleProducts.map((product, index) => (
-            <ProductCard
+            <div
               key={product.id}
+              id={`product-card-${product.id}`}
+              className={`pb-product-slot${highlightedId === String(product.id) ? " pb-product-slot--focus" : ""}`}
+            >
+            <ProductCard
               product={product}
               lang={lang}
               t={t}
@@ -97,6 +135,7 @@ export default function HomePage({
               imagePriority={index < 2}
               onImageSettled={onProductImageSettled}
             />
+            </div>
           ))
         ) : (
           <p className="empty-results">{t.emptySearch}</p>
