@@ -32,6 +32,7 @@ export default function HomePage({
   onAddProduct,
   onDeleteProduct,
   onImportProducts,
+  onProductImageSettled,
 }) {
   return <>
     <HeroSlider lang={lang} t={t} activeSlide={activeSlide} prevSlide={prevSlide} slideDir={slideDir} goToSlide={goToSlide} slideText={slideText} />
@@ -94,6 +95,7 @@ export default function HomePage({
               onEditProduct={onEditProduct}
               onDeleteProduct={onDeleteProduct}
               imagePriority={index < 2}
+              onImageSettled={onProductImageSettled}
             />
           ))
         ) : (

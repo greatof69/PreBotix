@@ -29,6 +29,7 @@ export default function ProductCard({
   onEditProduct,
   onDeleteProduct,
   imagePriority = false,
+  onImageSettled,
 }) {
   const isBangla = lang === "bn";
 
@@ -82,6 +83,12 @@ export default function ProductCard({
     : /^(https?:\/\/|blob:|data:)/i.test(image)
       ? image
       : `${apiBase}/${image.replace(/^\/+/, "")}`;
+
+  useEffect(() => {
+    if (!imageSrc && imagePriority) {
+      onImageSettled?.(product.id);
+    }
+  }, [imageSrc, imagePriority, product.id, onImageSettled]);
 
   // Reset failed image when product image changes.
   useEffect(() => {
@@ -340,6 +347,11 @@ export default function ProductCard({
             draggable={false}
             onContextMenu={(event) => event.preventDefault()}
             onDragStart={(event) => event.preventDefault()}
+            onLoad={() => {
+              if (imagePriority) {
+                onImageSettled?.(product.id);
+              }
+            }}
             onError={() => {
               console.error(
                 "[PreBotix] Product image failed:",
@@ -352,6 +364,10 @@ export default function ProductCard({
               );
 
               setImageFailed(true);
+
+              if (imagePriority) {
+                onImageSettled?.(product.id);
+              }
             }}
           />
         ) : (

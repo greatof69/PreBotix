@@ -467,6 +467,25 @@ export default function App() {
   const [showWishlist, setShowWishlist] = useState(false);
   const [productsRefreshing, setProductsRefreshing] = useState(true);
 
+  const [settledProductImages, setSettledProductImages] = useState(
+  () => new Set()
+);
+
+const handleProductImageSettled = useCallback((productId) => {
+  setSettledProductImages((current) => {
+    if (current.has(String(productId))) return current;
+
+    const next = new Set(current);
+    next.add(String(productId));
+
+    if (next.size >= Math.min(2, products.length)) {
+      setProductsRefreshing(false);
+    }
+
+    return next;
+  });
+}, [products.length]);
+
   // Sync browser URLs with existing storefront state.
   useEffect(() => {
     const path = location.pathname.replace(/\/+$/, "") || "/";
@@ -2092,7 +2111,7 @@ export default function App() {
 
       {productsLoaded && productsRefreshing && (
         <div className="toast-notice" role="status">
-          {lang === "bn" ? "প্রোডাক্ট আপডেট হচ্ছে..." : "Updating products..."}
+          {lang === "bn" ? "প্রোডাক্ট লোড হচ্ছে..." : "Loading products..."}
         </div>
       )}
 
@@ -2271,6 +2290,7 @@ export default function App() {
                 behavior: "smooth",
               });
             }}
+            onProductImageSettled={handleProductImageSettled}
           />
         ) : (
           <HomePage
@@ -2302,6 +2322,7 @@ export default function App() {
             }}
             onDeleteProduct={handleProductDeleted}
             onImportProducts={() => setProductBulkImportOpen(true)}
+            onProductImageSettled={handleProductImageSettled}
           />
         )}
         </Suspense>

@@ -36,6 +36,7 @@ export default function CatalogPage({
   onAddProduct,
   onDeleteProduct,
   onImportProducts,
+  onProductImageSettled,
 }) {
   const [activeCategory, setActiveCategory] = useState("all");
   const [inStockOnly, setInStockOnly] = useState(false);
@@ -536,6 +537,7 @@ export default function CatalogPage({
                   isAdmin={adminView}
                   isModerator={moderatorView}
                   user={user}
+                  onImageSettled={onProductImageSettled}
                 />
               ))
             ) : (
