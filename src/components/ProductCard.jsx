@@ -310,6 +310,7 @@ export default function ProductCard({
   return (
     <article
       id={`product-card-${product.id}`}
+
       className={`product-card ${
         outOfStock ? "out-of-stock" : ""
       } ${
@@ -644,4 +645,5 @@ export default function ProductCard({
     </article>
   );
 }
+
 
