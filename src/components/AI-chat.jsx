@@ -59,6 +59,16 @@ export default function AIChat({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [imageFile, setImageFile] = useState(null);
+  const [imagePreview, setImagePreview] = useState("");
+  const [cameraOpen, setCameraOpen] = useState(false);
+  
+  const fileInputRef = useRef(null);
+  const videoRef = useRef(null);
+  const cameraStreamRef = useRef(null);
+  const menuRef = useRef(null);
+
   const bottomRef = useRef(null);
   const inputRef = useRef(null);
 
@@ -71,6 +81,151 @@ export default function AIChat({
   }, [isOpen]);
 
   if (!isOpen) return null;
+
+
+const stopCamera = () => {
+  if (cameraStreamRef.current) {
+    cameraStreamRef.current.getTracks().forEach((track) => {
+      track.stop();
+    });
+
+    cameraStreamRef.current = null;
+  }
+
+  setCameraOpen(false);
+};
+
+const startCamera = async () => {
+  setMenuOpen(false);
+
+  try {
+    if (!navigator.mediaDevices?.getUserMedia) {
+      throw new Error("Camera access is not supported by this browser.");
+    }
+
+    const stream = await navigator.mediaDevices.getUserMedia({
+      audio: false,
+      video: {
+        facingMode: { ideal: "environment" },
+        width: { ideal: 1280 },
+        height: { ideal: 1280 },
+      },
+    });
+
+    cameraStreamRef.current = stream;
+    setCameraOpen(true);
+  } catch (err) {
+    setError(
+      err.name === "NotAllowedError"
+        ? "Camera permission denied. Please allow camera access."
+        : err.message || "Could not access camera."
+    );
+  }
+};
+
+useEffect(() => {
+  if (cameraOpen && videoRef.current && cameraStreamRef.current) {
+    videoRef.current.srcObject = cameraStreamRef.current;
+    videoRef.current.play().catch(() => {});
+  }
+}, [cameraOpen]);
+
+useEffect(() => {
+  return () => {
+    cameraStreamRef.current?.getTracks().forEach((track) => {
+      track.stop();
+    });
+
+    if (imagePreview) {
+      URL.revokeObjectURL(imagePreview);
+    }
+  };
+}, []);
+
+const selectImage = (file) => {
+  if (!file) return;
+
+  if (!["image/jpeg", "image/png", "image/webp"].includes(file.type)) {
+    setError("Please select a JPG, PNG or WEBP image.");
+    return;
+  }
+
+  if (file.size > 10 * 1024 * 1024) {
+    setError("Image size must be below 10 MB.");
+    return;
+  }
+
+  setError("");
+
+  setImagePreview((old) => {
+    if (old) URL.revokeObjectURL(old);
+    return URL.createObjectURL(file);
+  });
+
+  setImageFile(file);
+};
+
+const handleFileInput = (event) => {
+  const file = event.target.files?.[0];
+
+  event.target.value = "";
+
+  selectImage(file);
+};
+
+const captureCameraImage = () => {
+  const video = videoRef.current;
+
+  if (!video || !video.videoWidth) {
+    setError("Camera is not ready. Please try again.");
+    return;
+  }
+
+  const canvas = document.createElement("canvas");
+
+  const maxSize = 1280;
+  const scale = Math.min(
+    1,
+    maxSize / Math.max(video.videoWidth, video.videoHeight)
+  );
+
+  canvas.width = Math.round(video.videoWidth * scale);
+  canvas.height = Math.round(video.videoHeight * scale);
+
+  const context = canvas.getContext("2d");
+
+  context.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+  canvas.toBlob(
+    (blob) => {
+      if (!blob) {
+        setError("Could not capture the image.");
+        return;
+      }
+
+      const file = new File(
+        [blob],
+        "prebotix-camera.jpg",
+        { type: "image/jpeg" }
+      );
+
+      selectImage(file);
+      stopCamera();
+    },
+    "image/jpeg",
+    0.85
+  );
+};
+
+const removeSelectedImage = () => {
+  setImagePreview((old) => {
+    if (old) URL.revokeObjectURL(old);
+    return "";
+  });
+
+  setImageFile(null);
+};
+
 
   const sendMessage = async (event) => {
     event?.preventDefault();
@@ -137,6 +292,160 @@ export default function AIChat({
       inputRef.current?.focus();
     }
   };
+
+
+const sendImageMessage = async (event) => {
+  event?.preventDefault();
+
+  if (!imageFile || loading) return;
+
+  setLoading(true);
+  setError("");
+  setMenuOpen(false);
+
+  const caption = input.trim();
+
+  try {
+    // Resize image before sending to reduce bandwidth.
+    const imageUrl = await new Promise((resolve, reject) => {
+      const reader = new FileReader();
+
+      reader.onload = () => {
+        const image = new Image();
+
+        image.onload = () => {
+          const maxSize = 1280;
+          const scale = Math.min(
+            1,
+            maxSize / Math.max(image.width, image.height)
+          );
+
+          const canvas = document.createElement("canvas");
+
+          canvas.width = Math.round(image.width * scale);
+          canvas.height = Math.round(image.height * scale);
+
+          const ctx = canvas.getContext("2d");
+
+          ctx.drawImage(
+            image,
+            0,
+            0,
+            canvas.width,
+            canvas.height
+          );
+
+          resolve(canvas.toDataURL("image/jpeg", 0.82));
+        };
+
+        image.onerror = reject;
+        image.src = reader.result;
+      };
+
+      reader.onerror = reject;
+      reader.readAsDataURL(imageFile);
+    });
+
+    const response = await fetch(`${API}/api/image-search`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        image: imageUrl,
+
+        catalog: products.map((product) => ({
+          id: product.id,
+          title: product.title,
+          category: product.category,
+        })),
+      }),
+    });
+
+    const data = await response.json();
+
+    if (!response.ok || !data.success) {
+      throw new Error(
+        data.message || "Image analysis failed."
+      );
+    }
+
+    // Match AI results with actual MongoDB products
+    // already loaded by App.jsx.
+    const recommendations = (data.matches || [])
+      .map((match) => {
+        const product = products.find(
+          (item) => String(item.id) === String(match.id)
+        );
+
+        if (!product) return null;
+
+        return {
+          id: product.id,
+          title: product.title,
+          bn: product.bn,
+          category: product.category,
+          image: product.image,
+          price: product.discountPrice || product.price,
+          currentPrice: product.discountPrice || product.price,
+          oldPrice: product.oldPrice,
+          stock: product.stock,
+          inStock: Number(product.stock) > 0,
+          confidence: match.confidence,
+        };
+      })
+      .filter(Boolean);
+
+    const userMessage = {
+      role: "user",
+      text:
+        caption ||
+        (lang === "bn"
+          ? "এই ছবির পণ্যটি শনাক্ত করুন।"
+          : "Please identify this product."),
+      image: imageUrl,
+    };
+
+    const assistantMessage = {
+      role: "assistant",
+      text: recommendations.length
+        ? lang === "bn"
+          ? "ছবিটি বিশ্লেষণ করেছি। PreBotix-এর ক্যাটালগে সবচেয়ে বেশি মিল পাওয়া পণ্যগুলো নিচে দেওয়া হলো।"
+          : "I've analyzed your image. Here are the closest matching products available in PreBotix."
+        : lang === "bn"
+          ? "ছবিটি বিশ্লেষণ করেছি, কিন্তু PreBotix ক্যাটালগে ৯০% বা তার বেশি confidence-এর কোনো নির্ভরযোগ্য মিল পাইনি।"
+          : "I've analyzed the image, but couldn't find a sufficiently reliable match in the PreBotix catalog.",
+      products: recommendations,
+    };
+
+    setMessages((current) => [
+      ...current,
+      userMessage,
+      assistantMessage,
+    ]);
+
+    setInput("");
+    removeSelectedImage();
+    } catch (err) {
+      setError(
+        err.message === "Failed to fetch"
+          ? "Cannot connect to PreBotix server."
+          : err.message
+      );
+    } finally {
+      setLoading(false);
+      inputRef.current?.focus();
+    }
+  };
+
+  const handleComposerSubmit = (event) => {
+    if (imageFile) {
+      sendImageMessage(event);
+    } else {
+      sendMessage(event);
+    }
+  };
+
 
   const openRecommendedProduct = (recommendation) => {
     // Use the full product object already loaded by App.jsx.
@@ -238,6 +547,14 @@ export default function AIChat({
                   message.role === "user" ? "#267c91" : "#2a4054",
               }}
             >
+              {message.image && (
+                <img
+                  src={message.image}
+                  alt="Uploaded image"
+                  style={styles.userImage}
+                />
+              )}
+
               {message.text}
             </div>
 
@@ -267,20 +584,20 @@ export default function AIChat({
                     );
 
                     const currentPrice = Number(
-  recommendation.currentPrice ??
-    recommendation.price ??
-    product?.price
-);
+                      recommendation.currentPrice ??
+                      recommendation.price ??
+                      product?.price
+                    );
 
-console.log("PreBotix AI PRICE DEBUG:", {
-  productId: recommendation.id,
-  recommendationTitle: recommendation.title,
-  backendPrice: recommendation.price,
-  backendCurrentPrice: recommendation.currentPrice,
-  frontendProductTitle: product?.title,
-  frontendProductPrice: product?.price,
-  displayedPrice: currentPrice,
-});
+                    console.log("PreBotix AI PRICE DEBUG:", {
+                      productId: recommendation.id,
+                      recommendationTitle: recommendation.title,
+                      backendPrice: recommendation.price,
+                      backendCurrentPrice: recommendation.currentPrice,
+                      frontendProductTitle: product?.title,
+                      frontendProductPrice: product?.price,
+                      displayedPrice: currentPrice,
+                    });
 
                     const stock = Number(
                       product?.stock ?? recommendation.stock ?? 0
@@ -288,7 +605,7 @@ console.log("PreBotix AI PRICE DEBUG:", {
 
                     const oldPrice = Number(
                       recommendation.oldPrice ??
-                        product?.oldPrice
+                      product?.oldPrice
                     );
 
                     const inStock =
@@ -426,7 +743,76 @@ console.log("PreBotix AI PRICE DEBUG:", {
         </p>
       )}
 
-      <form onSubmit={sendMessage} style={styles.form}>
+      {imagePreview && (
+        <div style={styles.previewBar}>
+          <img
+            src={imagePreview}
+            alt="Selected image"
+            style={styles.previewImage}
+          />
+
+          <button
+            type="button"
+            onClick={removeSelectedImage}
+            style={styles.removeImageButton}
+            aria-label="Remove image"
+          >
+            ×
+          </button>
+        </div>
+      )}
+
+      <form onSubmit={handleComposerSubmit} style={styles.form}>
+        <div
+          style={styles.menuWrap}
+          onMouseEnter={() => setMenuOpen(true)}
+          onMouseLeave={() => setMenuOpen(false)}
+        >
+          <button
+            type="button"
+            style={styles.menuButton}
+            onClick={() => setMenuOpen((previous) => !previous)}
+            disabled={loading}
+            aria-label="Add image"
+          >
+            +
+          </button>
+
+          {menuOpen && (
+            <div style={styles.attachmentMenu}>
+              <button
+                type="button"
+                style={styles.attachmentItem}
+                onClick={() => {
+                  setMenuOpen(false);
+                  startCamera();
+                }}
+              >
+                📷 {lang === "bn" ? "ক্যামেরা ইনপুট" : "Camera Input"}
+              </button>
+
+              <button
+                type="button"
+                style={styles.attachmentItem}
+                onClick={() => {
+                  setMenuOpen(false);
+                  fileInputRef.current?.click();
+                }}
+              >
+                📁 {lang === "bn" ? "ফাইল ইনপুট" : "File Input"}
+              </button>
+            </div>
+          )}
+        </div>
+
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/jpeg,image/png,image/webp"
+          onChange={handleFileInput}
+          style={styles.hiddenInput}
+        />
+
         <input
           ref={inputRef}
           value={input}
@@ -444,15 +830,64 @@ console.log("PreBotix AI PRICE DEBUG:", {
 
         <button
           type="submit"
-          disabled={loading || !input.trim()}
+          disabled={loading || (!input.trim() && !imageFile)}
           style={{
             ...styles.sendButton,
-            opacity: loading || !input.trim() ? 0.55 : 1,
+            opacity:
+              loading || (!input.trim() && !imageFile) ? 0.55 : 1,
           }}
         >
           {loading ? "…" : lang === "bn" ? "পাঠান" : "Send"}
         </button>
-      </form>
+      </form> 
+
+
+      {cameraOpen && (
+        <div style={styles.cameraOverlay}>
+          <div style={styles.cameraDialog}>
+            <div style={styles.cameraHeader}>
+              <strong>
+                {lang === "bn" ? "ক্যামেরা" : "Camera Input"}
+              </strong>
+
+              <button
+                type="button"
+                onClick={stopCamera}
+                style={styles.removeImageButton}
+              >
+                ✕
+              </button>
+            </div>
+
+            <video
+              ref={videoRef}
+              autoPlay
+              muted
+              playsInline
+              style={styles.cameraVideo}
+            />
+
+            <div style={styles.cameraActions}>
+              <button
+                type="button"
+                onClick={stopCamera}
+                style={styles.cameraCancelButton}
+              >
+                Cancel
+              </button>
+
+              <button
+                type="button"
+                onClick={captureCameraImage}
+                style={styles.cameraCaptureButton}
+              >
+                📷 Capture
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
     </section>
   );
 }
@@ -658,10 +1093,13 @@ const styles = {
   },
   form: {
     display: "flex",
+    alignItems: "center",
     gap: "8px",
-    padding: "12px",
+    padding: "10px",
     borderTop: "1px solid #254154",
     background: "#0e1e30",
+    width: "100%",
+    boxSizing: "border-box",
   },
   input: {
     minWidth: 0,
@@ -672,9 +1110,173 @@ const styles = {
     border: "1px solid #355168",
     borderRadius: "10px",
     outlineColor: "#47e3ef",
+    boxSizing: "border-box",
+    width: "100%",
   },
   sendButton: {
     padding: "0 14px",
+    color: "#07111f",
+    background: "#47e3ef",
+    border: 0,
+    borderRadius: "9px",
+    fontWeight: 700,
+    cursor: "pointer",
+  },
+
+  composer: {
+    display: "flex",
+    flexDirection: "column",
+    gap: "8px",
+    padding: "10px",
+    borderTop: "1px solid #254154",
+    background: "#0e1e30",
+  },
+
+  menuWrap: {
+    position: "relative",
+    flexShrink: 0,
+  },
+
+  menuButton: {
+    width: "42px",
+    height: "42px",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    color: "#47e3ef",
+    background: "#172b40",
+    border: "1px solid #355168",
+    borderRadius: "10px",
+    fontSize: "28px",
+    cursor: "pointer",
+    cursor: "pointer",
+    flexShrink: 0,
+  },
+
+  attachmentMenu: {
+    position: "absolute",
+    left: "5px",
+    bottom: "52px",
+    width: "190px",
+    padding: "7px",
+    display: "flex",
+    flexDirection: "column",
+    gap: "5px",
+    background: "#172b40",
+    border: "1px solid #47e3ef",
+    borderRadius: "12px",
+    boxShadow: "0 10px 30px rgba(0,0,0,.45)",
+    zIndex: 100002,
+  },
+
+  attachmentItem: {
+    display: "flex",
+    alignItems: "center",
+    gap: "11px",
+    width: "100%",
+    padding: "12px",
+    color: "#f1f5f9",
+    background: "transparent",
+    border: 0,
+    borderRadius: "8px",
+    textAlign: "left",
+    fontSize: "13px",
+    cursor: "pointer",
+  },
+
+  hiddenInput: {
+    display: "none",
+  },
+
+  previewBar: {
+    display: "flex",
+    alignItems: "center",
+    gap: "10px",
+    margin: "8px 10px 0",
+    padding: "8px",
+    background: "#172b40",
+    border: "1px solid #355168",
+    borderRadius: "10px",
+  },
+  previewImage: {
+    width: "55px",
+    height: "55px",
+    objectFit: "cover",
+    borderRadius: "7px",
+  },
+
+  removeImageButton: {
+    width: "30px",
+    height: "30px",
+    color: "#fff",
+    background: "#29465c",
+    border: 0,
+    borderRadius: "7px",
+    cursor: "pointer",
+  },
+
+  userImage: {
+    display: "block",
+    width: "180px",
+    maxWidth: "100%",
+    maxHeight: "200px",
+    marginTop: "7px",
+    objectFit: "contain",
+    borderRadius: "10px",
+    border: "1px solid #355168",
+  },
+
+  cameraOverlay: {
+    position: "absolute",
+    inset: 0,
+    zIndex: 100001,
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    padding: "15px",
+    background: "rgba(0,0,0,.88)",
+  },
+
+  cameraDialog: {
+    width: "100%",
+    display: "flex",
+    flexDirection: "column",
+    gap: "12px",
+  },
+
+  cameraHeader: {
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "space-between",
+    color: "#47e3ef",
+  },
+
+  cameraVideo: {
+    width: "100%",
+    maxHeight: "390px",
+    background: "#000",
+    borderRadius: "12px",
+    objectFit: "contain",
+  },
+
+  cameraActions: {
+    display: "flex",
+    gap: "10px",
+  },
+
+  cameraCancelButton: {
+    flex: 1,
+    padding: "12px",
+    color: "#fff",
+    background: "#29465c",
+    border: 0,
+    borderRadius: "9px",
+    cursor: "pointer",
+  },
+
+  cameraCaptureButton: {
+    flex: 2,
+    padding: "12px",
     color: "#07111f",
     background: "#47e3ef",
     border: 0,
