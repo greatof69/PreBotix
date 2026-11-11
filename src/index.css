@@ -4925,3 +4925,38 @@ body img:not([data-allow-image-copy]) {
     width: 100%;
   }
 }
+
+/* Remember Me: keep checkbox and text on one horizontal line */
+.account-remember {
+  display: inline-flex !important;
+  flex-direction: row !important;
+  flex-wrap: nowrap !important;
+  align-items: center !important;
+  white-space: nowrap !important;
+  width: fit-content;
+  max-width: 100%;
+}
+
+.account-remember input[type="checkbox"] {
+  flex: 0 0 16px !important;
+}
+
+.account-remember span {
+  white-space: nowrap !important;
+}
+
+/* OTP resend cooldown */
+.account-resend {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 9px;
+}
+
+.account-resend-timer {
+  color: #64748b;
+  font-size: 12px;
+  line-height: 1.5;
+  white-space: nowrap;
+}

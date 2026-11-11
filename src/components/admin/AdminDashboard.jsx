@@ -1,7 +1,7 @@
-﻿import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import DashboardLayout from "../shared/DashboardLayout";
-import { clearAuthSession, getAccessToken } from "../../utils/authSession";
+import { clearAuthSession, getAccessToken, authFetch } from "../../utils/authSession";
 import FloatingCalculator from "../shared/FloatingCalculator";
 
 const API = import.meta.env.VITE_API_URL || "http://localhost:5000";
@@ -257,11 +257,10 @@ const [savingAnnouncements, setSavingAnnouncements] = useState(false);
       throw new Error("Your session has expired. Please log in again.");
     }
 
-    const response = await fetch(`${API}/api/admin${path}`, {
+    const response = await authFetch(`${API}/api/admin${path}`, {
       ...options,
       headers: {
         ...options.headers,
-        Authorization: `Bearer ${token}`,
         "Content-Type": "application/json",
       },
     });
@@ -726,17 +725,13 @@ const deleteFilteredMessages = async () => {
     setMessage("");
 
     try {
-      const token = getAccessToken();
-      if (!token) throw new Error("Your session has expired. Please log in again.");
-
       const formData = new FormData();
       formData.append("image", file);
 
-      const response = await fetch(
+      const response = await authFetch(
         `${API}/api/admin/storefront-settings/upload/${asset}`,
         {
           method: "POST",
-          headers: { Authorization: `Bearer ${token}` },
           body: formData,
         }
       );

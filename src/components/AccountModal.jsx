@@ -1,4 +1,4 @@
-﻿
+
 /* eslint-disable react-hooks/set-state-in-effect */
 
 import { useEffect, useState } from "react";
@@ -18,6 +18,7 @@ export default function AccountModal({
   setAccountPassword,
   accountOtp,
   setAccountOtp,
+  otpExpiresAt,
   accountNewPassword,
   setAccountNewPassword,
   accountMessage,
@@ -37,32 +38,39 @@ export default function AccountModal({
   rememberMe = false,
   setRememberMe = () => {},
 }) {
-  const [cooldown, setCooldown] = useState(0);
   const bn = lang === "bn";
-
   const t = (english, bangla) => (bn ? bangla : english);
+
+  const otpMode = [
+    "verify-registration",
+    "verify-login",
+    "reset-password",
+  ].includes(accountMode);
+
+  const [now, setNow] = useState(Date.now());
   const [showPassword, setShowPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
 
   useEffect(() => {
-    if (cooldown <= 0) return undefined;
+    if (!otpMode || !otpExpiresAt) return undefined;
 
-    const timer = setTimeout(() => {
-      setCooldown((value) => Math.max(0, value - 1));
+    const timer = setInterval(() => {
+      setNow(Date.now());
     }, 1000);
 
-    return () => clearTimeout(timer);
-  }, [cooldown]);
+    return () => clearInterval(timer);
+  }, [otpMode, otpExpiresAt]);
 
-  useEffect(() => {
-    if (
-      !["verify-registration", "verify-login", "reset-password"].includes(
-        accountMode
-      )
-    ) {
-      setCooldown(0);
-    }
-  }, [accountMode]);
+  const expiryTime = otpExpiresAt
+    ? new Date(otpExpiresAt).getTime()
+    : 0;
+
+  const cooldown = expiryTime > 0
+    ? Math.max(0, Math.ceil((expiryTime - now) / 1000))
+    : 0;
+
+  const minutes = String(Math.floor(cooldown / 60)).padStart(2, "0");
+  const seconds = String(cooldown % 60).padStart(2, "0");
 
   useEffect(() => {
     if (accountMode === "dashboard" && accountUser) {
@@ -70,11 +78,6 @@ export default function AccountModal({
     }
   }, [accountMode, accountUser, loadMyOrders]);
 
-  const otpMode = [
-    "verify-registration",
-    "verify-login",
-    "reset-password",
-  ].includes(accountMode);
 
   const titleMap = {
     login: t("Welcome back", "আবার স্বাগতম"),
@@ -91,9 +94,7 @@ export default function AccountModal({
   const handleResend = async () => {
     if (cooldown > 0 || accountLoading) return;
 
-    const success = await resendAccountOtp();
-
-    if (success) setCooldown(60);
+    await resendAccountOtp();
   };
 
   const switchMode = (mode) => {
@@ -523,13 +524,20 @@ export default function AccountModal({
                   onClick={handleResend}
                   disabled={cooldown > 0 || accountLoading}
                 >
+                  {t("Resend OTP", "আবার OTP পাঠান")}
+                </button>
+
+                <span className="account-resend-timer" aria-live="polite">
                   {cooldown > 0
                     ? t(
-                        `Resend OTP (${cooldown}s)`,
-                        `আবার OTP পাঠান (${cooldown} সেকেন্ড)`
+                        `Available in ${minutes}:${seconds}`,
+                        `আবার পাঠাতে ${minutes}:${seconds}`
                       )
-                    : t("Resend OTP", "আবার OTP পাঠান")}
-                </button>
+                    : t(
+                        "You can resend now",
+                        "এখন আবার OTP পাঠাতে পারবেন"
+                      )}
+                </span>
               </div>
             )}
 

@@ -1,11 +1,11 @@
-﻿import { createPortal } from "react-dom";
+import { createPortal } from "react-dom";
 import { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import DashboardLayout from "../shared/DashboardLayout";
 import FloatingCalculator from "../shared/FloatingCalculator";
 import {
   clearAuthSession,
-  getAccessToken,
+  authFetch,
 } from "../../utils/authSession";
 
 const API = import.meta.env.VITE_API_URL || "http://localhost:5000";
@@ -235,21 +235,12 @@ export default function ModeratorDashboard({
   // -------------------- API Request --------------------
 
   const request = useCallback(async (path, options = {}) => {
-    const token = getAccessToken();
-
-    if (!token) {
-      throw new Error(
-        "Your session has expired. Please log in again."
-      );
-    }
-
-    const response = await fetch(
+    const response = await authFetch(
       `${API}/api/moderator${path}`,
       {
         ...options,
         headers: {
           ...options.headers,
-          Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
         },
       }

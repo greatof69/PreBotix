@@ -1,4 +1,4 @@
-﻿import React, {
+import React, {
   useCallback,
   useEffect,
   useMemo,
@@ -601,6 +601,7 @@ const handleProductImageSettled = useCallback((productId) => {
   const [accountEmail, setAccountEmail] = useState("");
   const [accountPassword, setAccountPassword] = useState("");
   const [accountOtp, setAccountOtp] = useState("");
+  const [accountOtpExpiresAt, setAccountOtpExpiresAt] = useState(null);
   const [accountNewPassword, setAccountNewPassword] = useState("");
   const [accountLoading, setAccountLoading] = useState(false);
   const [accountMessage, setAccountMessage] = useState("");
@@ -1430,12 +1431,6 @@ const handleProductImageSettled = useCallback((productId) => {
       const data = await response.json().catch(() => ({}));
 
       if (!response.ok) {
-        if (response.status === 401) {
-          clearAuthSession();
-          setAccountUser(null);
-          setAccountMode("login");
-        }
-
         throw new Error(data.message || "Could not load your orders.");
       }
 
@@ -1758,6 +1753,7 @@ const handleProductImageSettled = useCallback((productId) => {
         });
 
         setAccountEmail(email);
+        setAccountOtpExpiresAt(data.otpExpiresAt || null);
         setAccountPassword("");
         setAccountOtp("");
         setAccountMode("verify-registration");
@@ -1775,6 +1771,7 @@ const handleProductImageSettled = useCallback((productId) => {
         });
 
         setAccountEmail(email);
+        setAccountOtpExpiresAt(data.otpExpiresAt || null);
         setAccountPassword("");
         setAccountOtp("");
         setAccountMode("verify-login");
@@ -1809,6 +1806,7 @@ const handleProductImageSettled = useCallback((productId) => {
           otp: accountOtp.trim(),
         });
 
+        setAccountOtpExpiresAt(null);
         setAccountOtp("");
         setAccountMode("login");
 
@@ -1822,7 +1820,7 @@ const handleProductImageSettled = useCallback((productId) => {
         const data = await apiRequest("/verify-login", {
           email,
           otp: accountOtp.trim(),
-          rememberMe,
+          rememberMe: true,
         });
 
         if (!data.accessToken || !data.refreshToken || !data.user) {
@@ -1834,13 +1832,14 @@ const handleProductImageSettled = useCallback((productId) => {
         saveAuthSession(
           data.accessToken,
           data.user,
-          rememberMe,
+          true,
           data.refreshToken
         );
 
         setAccountUser(data.user);
 
         // Login done: close the modal and never open the dashboard.
+        setAccountOtpExpiresAt(null);
         setAccountOtp("");
         setAccountMessage("");
         setAccountOpen(false);
@@ -1878,6 +1877,7 @@ const handleProductImageSettled = useCallback((productId) => {
         email: accountEmail.trim().toLowerCase(),
       });
 
+      setAccountOtpExpiresAt(data.otpExpiresAt || null);
       setAccountOtp("");
       setAccountNewPassword("");
       setAccountMode("reset-password");
@@ -1914,6 +1914,8 @@ const handleProductImageSettled = useCallback((productId) => {
       const data = await apiRequest(endpoint, {
         email: accountEmail.trim().toLowerCase(),
       });
+
+      setAccountOtpExpiresAt(data.otpExpiresAt || null);
 
       setAccountMessage(
         data.message ||
@@ -2345,6 +2347,7 @@ const handleProductImageSettled = useCallback((productId) => {
             setAccountPassword={setAccountPassword}
             accountOtp={accountOtp}
             setAccountOtp={setAccountOtp}
+            otpExpiresAt={accountOtpExpiresAt}
             accountNewPassword={accountNewPassword}
             setAccountNewPassword={setAccountNewPassword}
             accountMessage={accountMessage}
