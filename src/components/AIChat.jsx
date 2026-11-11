@@ -101,6 +101,7 @@ export default function AIChat({
   const requestIdRef = useRef(0); // chat clear korle pending reply ignore korar jonno
   const closeTimerRef = useRef(null); // menu hover-e ektu delay diye bondho korar jonno
   const pointerTypeRef = useRef("mouse");
+  const menuBoxRef = useRef(null);
 
   // Save conversation on every change.
   useEffect(() => {
@@ -146,10 +147,61 @@ export default function AIChat({
     };
   }, [imagePreview]);
 
-  // Clear menu close timer on unmount.
+  // Menu khola thakle:
+  // - menu-r bairey click korle ba Esc chapole bondho hobe
+  // - mouse menu theke onek dure (120px+) gele bondho hobe
+  // - kache thakle (button, box, majher gap) kokhono bondho hobe na
   useEffect(() => {
-    return () => clearTimeout(closeTimerRef.current);
-  }, []);
+    if (!menuOpen) return undefined;
+
+    const onPointerDown = (e) => {
+      if (!menuRef.current?.contains(e.target)) {
+        setMenuOpen(false);
+      }
+    };
+
+    const onKeyDown = (e) => {
+      if (e.key === "Escape") setMenuOpen(false);
+    };
+
+    const onMove = (e) => {
+      if (e.pointerType && e.pointerType !== "mouse") return;
+
+      const a = menuRef.current?.getBoundingClientRect();
+      const b = menuBoxRef.current?.getBoundingClientRect();
+
+      if (!a) return;
+
+      const pad = 120;
+      const left = Math.min(a.left, b?.left ?? a.left) - pad;
+      const top = Math.min(a.top, b?.top ?? a.top) - pad;
+      const right = Math.max(a.right, b?.right ?? a.right) + pad;
+      const bottom = Math.max(a.bottom, b?.bottom ?? a.bottom) + pad;
+
+      const inside =
+        e.clientX >= left &&
+        e.clientX <= right &&
+        e.clientY >= top &&
+        e.clientY <= bottom;
+
+      clearTimeout(closeTimerRef.current);
+
+      if (!inside) {
+        closeTimerRef.current = setTimeout(() => setMenuOpen(false), 300);
+      }
+    };
+
+    document.addEventListener("pointerdown", onPointerDown);
+    document.addEventListener("keydown", onKeyDown);
+    document.addEventListener("pointermove", onMove);
+
+    return () => {
+      document.removeEventListener("pointerdown", onPointerDown);
+      document.removeEventListener("keydown", onKeyDown);
+      document.removeEventListener("pointermove", onMove);
+      clearTimeout(closeTimerRef.current);
+    };
+  }, [menuOpen]);
 
   // Release camera when component unmounts.
   useEffect(() => {
@@ -866,15 +918,6 @@ export default function AIChat({
               clearTimeout(closeTimerRef.current);
               setMenuOpen(true);
             }}
-            onPointerLeave={(e) => {
-              if (e.pointerType !== "mouse") return;
-              clearTimeout(closeTimerRef.current);
-              // 400ms delay: mouse box-e jawar somoy menu bondho hobe na
-              closeTimerRef.current = setTimeout(
-                () => setMenuOpen(false),
-                400
-              );
-            }}
           >
             <button
               type="button"
@@ -896,7 +939,7 @@ export default function AIChat({
 
             {menuOpen && (
               <div style={styles.attachmentMenuOuter}>
-                <div style={styles.attachmentMenu}>
+                <div ref={menuBoxRef} style={styles.attachmentMenu}>
                   <button
                     type="button"
                     style={styles.attachmentItem}
@@ -1315,9 +1358,10 @@ const styles = {
   attachmentMenuOuter: {
     position: "absolute",
     left: "0",
-    bottom: "42px",
-    paddingBottom: "4px", // box ta button-er ekdom kache (4px upore), gap nai bolei hover hare na
+    bottom: "100%", // button-er ekdom upore, majhe kono gap nei
+    paddingBottom: "6px",
     zIndex: 100002,
+    pointerEvents: "auto",
   },
 
   attachmentMenu: {
