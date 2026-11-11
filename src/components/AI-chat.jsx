@@ -1,4 +1,3 @@
-
 import { useEffect, useRef, useState } from "react";
 
 const API = (
@@ -36,14 +35,11 @@ function formatPrice(price, lang) {
 
   if (!Number.isFinite(amount)) return "—";
 
-  return new Intl.NumberFormat(
-    lang === "bn" ? "bn-BD" : "en-BD",
-    {
-      style: "currency",
-      currency: "BDT",
-      maximumFractionDigits: 2,
-    }
-  ).format(amount);
+  return new Intl.NumberFormat(lang === "bn" ? "bn-BD" : "en-BD", {
+    style: "currency",
+    currency: "BDT",
+    maximumFractionDigits: 2,
+  }).format(amount);
 }
 
 export default function AIChat({
@@ -70,13 +66,12 @@ export default function AIChat({
   const menuRef = useRef(null);
   const bottomRef = useRef(null);
   const inputRef = useRef(null);
+  const requestIdRef = useRef(0); // chat clear korle pending reply ignore korar jonno
 
   // Scroll to latest message.
   useEffect(() => {
     if (isOpen) {
-      bottomRef.current?.scrollIntoView({
-        behavior: "smooth",
-      });
+      bottomRef.current?.scrollIntoView({ behavior: "smooth" });
     }
   }, [messages, loading, isOpen]);
 
@@ -97,11 +92,7 @@ export default function AIChat({
 
   // Attach camera stream to video.
   useEffect(() => {
-    if (
-      cameraOpen &&
-      videoRef.current &&
-      cameraStreamRef.current
-    ) {
+    if (cameraOpen && videoRef.current && cameraStreamRef.current) {
       videoRef.current.srcObject = cameraStreamRef.current;
       videoRef.current.play().catch(() => {});
     }
@@ -153,9 +144,7 @@ export default function AIChat({
 
     try {
       if (!navigator.mediaDevices?.getUserMedia) {
-        throw new Error(
-          "Camera access is not supported by this browser."
-        );
+        throw new Error("Camera access is not supported by this browser.");
       }
 
       const stream = await navigator.mediaDevices.getUserMedia({
@@ -187,9 +176,7 @@ export default function AIChat({
   const selectImage = (file) => {
     if (!file) return;
 
-    if (
-      !["image/jpeg", "image/png", "image/webp"].includes(file.type)
-    ) {
+    if (!["image/jpeg", "image/png", "image/webp"].includes(file.type)) {
       setError("Please select a JPG, PNG or WEBP image.");
       return;
     }
@@ -241,13 +228,7 @@ export default function AIChat({
       return;
     }
 
-    context.drawImage(
-      video,
-      0,
-      0,
-      canvas.width,
-      canvas.height
-    );
+    context.drawImage(video, 0, 0, canvas.width, canvas.height);
 
     canvas.toBlob(
       (blob) => {
@@ -256,11 +237,9 @@ export default function AIChat({
           return;
         }
 
-        const file = new File(
-          [blob],
-          "prebotix-camera.jpg",
-          { type: "image/jpeg" }
-        );
+        const file = new File([blob], "prebotix-camera.jpg", {
+          type: "image/jpeg",
+        });
 
         selectImage(file);
         stopCamera();
@@ -275,6 +254,27 @@ export default function AIChat({
     setImageFile(null);
   };
 
+  // Delete the whole conversation and reset everything.
+  const clearChat = () => {
+    const ok = window.confirm(
+      lang === "bn"
+        ? "সব মেসেজ মুছে ফেলতে চান?"
+        : "Delete all messages in this chat?"
+    );
+
+    if (!ok) return;
+
+    requestIdRef.current += 1; // pending AI reply ar ashbe na
+    stopCamera();
+    setMenuOpen(false);
+    setMessages([initialMessage]);
+    setInput("");
+    setError("");
+    setLoading(false);
+    removeSelectedImage();
+    inputRef.current?.focus();
+  };
+
   const sendMessage = async (event) => {
     event?.preventDefault();
 
@@ -287,15 +287,14 @@ export default function AIChat({
       return;
     }
 
-    const updatedMessages = [
-      ...messages,
-      { role: "user", text },
-    ];
+    const updatedMessages = [...messages, { role: "user", text }];
 
     setMessages(updatedMessages);
     setInput("");
     setError("");
     setLoading(true);
+
+    const myRequestId = ++requestIdRef.current;
 
     try {
       const response = await fetch(`${API}/api/ai-chat`, {
@@ -313,10 +312,10 @@ export default function AIChat({
 
       const data = await response.json();
 
+      if (myRequestId !== requestIdRef.current) return;
+
       if (!response.ok || !data.success) {
-        throw new Error(
-          data.message || "Could not get an AI response."
-        );
+        throw new Error(data.message || "Could not get an AI response.");
       }
 
       setMessages((current) => [
@@ -330,6 +329,8 @@ export default function AIChat({
         },
       ]);
     } catch (err) {
+      if (myRequestId !== requestIdRef.current) return;
+
       setError(
         err.message === "Failed to fetch"
           ? "Cannot connect to PreBotix server. Check that the backend is running."
@@ -350,6 +351,7 @@ export default function AIChat({
     setError("");
     setMenuOpen(false);
 
+    const myRequestId = ++requestIdRef.current;
     const caption = input.trim();
 
     try {
@@ -379,13 +381,7 @@ export default function AIChat({
               return;
             }
 
-            ctx.drawImage(
-              image,
-              0,
-              0,
-              canvas.width,
-              canvas.height
-            );
+            ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
 
             resolve(canvas.toDataURL("image/jpeg", 0.82));
           };
@@ -421,10 +417,10 @@ export default function AIChat({
 
       const data = await response.json();
 
+      if (myRequestId !== requestIdRef.current) return;
+
       if (!response.ok || !data.success) {
-        throw new Error(
-          data.message || "Image analysis failed."
-        );
+        throw new Error(data.message || "Image analysis failed.");
       }
 
       const recommendations = (data.matches || [])
@@ -465,7 +461,7 @@ export default function AIChat({
         role: "assistant",
         text: recommendations.length
           ? lang === "bn"
-            ? "ছবিটি বিশ্লেষণ করেছি। PreBotix-এর ক্যাটালগে সবচেয়ে বেশি মিল পাওয়া পণ্যগুলো নিচে দেওয়া হলো।"
+            ? "ছবিটি বিশ্লেষণ করেছি। PreBotix-এর ক্যাটালগে সবচেয়ে বেশি মিল পাওয়া পণ্যগুলো নিচে দেওয়া হলো।"
             : "I've analyzed your image. Here are the closest matching products available in PreBotix."
           : lang === "bn"
             ? "ছবিটি বিশ্লেষণ করেছি, কিন্তু PreBotix ক্যাটালগে ৯০% বা তার বেশি confidence-এর কোনো নির্ভরযোগ্য মিল পাইনি।"
@@ -473,15 +469,13 @@ export default function AIChat({
         products: recommendations,
       };
 
-      setMessages((current) => [
-        ...current,
-        userMessage,
-        assistantMessage,
-      ]);
+      setMessages((current) => [...current, userMessage, assistantMessage]);
 
       setInput("");
       removeSelectedImage();
     } catch (err) {
+      if (myRequestId !== requestIdRef.current) return;
+
       setError(
         err.message === "Failed to fetch"
           ? "Cannot connect to PreBotix server."
@@ -656,8 +650,8 @@ export default function AIChat({
 
                       const currentPrice = Number(
                         recommendation.currentPrice ??
-                        recommendation.price ??
-                        product?.price
+                          recommendation.price ??
+                          product?.price
                       );
 
                       const stock = Number(
@@ -669,8 +663,7 @@ export default function AIChat({
                       );
 
                       const inStock =
-                        stock > 0 &&
-                        recommendation.inStock !== false;
+                        stock > 0 && recommendation.inStock !== false;
 
                       return (
                         <article
@@ -827,47 +820,58 @@ export default function AIChat({
           <div
             ref={menuRef}
             style={styles.menuWrap}
-            onMouseEnter={() => setMenuOpen(true)}
-            onMouseLeave={() => setMenuOpen(false)}
+            onPointerEnter={(e) => {
+              if (e.pointerType === "mouse") setMenuOpen(true);
+            }}
+            onPointerLeave={(e) => {
+              if (e.pointerType === "mouse") setMenuOpen(false);
+            }}
           >
             <button
               type="button"
               style={styles.menuButton}
-              onClick={() => setMenuOpen(true)}
-              disabled={loading}
-              aria-label="Add image"
+              onClick={() => setMenuOpen((open) => !open)}
+              aria-label="Chat menu"
               aria-expanded={menuOpen}
             >
               +
             </button>
 
             {menuOpen && (
-              <div
-                style={styles.attachmentMenu}
-                onMouseEnter={() => setMenuOpen(true)}
-                onMouseLeave={() => setMenuOpen(false)}
-              >
-                <button
-                  type="button"
-                  style={styles.attachmentItem}
-                  onClick={() => {
-                    setMenuOpen(false);
-                    startCamera();
-                  }}
-                >
-                  📷 {lang === "bn" ? "ক্যামেরা ইনপুট" : "Camera Input"}
-                </button>
+              <div style={styles.attachmentMenuOuter}>
+                <div style={styles.attachmentMenu}>
+                  <button
+                    type="button"
+                    style={styles.attachmentItem}
+                    disabled={loading}
+                    onClick={() => {
+                      setMenuOpen(false);
+                      startCamera();
+                    }}
+                  >
+                    📷 {lang === "bn" ? "ক্যামেরা ইনপুট" : "Camera Input"}
+                  </button>
 
-                <button
-                  type="button"
-                  style={styles.attachmentItem}
-                  onClick={() => {
-                    setMenuOpen(false);
-                    fileInputRef.current?.click();
-                  }}
-                >
-                  📁 {lang === "bn" ? "ফাইল ইনপুট" : "File Input"}
-                </button>
+                  <button
+                    type="button"
+                    style={styles.attachmentItem}
+                    disabled={loading}
+                    onClick={() => {
+                      setMenuOpen(false);
+                      fileInputRef.current?.click();
+                    }}
+                  >
+                    📁 {lang === "bn" ? "ফাইল ইনপুট" : "File Input"}
+                  </button>
+
+                  <button
+                    type="button"
+                    style={styles.deleteItem}
+                    onClick={clearChat}
+                  >
+                    🗑 {lang === "bn" ? "চ্যাট মুছুন" : "Delete chat"}
+                  </button>
+                </div>
               </div>
             )}
           </div>
@@ -900,8 +904,7 @@ export default function AIChat({
             disabled={loading || (!input.trim() && !imageFile)}
             style={{
               ...styles.sendButton,
-              opacity:
-                loading || (!input.trim() && !imageFile) ? 0.55 : 1,
+              opacity: loading || (!input.trim() && !imageFile) ? 0.55 : 1,
             }}
           >
             {loading ? "…" : lang === "bn" ? "পাঠান" : "Send"}
@@ -913,9 +916,7 @@ export default function AIChat({
           <div style={styles.cameraOverlay}>
             <div style={styles.cameraDialog}>
               <div style={styles.cameraHeader}>
-                <strong>
-                  {lang === "bn" ? "ক্যামেরা" : "Camera Input"}
-                </strong>
+                <strong>{lang === "bn" ? "ক্যামেরা" : "Camera Input"}</strong>
 
                 <button
                   type="button"
@@ -975,7 +976,7 @@ const styles = {
     zIndex: 99999,
     width: "370px",
     maxWidth: "calc(100vw - 24px)",
-    height: "min(650px, calc(100dvh - 125px)",
+    height: "min(650px, calc(100dvh - 125px))",
     display: "flex",
     flexDirection: "column",
     overflow: "hidden",
@@ -1252,10 +1253,16 @@ const styles = {
     flexShrink: 0,
   },
 
-  attachmentMenu: {
+  // Invisible wrapper: button ar visible box-er majhe gap-ta hover "bridge" hoye thake
+  attachmentMenuOuter: {
     position: "absolute",
     left: "0",
     bottom: "42px",
+    paddingBottom: "18px", // box ta button theke 18px upore uthbe
+    zIndex: 100002,
+  },
+
+  attachmentMenu: {
     width: "190px",
     padding: "7px",
     display: "flex",
@@ -1265,7 +1272,6 @@ const styles = {
     border: "1px solid #47e3ef",
     borderRadius: "12px",
     boxShadow: "0 10px 30px rgba(0,0,0,.45)",
-    zIndex: 100002,
   },
 
   attachmentItem: {
@@ -1277,6 +1283,22 @@ const styles = {
     color: "#f1f5f9",
     background: "transparent",
     border: 0,
+    borderRadius: "8px",
+    textAlign: "left",
+    fontSize: "13px",
+    cursor: "pointer",
+  },
+
+  deleteItem: {
+    display: "flex",
+    alignItems: "center",
+    gap: "11px",
+    width: "100%",
+    padding: "12px",
+    marginTop: "2px",
+    color: "#ffb4b4",
+    background: "rgba(239,68,68,.12)",
+    border: "1px solid rgba(239,68,68,.3)",
     borderRadius: "8px",
     textAlign: "left",
     fontSize: "13px",
