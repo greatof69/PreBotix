@@ -99,6 +99,9 @@ export default function AIChat({
   const bottomRef = useRef(null);
   const inputRef = useRef(null);
   const requestIdRef = useRef(0); // chat clear korle pending reply ignore korar jonno
+  const closeTimerRef = useRef(null); // menu hover-e ektu delay diye bondho korar jonno
+  const pointerTypeRef = useRef("mouse");
+  const menuBoxRef = useRef(null);
 
   // Save conversation on every change.
   useEffect(() => {
@@ -143,6 +146,32 @@ export default function AIChat({
       }
     };
   }, [imagePreview]);
+
+  // Menu khola thakle:
+  // - menu-r bairey click korle ba Esc chapole bondho hobe
+  // - mouse soralei bondho hobe NA (hover-e khulle khola-i thake)
+  useEffect(() => {
+    if (!menuOpen) return undefined;
+
+    const onPointerDown = (e) => {
+      if (!menuRef.current?.contains(e.target)) {
+        setMenuOpen(false);
+      }
+    };
+
+    const onKeyDown = (e) => {
+      if (e.key === "Escape") setMenuOpen(false);
+    };
+
+    document.addEventListener("pointerdown", onPointerDown);
+    document.addEventListener("keydown", onKeyDown);
+
+    return () => {
+      document.removeEventListener("pointerdown", onPointerDown);
+      document.removeEventListener("keydown", onKeyDown);
+      clearTimeout(closeTimerRef.current);
+    };
+  }, [menuOpen]);
 
   // Release camera when component unmounts.
   useEffect(() => {
@@ -855,16 +884,23 @@ export default function AIChat({
             ref={menuRef}
             style={styles.menuWrap}
             onPointerEnter={(e) => {
-              if (e.pointerType === "mouse") setMenuOpen(true);
-            }}
-            onPointerLeave={(e) => {
-              if (e.pointerType === "mouse") setMenuOpen(false);
+              if (e.pointerType !== "mouse") return;
+              clearTimeout(closeTimerRef.current);
+              setMenuOpen(true);
             }}
           >
             <button
               type="button"
               style={styles.menuButton}
-              onClick={() => setMenuOpen((open) => !open)}
+              onPointerDown={(e) => {
+                pointerTypeRef.current = e.pointerType;
+              }}
+              onClick={() =>
+                // Mouse: hover-e already open, click-e bondho hobe na. Touch: toggle.
+                setMenuOpen((open) =>
+                  pointerTypeRef.current === "mouse" ? true : !open
+                )
+              }
               aria-label="Chat menu"
               aria-expanded={menuOpen}
             >
@@ -873,7 +909,7 @@ export default function AIChat({
 
             {menuOpen && (
               <div style={styles.attachmentMenuOuter}>
-                <div style={styles.attachmentMenu}>
+                <div ref={menuBoxRef} style={styles.attachmentMenu}>
                   <button
                     type="button"
                     style={styles.attachmentItem}
@@ -1292,9 +1328,10 @@ const styles = {
   attachmentMenuOuter: {
     position: "absolute",
     left: "0",
-    bottom: "62px",
-    paddingBottom: "18px", // box ta button theke 42px upore uthbe (aro upore chaile eta baran)
+    bottom: "100%", // button-er ekdom upore, majhe kono gap nei
+    paddingBottom: "6px",
     zIndex: 100002,
+    pointerEvents: "auto",
   },
 
   attachmentMenu: {
@@ -1348,7 +1385,7 @@ const styles = {
     display: "flex",
     alignItems: "center",
     gap: "10px",
-    margin: "8px 10px 0",
+    margin: "8px 10px 14px",
     padding: "8px",
     background: "#172b40",
     border: "1px solid #355168",
