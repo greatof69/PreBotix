@@ -63,24 +63,67 @@ export default function AIChat({
   const [imageFile, setImageFile] = useState(null);
   const [imagePreview, setImagePreview] = useState("");
   const [cameraOpen, setCameraOpen] = useState(false);
-  
+
   const fileInputRef = useRef(null);
   const videoRef = useRef(null);
   const cameraStreamRef = useRef(null);
   const menuRef = useRef(null);
-
   const bottomRef = useRef(null);
   const inputRef = useRef(null);
 
+  // Scroll to latest message.
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages, loading]);
+    if (isOpen) {
+      bottomRef.current?.scrollIntoView({
+        behavior: "smooth",
+      });
+    }
+  }, [messages, loading, isOpen]);
 
+  // Focus input when chat opens.
   useEffect(() => {
-    if (isOpen) inputRef.current?.focus();
+    if (isOpen) {
+      inputRef.current?.focus();
+    }
   }, [isOpen]);
 
+  // Stop camera when chat closes.
+  useEffect(() => {
+    if (!isOpen) {
+      stopCamera();
+      setMenuOpen(false);
+    }
+  }, [isOpen]);
 
+  // Attach camera stream to video.
+  useEffect(() => {
+    if (
+      cameraOpen &&
+      videoRef.current &&
+      cameraStreamRef.current
+    ) {
+      videoRef.current.srcObject = cameraStreamRef.current;
+      videoRef.current.play().catch(() => {});
+    }
+  }, [cameraOpen]);
+
+  // Release image preview URL when it changes or component unmounts.
+  useEffect(() => {
+    return () => {
+      if (imagePreview) {
+        URL.revokeObjectURL(imagePreview);
+      }
+    };
+  }, [imagePreview]);
+
+  // Release camera when component unmounts.
+  useEffect(() => {
+    return () => {
+      cameraStreamRef.current?.getTracks().forEach((track) => {
+        track.stop();
+      });
+    };
+  }, []);
 
   const stopCamera = () => {
     if (cameraStreamRef.current) {
@@ -98,137 +141,139 @@ export default function AIChat({
     setCameraOpen(false);
   };
 
-const startCamera = async () => {
-  setMenuOpen(false);
-
-  try {
-    if (!navigator.mediaDevices?.getUserMedia) {
-      throw new Error("Camera access is not supported by this browser.");
-    }
-
-    const stream = await navigator.mediaDevices.getUserMedia({
-      audio: false,
-      video: {
-        facingMode: { ideal: "environment" },
-        width: { ideal: 1280 },
-        height: { ideal: 1280 },
-      },
-    });
-
-    cameraStreamRef.current = stream;
-    setCameraOpen(true);
-  } catch (err) {
-    setError(
-      err.name === "NotAllowedError"
-        ? "Camera permission denied. Please allow camera access."
-        : err.message || "Could not access camera."
-    );
-  }
-};
-
-useEffect(() => {
-  if (cameraOpen && videoRef.current && cameraStreamRef.current) {
-    videoRef.current.srcObject = cameraStreamRef.current;
-    videoRef.current.play().catch(() => {});
-  }
-}, [cameraOpen]);
-
-useEffect(() => {
-  return () => {
-    cameraStreamRef.current?.getTracks().forEach((track) => {
-      track.stop();
-    });
-
-    if (imagePreview) {
-      URL.revokeObjectURL(imagePreview);
-    }
+  const closeChat = () => {
+    stopCamera();
+    setMenuOpen(false);
+    onClose?.();
   };
-}, []);
 
-const selectImage = (file) => {
-  if (!file) return;
+  const startCamera = async () => {
+    setMenuOpen(false);
+    setError("");
 
-  if (!["image/jpeg", "image/png", "image/webp"].includes(file.type)) {
-    setError("Please select a JPG, PNG or WEBP image.");
-    return;
-  }
+    try {
+      if (!navigator.mediaDevices?.getUserMedia) {
+        throw new Error(
+          "Camera access is not supported by this browser."
+        );
+      }
 
-  if (file.size > 10 * 1024 * 1024) {
-    setError("Image size must be below 10 MB.");
-    return;
-  }
+      const stream = await navigator.mediaDevices.getUserMedia({
+        audio: false,
+        video: {
+          facingMode: { ideal: "environment" },
+          width: { ideal: 1280 },
+          height: { ideal: 1280 },
+        },
+      });
 
-  setError("");
-
-  setImagePreview((old) => {
-    if (old) URL.revokeObjectURL(old);
-    return URL.createObjectURL(file);
-  });
-
-  setImageFile(file);
-};
-
-const handleFileInput = (event) => {
-  const file = event.target.files?.[0];
-
-  event.target.value = "";
-
-  selectImage(file);
-};
-
-const captureCameraImage = () => {
-  const video = videoRef.current;
-
-  if (!video || !video.videoWidth) {
-    setError("Camera is not ready. Please try again.");
-    return;
-  }
-
-  const canvas = document.createElement("canvas");
-
-  const maxSize = 1280;
-  const scale = Math.min(
-    1,
-    maxSize / Math.max(video.videoWidth, video.videoHeight)
-  );
-
-  canvas.width = Math.round(video.videoWidth * scale);
-  canvas.height = Math.round(video.videoHeight * scale);
-
-  const context = canvas.getContext("2d");
-
-  context.drawImage(video, 0, 0, canvas.width, canvas.height);
-
-  canvas.toBlob(
-    (blob) => {
-      if (!blob) {
-        setError("Could not capture the image.");
+      // If chat closed while permission was pending, stop the stream.
+      if (!isOpen) {
+        stream.getTracks().forEach((track) => track.stop());
         return;
       }
 
-      const file = new File(
-        [blob],
-        "prebotix-camera.jpg",
-        { type: "image/jpeg" }
+      cameraStreamRef.current = stream;
+      setCameraOpen(true);
+    } catch (err) {
+      setError(
+        err.name === "NotAllowedError"
+          ? "Camera permission denied. Please allow camera access."
+          : err.message || "Could not access camera."
       );
+    }
+  };
 
-      selectImage(file);
-      stopCamera();
-    },
-    "image/jpeg",
-    0.85
-  );
-};
+  const selectImage = (file) => {
+    if (!file) return;
 
-const removeSelectedImage = () => {
-  setImagePreview((old) => {
-    if (old) URL.revokeObjectURL(old);
-    return "";
-  });
+    if (
+      !["image/jpeg", "image/png", "image/webp"].includes(file.type)
+    ) {
+      setError("Please select a JPG, PNG or WEBP image.");
+      return;
+    }
 
-  setImageFile(null);
-};
+    if (file.size > 10 * 1024 * 1024) {
+      setError("Image size must be below 10 MB.");
+      return;
+    }
 
+    setError("");
+
+    const preview = URL.createObjectURL(file);
+
+    setImagePreview(preview);
+    setImageFile(file);
+  };
+
+  const handleFileInput = (event) => {
+    const file = event.target.files?.[0];
+
+    event.target.value = "";
+
+    selectImage(file);
+  };
+
+  const captureCameraImage = () => {
+    const video = videoRef.current;
+
+    if (!video || !video.videoWidth) {
+      setError("Camera is not ready. Please try again.");
+      return;
+    }
+
+    const canvas = document.createElement("canvas");
+    const maxSize = 1280;
+
+    const scale = Math.min(
+      1,
+      maxSize / Math.max(video.videoWidth, video.videoHeight)
+    );
+
+    canvas.width = Math.round(video.videoWidth * scale);
+    canvas.height = Math.round(video.videoHeight * scale);
+
+    const context = canvas.getContext("2d");
+
+    if (!context) {
+      setError("Could not capture the image.");
+      return;
+    }
+
+    context.drawImage(
+      video,
+      0,
+      0,
+      canvas.width,
+      canvas.height
+    );
+
+    canvas.toBlob(
+      (blob) => {
+        if (!blob) {
+          setError("Could not capture the image.");
+          return;
+        }
+
+        const file = new File(
+          [blob],
+          "prebotix-camera.jpg",
+          { type: "image/jpeg" }
+        );
+
+        selectImage(file);
+        stopCamera();
+      },
+      "image/jpeg",
+      0.85
+    );
+  };
+
+  const removeSelectedImage = () => {
+    setImagePreview("");
+    setImageFile(null);
+  };
 
   const sendMessage = async (event) => {
     event?.preventDefault();
@@ -296,139 +341,146 @@ const removeSelectedImage = () => {
     }
   };
 
+  const sendImageMessage = async (event) => {
+    event?.preventDefault();
 
-const sendImageMessage = async (event) => {
-  event?.preventDefault();
+    if (!imageFile || loading) return;
 
-  if (!imageFile || loading) return;
+    setLoading(true);
+    setError("");
+    setMenuOpen(false);
 
-  setLoading(true);
-  setError("");
-  setMenuOpen(false);
+    const caption = input.trim();
 
-  const caption = input.trim();
+    try {
+      const imageUrl = await new Promise((resolve, reject) => {
+        const reader = new FileReader();
 
-  try {
-    // Resize image before sending to reduce bandwidth.
-    const imageUrl = await new Promise((resolve, reject) => {
-      const reader = new FileReader();
+        reader.onload = () => {
+          const image = new Image();
 
-      reader.onload = () => {
-        const image = new Image();
+          image.onload = () => {
+            const maxSize = 1280;
 
-        image.onload = () => {
-          const maxSize = 1280;
-          const scale = Math.min(
-            1,
-            maxSize / Math.max(image.width, image.height)
-          );
+            const scale = Math.min(
+              1,
+              maxSize / Math.max(image.width, image.height)
+            );
 
-          const canvas = document.createElement("canvas");
+            const canvas = document.createElement("canvas");
 
-          canvas.width = Math.round(image.width * scale);
-          canvas.height = Math.round(image.height * scale);
+            canvas.width = Math.round(image.width * scale);
+            canvas.height = Math.round(image.height * scale);
 
-          const ctx = canvas.getContext("2d");
+            const ctx = canvas.getContext("2d");
 
-          ctx.drawImage(
-            image,
-            0,
-            0,
-            canvas.width,
-            canvas.height
-          );
+            if (!ctx) {
+              reject(new Error("Could not process the image."));
+              return;
+            }
 
-          resolve(canvas.toDataURL("image/jpeg", 0.82));
+            ctx.drawImage(
+              image,
+              0,
+              0,
+              canvas.width,
+              canvas.height
+            );
+
+            resolve(canvas.toDataURL("image/jpeg", 0.82));
+          };
+
+          image.onerror = () => {
+            reject(new Error("Could not read the selected image."));
+          };
+
+          image.src = reader.result;
         };
 
-        image.onerror = reject;
-        image.src = reader.result;
+        reader.onerror = () => {
+          reject(new Error("Could not read the selected image."));
+        };
+
+        reader.readAsDataURL(imageFile);
+      });
+
+      const response = await fetch(`${API}/api/image-search`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          image: imageUrl,
+          catalog: products.map((product) => ({
+            id: product.id,
+            title: product.title,
+            category: product.category,
+          })),
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok || !data.success) {
+        throw new Error(
+          data.message || "Image analysis failed."
+        );
+      }
+
+      const recommendations = (data.matches || [])
+        .map((match) => {
+          const product = products.find(
+            (item) => String(item.id) === String(match.id)
+          );
+
+          if (!product) return null;
+
+          return {
+            id: product.id,
+            title: product.title,
+            bn: product.bn,
+            category: product.category,
+            image: product.image,
+            price: product.discountPrice || product.price,
+            currentPrice: product.discountPrice || product.price,
+            oldPrice: product.oldPrice,
+            stock: product.stock,
+            inStock: Number(product.stock) > 0,
+            confidence: match.confidence,
+          };
+        })
+        .filter(Boolean);
+
+      const userMessage = {
+        role: "user",
+        text:
+          caption ||
+          (lang === "bn"
+            ? "এই ছবির পণ্যটি শনাক্ত করুন।"
+            : "Please identify this product."),
+        image: imageUrl,
       };
 
-      reader.onerror = reject;
-      reader.readAsDataURL(imageFile);
-    });
+      const assistantMessage = {
+        role: "assistant",
+        text: recommendations.length
+          ? lang === "bn"
+            ? "ছবিটি বিশ্লেষণ করেছি। PreBotix-এর ক্যাটালগে সবচেয়ে বেশি মিল পাওয়া পণ্যগুলো নিচে দেওয়া হলো।"
+            : "I've analyzed your image. Here are the closest matching products available in PreBotix."
+          : lang === "bn"
+            ? "ছবিটি বিশ্লেষণ করেছি, কিন্তু PreBotix ক্যাটালগে ৯০% বা তার বেশি confidence-এর কোনো নির্ভরযোগ্য মিল পাইনি।"
+            : "I've analyzed the image, but couldn't find a sufficiently reliable match in the PreBotix catalog.",
+        products: recommendations,
+      };
 
-    const response = await fetch(`${API}/api/image-search`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        image: imageUrl,
+      setMessages((current) => [
+        ...current,
+        userMessage,
+        assistantMessage,
+      ]);
 
-        catalog: products.map((product) => ({
-          id: product.id,
-          title: product.title,
-          category: product.category,
-        })),
-      }),
-    });
-
-    const data = await response.json();
-
-    if (!response.ok || !data.success) {
-      throw new Error(
-        data.message || "Image analysis failed."
-      );
-    }
-
-    // Match AI results with actual MongoDB products
-    // already loaded by App.jsx.
-    const recommendations = (data.matches || [])
-      .map((match) => {
-        const product = products.find(
-          (item) => String(item.id) === String(match.id)
-        );
-
-        if (!product) return null;
-
-        return {
-          id: product.id,
-          title: product.title,
-          bn: product.bn,
-          category: product.category,
-          image: product.image,
-          price: product.discountPrice || product.price,
-          currentPrice: product.discountPrice || product.price,
-          oldPrice: product.oldPrice,
-          stock: product.stock,
-          inStock: Number(product.stock) > 0,
-          confidence: match.confidence,
-        };
-      })
-      .filter(Boolean);
-
-    const userMessage = {
-      role: "user",
-      text:
-        caption ||
-        (lang === "bn"
-          ? "এই ছবির পণ্যটি শনাক্ত করুন।"
-          : "Please identify this product."),
-      image: imageUrl,
-    };
-
-    const assistantMessage = {
-      role: "assistant",
-      text: recommendations.length
-        ? lang === "bn"
-          ? "ছবিটি বিশ্লেষণ করেছি। PreBotix-এর ক্যাটালগে সবচেয়ে বেশি মিল পাওয়া পণ্যগুলো নিচে দেওয়া হলো।"
-          : "I've analyzed your image. Here are the closest matching products available in PreBotix."
-        : lang === "bn"
-          ? "ছবিটি বিশ্লেষণ করেছি, কিন্তু PreBotix ক্যাটালগে ৯০% বা তার বেশি confidence-এর কোনো নির্ভরযোগ্য মিল পাইনি।"
-          : "I've analyzed the image, but couldn't find a sufficiently reliable match in the PreBotix catalog.",
-      products: recommendations,
-    };
-
-    setMessages((current) => [
-      ...current,
-      userMessage,
-      assistantMessage,
-    ]);
-
-    setInput("");
-    removeSelectedImage();
+      setInput("");
+      removeSelectedImage();
     } catch (err) {
       setError(
         err.message === "Failed to fetch"
@@ -449,9 +501,7 @@ const sendImageMessage = async (event) => {
     }
   };
 
-
   const openRecommendedProduct = (recommendation) => {
-    // Use the full product object already loaded by App.jsx.
     const product = products.find(
       (item) => String(item.id) === String(recommendation.id)
     );
@@ -467,7 +517,7 @@ const sendImageMessage = async (event) => {
 
     setError("");
     onDetails?.(product);
-    onClose?.();
+    closeChat();
   };
 
   const addRecommendedProduct = (recommendation) => {
@@ -497,20 +547,24 @@ const sendImageMessage = async (event) => {
     onAdd?.(product);
   };
 
+  // Do not render the chat when closed.
+  if (!isOpen) return null;
+
   return (
     <>
+      {/* Background: click outside chat to close */}
       <div
-        onClick={onClose}
-        style={{
-          position: "fixed",
-          inset: 0,
-          zIndex: 99998,
-          background: "rgba(0,0,0,0.35)",
+        aria-hidden="true"
+        onMouseDown={(event) => {
+          if (event.target === event.currentTarget) {
+            closeChat();
+          }
         }}
+        style={styles.backdrop}
       />
 
       <section
-        onClick={(event) => event.stopPropagation()}
+        onMouseDown={(event) => event.stopPropagation()}
         role="dialog"
         aria-label="PreBotix AI chat"
         aria-modal="false"
@@ -519,11 +573,13 @@ const sendImageMessage = async (event) => {
         <header style={styles.header}>
           <div>
             <strong style={styles.brand}>PreBotix AI</strong>
+
             <div style={styles.subtitle}>
               {lang === "bn"
                 ? "রোবটিক্স ও ইলেকট্রনিক্স সহকারী"
                 : "Robotics & Electronics Assistant"}
             </div>
+
             <div style={styles.status}>
               <span style={styles.statusDot} />
               {lang === "bn"
@@ -534,12 +590,7 @@ const sendImageMessage = async (event) => {
 
           <button
             type="button"
-            onClick={(event) => {
-              event.stopPropagation();
-              stopCamera();
-              setMenuOpen(false);
-              onClose?.();
-            }}
+            onClick={closeChat}
             aria-label="Close chat"
             style={styles.closeButton}
           >
@@ -609,23 +660,12 @@ const sendImageMessage = async (event) => {
                         product?.price
                       );
 
-                      console.log("PreBotix AI PRICE DEBUG:", {
-                        productId: recommendation.id,
-                        recommendationTitle: recommendation.title,
-                        backendPrice: recommendation.price,
-                        backendCurrentPrice: recommendation.currentPrice,
-                        frontendProductTitle: product?.title,
-                        frontendProductPrice: product?.price,
-                        displayedPrice: currentPrice,
-                      });
-
                       const stock = Number(
                         product?.stock ?? recommendation.stock ?? 0
                       );
 
                       const oldPrice = Number(
-                        recommendation.oldPrice ??
-                        product?.oldPrice
+                        recommendation.oldPrice ?? product?.oldPrice
                       );
 
                       const inStock =
@@ -783,7 +823,9 @@ const sendImageMessage = async (event) => {
         )}
 
         <form onSubmit={handleComposerSubmit} style={styles.form}>
+          {/* Attachment menu */}
           <div
+            ref={menuRef}
             style={styles.menuWrap}
             onMouseEnter={() => setMenuOpen(true)}
             onMouseLeave={() => setMenuOpen(false)}
@@ -791,15 +833,20 @@ const sendImageMessage = async (event) => {
             <button
               type="button"
               style={styles.menuButton}
-              onClick={() => setMenuOpen((previous) => !previous)}
+              onClick={() => setMenuOpen(true)}
               disabled={loading}
               aria-label="Add image"
+              aria-expanded={menuOpen}
             >
               +
             </button>
 
             {menuOpen && (
-              <div style={styles.attachmentMenu}>
+              <div
+                style={styles.attachmentMenu}
+                onMouseEnter={() => setMenuOpen(true)}
+                onMouseLeave={() => setMenuOpen(false)}
+              >
                 <button
                   type="button"
                   style={styles.attachmentItem}
@@ -861,7 +908,7 @@ const sendImageMessage = async (event) => {
           </button>
         </form>
 
-
+        {/* Camera modal */}
         {cameraOpen && (
           <div style={styles.cameraOverlay}>
             <div style={styles.cameraDialog}>
@@ -874,6 +921,7 @@ const sendImageMessage = async (event) => {
                   type="button"
                   onClick={stopCamera}
                   style={styles.removeImageButton}
+                  aria-label="Close camera"
                 >
                   ✕
                 </button>
@@ -907,13 +955,19 @@ const sendImageMessage = async (event) => {
             </div>
           </div>
         )}
-
       </section>
     </>
   );
 }
 
 const styles = {
+  backdrop: {
+    position: "fixed",
+    inset: 0,
+    zIndex: 99998,
+    background: "rgba(0,0,0,0.35)",
+  },
+
   panel: {
     position: "fixed",
     right: "20px",
@@ -921,7 +975,7 @@ const styles = {
     zIndex: 99999,
     width: "370px",
     maxWidth: "calc(100vw - 24px)",
-    height: "min(650px, calc(100dvh - 125px))",
+    height: "min(650px, calc(100dvh - 125px)",
     display: "flex",
     flexDirection: "column",
     overflow: "hidden",
@@ -931,6 +985,7 @@ const styles = {
     borderRadius: "18px",
     boxShadow: "0 12px 40px rgba(0,0,0,.45)",
   },
+
   header: {
     display: "flex",
     alignItems: "center",
@@ -940,15 +995,18 @@ const styles = {
     background: "#102338",
     borderBottom: "1px solid #254154",
   },
+
   brand: {
     color: "#47e3ef",
     fontSize: "17px",
   },
+
   subtitle: {
     marginTop: "3px",
     color: "#a7b8c9",
     fontSize: "12px",
   },
+
   status: {
     display: "flex",
     alignItems: "center",
@@ -957,6 +1015,7 @@ const styles = {
     color: "#7ce9b0",
     fontSize: "11px",
   },
+
   statusDot: {
     display: "inline-block",
     flexShrink: 0,
@@ -965,6 +1024,7 @@ const styles = {
     borderRadius: "50%",
     background: "#7ce9b0",
   },
+
   closeButton: {
     padding: "8px 11px",
     color: "#fff",
@@ -973,14 +1033,17 @@ const styles = {
     borderRadius: "8px",
     cursor: "pointer",
   },
+
   conversation: {
     flex: 1,
+    minHeight: 0,
     overflowY: "auto",
     padding: "14px",
     display: "flex",
     flexDirection: "column",
     gap: "12px",
   },
+
   bubble: {
     padding: "11px 13px",
     border: "1px solid",
@@ -990,12 +1053,14 @@ const styles = {
     whiteSpace: "pre-wrap",
     overflowWrap: "anywhere",
   },
+
   recommendations: {
     display: "flex",
     flexDirection: "column",
     gap: "10px",
     marginTop: "12px",
   },
+
   recommendationHeading: {
     display: "flex",
     alignItems: "center",
@@ -1004,12 +1069,14 @@ const styles = {
     fontSize: "13px",
     fontWeight: 700,
   },
+
   productCard: {
     padding: "10px",
     background: "#102338",
     border: "1px solid #29465c",
     borderRadius: "13px",
   },
+
   productDetailsButton: {
     display: "flex",
     alignItems: "flex-start",
@@ -1022,6 +1089,7 @@ const styles = {
     border: 0,
     cursor: "pointer",
   },
+
   imageWrap: {
     display: "flex",
     alignItems: "center",
@@ -1033,11 +1101,13 @@ const styles = {
     background: "#f8fafc",
     borderRadius: "9px",
   },
+
   productImage: {
     width: "100%",
     height: "100%",
     objectFit: "contain",
   },
+
   imagePlaceholder: {
     display: "flex",
     flexDirection: "column",
@@ -1046,6 +1116,7 @@ const styles = {
     color: "#64748b",
     fontSize: "10px",
   },
+
   productInfo: {
     display: "flex",
     flex: 1,
@@ -1054,39 +1125,47 @@ const styles = {
     alignItems: "flex-start",
     gap: "5px",
   },
+
   category: {
     color: "#91a9bc",
     fontSize: "10px",
     textTransform: "uppercase",
   },
+
   productTitle: {
     color: "#f1f5f9",
     fontSize: "13px",
     lineHeight: 1.4,
     overflowWrap: "anywhere",
   },
+
   priceRow: {
     display: "flex",
     flexWrap: "wrap",
     alignItems: "center",
     gap: "6px",
   },
+
   currentPrice: {
     color: "#47e3ef",
     fontSize: "14px",
   },
+
   oldPrice: {
     color: "#91a9bc",
     fontSize: "11px",
   },
+
   stock: {
     fontSize: "11px",
   },
+
   detailsHint: {
     marginTop: "2px",
     color: "#47e3ef",
     fontSize: "11px",
   },
+
   addButton: {
     width: "100%",
     marginTop: "10px",
@@ -1098,6 +1177,7 @@ const styles = {
     fontSize: "12px",
     fontWeight: 700,
   },
+
   typing: {
     display: "flex",
     alignItems: "center",
@@ -1105,6 +1185,7 @@ const styles = {
     color: "#47e3ef",
     fontSize: "12px",
   },
+
   error: {
     margin: 0,
     padding: "8px 14px",
@@ -1112,7 +1193,9 @@ const styles = {
     fontSize: "12px",
     overflowWrap: "anywhere",
   },
+
   form: {
+    position: "relative",
     display: "flex",
     alignItems: "center",
     gap: "8px",
@@ -1122,6 +1205,7 @@ const styles = {
     width: "100%",
     boxSizing: "border-box",
   },
+
   input: {
     minWidth: 0,
     flex: 1,
@@ -1134,8 +1218,10 @@ const styles = {
     boxSizing: "border-box",
     width: "100%",
   },
+
   sendButton: {
     padding: "0 14px",
+    minHeight: "42px",
     color: "#07111f",
     background: "#47e3ef",
     border: 0,
@@ -1144,18 +1230,11 @@ const styles = {
     cursor: "pointer",
   },
 
-  composer: {
-    display: "flex",
-    flexDirection: "column",
-    gap: "8px",
-    padding: "10px",
-    borderTop: "1px solid #254154",
-    background: "#0e1e30",
-  },
-
   menuWrap: {
     position: "relative",
     flexShrink: 0,
+    width: "42px",
+    height: "42px",
   },
 
   menuButton: {
@@ -1175,7 +1254,7 @@ const styles = {
 
   attachmentMenu: {
     position: "absolute",
-    left: "5px",
+    left: "0",
     bottom: "42px",
     width: "190px",
     padding: "7px",
@@ -1218,6 +1297,7 @@ const styles = {
     border: "1px solid #355168",
     borderRadius: "10px",
   },
+
   previewImage: {
     width: "55px",
     height: "55px",

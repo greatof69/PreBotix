@@ -2042,8 +2042,8 @@ const handleProductImageSettled = useCallback((productId) => {
           />
 
           <AIChat
-            isOpen={isAIChatOpen}
-            onClose={() => setIsAIChatOpen(false)}
+            isOpen={aiOpen}
+            onClose={() => setAiOpen(false)}
             products={products}
             lang={lang}
             onDetails={openProduct}
