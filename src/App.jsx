@@ -465,6 +465,7 @@ export default function App() {
   const [recentIds, setRecentIds] = useState([]);
   const [showCatalogPage, setShowCatalogPage] = useState(false);
   const [showWishlist, setShowWishlist] = useState(false);
+  const [productsRefreshing, setProductsRefreshing] = useState(true);
 
   // Sync browser URLs with existing storefront state.
   useEffect(() => {
@@ -2086,6 +2087,12 @@ export default function App() {
       {!productsLoaded && !productsError && (
         <div className="toast-notice" role="status">
           {lang === "bn" ? "প্রোডাক্ট লোড হচ্ছে..." : "Loading products..."}
+        </div>
+      )}
+
+      {productsLoaded && productsRefreshing && (
+        <div className="toast-notice" role="status">
+          {lang === "bn" ? "প্রোডাক্ট আপডেট হচ্ছে..." : "Updating products..."}
         </div>
       )}
 
