@@ -10,6 +10,38 @@ const initialMessage = {
   products: [],
 };
 
+const STORAGE_KEY = "prebotix_ai_chat_v1";
+
+// Page reload korleo conversation ferot ashbe
+function loadMessages() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return [initialMessage];
+
+    const parsed = JSON.parse(raw);
+
+    return Array.isArray(parsed) && parsed.length ? parsed : [initialMessage];
+  } catch {
+    return [initialMessage];
+  }
+}
+
+function saveMessages(messages) {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(messages));
+  } catch {
+    // Storage full hole image bad diye save kori
+    try {
+      const light = messages.map(({ image, ...rest }) =>
+        image ? { ...rest, text: rest.text || "📷 Image" } : rest
+      );
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(light));
+    } catch {
+      // ignore
+    }
+  }
+}
+
 function getProductTitle(product, lang) {
   return lang === "bn"
     ? product.bn || product.title
@@ -50,7 +82,7 @@ export default function AIChat({
   onDetails,
   onAdd,
 }) {
-  const [messages, setMessages] = useState([initialMessage]);
+  const [messages, setMessages] = useState(loadMessages);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -67,6 +99,11 @@ export default function AIChat({
   const bottomRef = useRef(null);
   const inputRef = useRef(null);
   const requestIdRef = useRef(0); // chat clear korle pending reply ignore korar jonno
+
+  // Save conversation on every change.
+  useEffect(() => {
+    saveMessages(messages);
+  }, [messages]);
 
   // Scroll to latest message.
   useEffect(() => {
