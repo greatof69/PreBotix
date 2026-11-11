@@ -390,13 +390,12 @@ footer { margin-top: auto; flex-shrink: 0; }
   background: linear-gradient(45deg, #feda75 0%, #fa7e1e 22%, #d62976 52%, #962fbf 75%, #4f5bd5 100%);
 }
 
-
 /* Tooltips */
 .pb-float-contact__tooltip {
   position: absolute;
-  right: calc(100% + 10px);
+  right: calc(100% + var(--pb-tooltip-gap));
   top: 50%;
-  z-index: 20;
+  z-index: 10;
   display: block;
   width: max-content;
   max-width: 190px;
@@ -413,36 +412,20 @@ footer { margin-top: auto; flex-shrink: 0; }
   box-shadow: 0 5px 18px rgba(11, 31, 77, .2);
   opacity: 0;
   visibility: hidden;
-  pointer-events: auto;
+  pointer-events: none;
   transform: translate(8px, -50%);
-  transition:
-    opacity .18s ease,
-    transform .18s ease,
-    visibility .18s ease;
+  transition: opacity .18s ease, transform .18s ease, visibility .18s ease;
 }
 
-/* AI tooltip */
-.pb-float-contact__tooltip--ai {
-  right: calc(100% + 10px);
-}
+.pb-float-contact__tooltip--ai { right: calc(100% + var(--pb-ai-tooltip-gap)); }
 
-/* Show AI tooltip while the floating widget is hovered */
-.pb-float-contact.menu-open .pb-float-contact__tooltip--ai,
-.pb-float-contact__ai:focus-visible .pb-float-contact__tooltip--ai {
+.pb-float-contact__button:hover .pb-float-contact__tooltip,
+.pb-float-contact__button:focus-visible .pb-float-contact__tooltip {
   opacity: 1;
   visibility: visible;
   transform: translate(0, -50%);
 }
 
-/* Social tooltips */
-.pb-float-contact__social:hover .pb-float-contact__tooltip,
-.pb-float-contact__social:focus-visible .pb-float-contact__tooltip {
-  opacity: 1;
-  visibility: visible;
-  transform: translate(0, -50%);
-}
-
-/* Instagram tooltip position */
 .pb-float-contact__social--instagram .pb-float-contact__tooltip {
   top: auto;
   right: auto;
@@ -456,10 +439,47 @@ footer { margin-top: auto; flex-shrink: 0; }
   transform: translate(-50%, 0);
 }
 
-/* Touch devices: no hover tooltip */
+@media (max-width: 600px) { .pb-float-contact { right: 48px; } }
+@media (max-width: 400px) { .pb-float-contact { right: 40px; } }
+@media (max-width: 340px) { .pb-float-contact { right: 34px; } }
+
+/* 1) Parent hover dhorle social button khule thakbe (AI -> social gap-e mouse gele-o) */
+.pb-float-contact:hover .pb-float-contact__social {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  transform: translate(var(--x), var(--y)) scale(1) rotate(0deg);
+  transition-delay: var(--d-open, 0ms);
+}
+
+/* 2) Invisible bridge: hover korle area boro hoy, tai gap-e hover hারায় na */
+.pb-float-contact:hover::before {
+  content: "";
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  width: calc(var(--pb-ai-size) * 2.4);
+  height: calc(var(--pb-ai-size) * 2.4);
+  z-index: 1;
+}
+
+/* 3) Social button hover-e lift thik rakha (menu-open chhara-o kaj korbe) */
+.pb-float-contact:hover .pb-float-contact__social:hover {
+  transform: translate(var(--x), calc(var(--y) - 4px)) scale(1.12);
+  filter: brightness(1.08);
+  transition-delay: 0ms;
+  transition-duration: 200ms;
+}
+
+/* 4) Touch device-e tooltip shudhu focus/hover-capable device-e dekhabe */
 @media (hover: none) {
-  .pb-float-contact__tooltip {
-    display: none;
+  .pb-float-contact__button:hover .pb-float-contact__tooltip {
+    opacity: 0;
+    visibility: hidden;
+  }
+  .pb-float-contact__button:focus-visible .pb-float-contact__tooltip {
+    opacity: 1;
+    visibility: visible;
   }
 }
 
