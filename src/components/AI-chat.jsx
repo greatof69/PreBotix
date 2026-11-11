@@ -351,25 +351,36 @@ export default function AIChat({
   };
 
   // Delete the whole conversation and reset everything.
+
   const clearChat = () => {
-    const ok = window.confirm(
-      lang === "bn"
-        ? "সব মেসেজ মুছে ফেলতে চান?"
-        : "Delete all messages in this chat?"
-    );
+    requestIdRef.current += 1; // Pending AI reply বন্ধ করবে
 
-    if (!ok) return;
+    clearTimeout(closeTimerRef.current);
 
-    requestIdRef.current += 1; // pending AI reply ar ashbe na
     stopCamera();
     setMenuOpen(false);
+
     setMessages([initialMessage]);
     setInput("");
     setError("");
     setLoading(false);
+
     removeSelectedImage();
+
+    // Immediately clear saved conversation
+    try {
+      localStorage.removeItem(STORAGE_KEY);
+      localStorage.setItem(
+        STORAGE_KEY,
+        JSON.stringify([initialMessage])
+      );
+    } catch {
+      // Ignore storage errors
+    }
+
     inputRef.current?.focus();
   };
+
 
   const sendMessage = async (event) => {
     event?.preventDefault();
