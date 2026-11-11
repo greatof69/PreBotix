@@ -99,6 +99,8 @@ export default function AIChat({
   const bottomRef = useRef(null);
   const inputRef = useRef(null);
   const requestIdRef = useRef(0); // chat clear korle pending reply ignore korar jonno
+  const closeTimerRef = useRef(null); // menu hover-e ektu delay diye bondho korar jonno
+  const pointerTypeRef = useRef("mouse");
 
   // Save conversation on every change.
   useEffect(() => {
@@ -143,6 +145,11 @@ export default function AIChat({
       }
     };
   }, [imagePreview]);
+
+  // Clear menu close timer on unmount.
+  useEffect(() => {
+    return () => clearTimeout(closeTimerRef.current);
+  }, []);
 
   // Release camera when component unmounts.
   useEffect(() => {
@@ -855,16 +862,32 @@ export default function AIChat({
             ref={menuRef}
             style={styles.menuWrap}
             onPointerEnter={(e) => {
-              if (e.pointerType === "mouse") setMenuOpen(true);
+              if (e.pointerType !== "mouse") return;
+              clearTimeout(closeTimerRef.current);
+              setMenuOpen(true);
             }}
             onPointerLeave={(e) => {
-              if (e.pointerType === "mouse") setMenuOpen(false);
+              if (e.pointerType !== "mouse") return;
+              clearTimeout(closeTimerRef.current);
+              // 300ms delay: mouse box-e jawar somoy menu bondho hobe na
+              closeTimerRef.current = setTimeout(
+                () => setMenuOpen(false),
+                300
+              );
             }}
           >
             <button
               type="button"
               style={styles.menuButton}
-              onClick={() => setMenuOpen((open) => !open)}
+              onPointerDown={(e) => {
+                pointerTypeRef.current = e.pointerType;
+              }}
+              onClick={() =>
+                // Mouse: hover-e already open, click-e bondho hobe na. Touch: toggle.
+                setMenuOpen((open) =>
+                  pointerTypeRef.current === "mouse" ? true : !open
+                )
+              }
               aria-label="Chat menu"
               aria-expanded={menuOpen}
             >
@@ -1348,7 +1371,7 @@ const styles = {
     display: "flex",
     alignItems: "center",
     gap: "10px",
-    margin: "8px 10px 0",
+    margin: "8px 10px 14px",
     padding: "8px",
     background: "#172b40",
     border: "1px solid #355168",
