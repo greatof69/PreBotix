@@ -1,4 +1,4 @@
-@import "tailwindcss";
+﻿@import "tailwindcss";
 
 /* ---------------------------------------------------------------------
    01  DESIGN TOKENS
@@ -390,12 +390,13 @@ footer { margin-top: auto; flex-shrink: 0; }
   background: linear-gradient(45deg, #feda75 0%, #fa7e1e 22%, #d62976 52%, #962fbf 75%, #4f5bd5 100%);
 }
 
+
 /* Tooltips */
 .pb-float-contact__tooltip {
   position: absolute;
-  right: calc(100% + var(--pb-tooltip-gap));
+  right: calc(100% + 10px);
   top: 50%;
-  z-index: 10;
+  z-index: 20;
   display: block;
   width: max-content;
   max-width: 190px;
@@ -412,20 +413,36 @@ footer { margin-top: auto; flex-shrink: 0; }
   box-shadow: 0 5px 18px rgba(11, 31, 77, .2);
   opacity: 0;
   visibility: hidden;
-  pointer-events: none;
+  pointer-events: auto;
   transform: translate(8px, -50%);
-  transition: opacity .18s ease, transform .18s ease, visibility .18s ease;
+  transition:
+    opacity .18s ease,
+    transform .18s ease,
+    visibility .18s ease;
 }
 
-.pb-float-contact__tooltip--ai { right: calc(100% + var(--pb-ai-tooltip-gap)); }
+/* AI tooltip */
+.pb-float-contact__tooltip--ai {
+  right: calc(100% + 10px);
+}
 
-.pb-float-contact__button:hover .pb-float-contact__tooltip,
-.pb-float-contact__button:focus-visible .pb-float-contact__tooltip {
+/* Show AI tooltip while the floating widget is hovered */
+.pb-float-contact.menu-open .pb-float-contact__tooltip--ai,
+.pb-float-contact__ai:focus-visible .pb-float-contact__tooltip--ai {
   opacity: 1;
   visibility: visible;
   transform: translate(0, -50%);
 }
 
+/* Social tooltips */
+.pb-float-contact__social:hover .pb-float-contact__tooltip,
+.pb-float-contact__social:focus-visible .pb-float-contact__tooltip {
+  opacity: 1;
+  visibility: visible;
+  transform: translate(0, -50%);
+}
+
+/* Instagram tooltip position */
 .pb-float-contact__social--instagram .pb-float-contact__tooltip {
   top: auto;
   right: auto;
@@ -439,9 +456,12 @@ footer { margin-top: auto; flex-shrink: 0; }
   transform: translate(-50%, 0);
 }
 
-@media (max-width: 600px) { .pb-float-contact { right: 48px; } }
-@media (max-width: 400px) { .pb-float-contact { right: 40px; } }
-@media (max-width: 340px) { .pb-float-contact { right: 34px; } }
+/* Touch devices: no hover tooltip */
+@media (hover: none) {
+  .pb-float-contact__tooltip {
+    display: none;
+  }
+}
 
 /* ---------------------------------------------------------------------
    05  ANNOUNCEMENT BAR
