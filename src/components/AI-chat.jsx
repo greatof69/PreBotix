@@ -1334,7 +1334,7 @@ const styles = {
     alignItems: "center",
     justifyContent: "center",
     padding: "15px",
-    background: "rgba(0,0,0,.88)",
+    background: "transparent",
   },
 
   cameraDialog: {
