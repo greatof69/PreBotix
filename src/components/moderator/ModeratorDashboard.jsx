@@ -269,20 +269,20 @@ export default function ModeratorDashboard({
 
   // -------------------- Load Orders --------------------
 
-  const loadOrders = useCallback(async () => {
-    setLoading(true);
-    setError("");
+  const loadOrders = useCallback(async ({ silent = false } = {}) => {
+    if (!silent) setLoading(true);
+    if (!silent) setError("");
 
     try {
       const data = await request("/orders");
       setOrders(getList(data, "orders"));
     } catch (err) {
-      setError(
+      if (!silent) setError(
         err.message ||
           t("Could not load orders.", "অর্ডার লোড করা যায়নি।")
       );
     } finally {
-      setLoading(false);
+      if (!silent) setLoading(false);
     }
   }, [request]);
 
@@ -344,9 +344,9 @@ export default function ModeratorDashboard({
 
   // -------------------- Load History --------------------
 
-  const loadOrderHistory = useCallback(async () => {
-    setHistoryLoading(true);
-    setError("");
+  const loadOrderHistory = useCallback(async ({ silent = false } = {}) => {
+    if (!silent) setHistoryLoading(true);
+    if (!silent) setError("");
 
     try {
       const data = await request("/order-history");
@@ -355,7 +355,7 @@ export default function ModeratorDashboard({
         getList(data, "history")
       );
     } catch (err) {
-      setError(
+      if (!silent) setError(
         err.message ||
           t(
             "Could not load Order History.",
@@ -363,7 +363,7 @@ export default function ModeratorDashboard({
           )
       );
     } finally {
-      setHistoryLoading(false);
+      if (!silent) setHistoryLoading(false);
     }
   }, [request]);
 
@@ -711,20 +711,20 @@ export default function ModeratorDashboard({
 
   // -------------------- Customer Messages --------------------
 
-  const loadMessages = useCallback(async () => {
-    setLoading(true);
-    setError("");
+  const loadMessages = useCallback(async ({ silent = false } = {}) => {
+    if (!silent) setLoading(true);
+    if (!silent) setError("");
 
     try {
       const data = await request("/messages");
       setMessages(getList(data, "messages"));
     } catch (err) {
-      setError(
+      if (!silent) setError(
         err.message ||
           t("Could not load messages.", "মেসেজ লোড করা যায়নি।")
       );
     } finally {
-      setLoading(false);
+      if (!silent) setLoading(false);
     }
   }, [request]);
 
@@ -911,24 +911,44 @@ export default function ModeratorDashboard({
   // -------------------- Load Active Tab --------------------
 
   useEffect(() => {
-    if (
-      tab === "dashboard" ||
-      tab === "orders" ||
-      tab === "courier"
-    ) {
-      loadOrders();
-    } else if (tab === "history") {
-      loadOrderHistory();
-    } else if (tab === "messages") {
-      loadMessages();
-    }
+    let refreshing = false;
+
+    const loadActiveTab = async (silent = false) => {
+      if (refreshing) return;
+
+      refreshing = true;
+
+      try {
+        if (
+          tab === "dashboard" ||
+          tab === "orders" ||
+          tab === "courier"
+        ) {
+          await loadOrders({ silent });
+        } else if (tab === "history") {
+          await loadOrderHistory({ silent });
+        } else if (tab === "messages") {
+          await loadMessages({ silent });
+        }
+      } finally {
+        refreshing = false;
+      }
+    };
+
+    loadActiveTab(false);
+
+    const timer = window.setInterval(
+      () => loadActiveTab(true),
+      15000
+    );
+
+    return () => window.clearInterval(timer);
   }, [
     tab,
     loadOrders,
     loadOrderHistory,
     loadMessages,
   ]);
-
   // -------------------- Navigation --------------------
 
   const navItems = [

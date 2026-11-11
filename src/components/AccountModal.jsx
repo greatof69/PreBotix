@@ -73,10 +73,16 @@ export default function AccountModal({
   const seconds = String(cooldown % 60).padStart(2, "0");
 
   useEffect(() => {
-    if (accountMode === "dashboard" && accountUser) {
-      loadMyOrders?.();
-    }
-  }, [accountMode, accountUser, loadMyOrders]);
+  if (accountMode !== "dashboard" || !accountUser) return;
+
+  loadMyOrders?.();
+
+  const timer = window.setInterval(() => {
+    loadMyOrders?.({ silent: true });
+  }, 15000);
+
+  return () => window.clearInterval(timer);
+}, [accountMode, accountUser, loadMyOrders]);
 
 
   const titleMap = {

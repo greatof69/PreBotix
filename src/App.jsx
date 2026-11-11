@@ -1410,7 +1410,7 @@ const handleProductImageSettled = useCallback((productId) => {
   };
 
   // LOAD AUTHENTICATED CUSTOMER'S ORDERS
-  const loadMyOrders = useCallback(async () => {
+  const loadMyOrders = useCallback(async ({ silent = false } = {}) => {
     const token = getAccessToken();
 
     if (!token) {
@@ -1420,8 +1420,8 @@ const handleProductImageSettled = useCallback((productId) => {
       return;
     }
 
-    setOrdersLoading(true);
-    setOrdersError("");
+    if (!silent) setOrdersLoading(true);
+    if (!silent) setOrdersError("");
 
     try {
       const response = await authFetch(`${API_BASE_URL}/api/orders/my`, {
@@ -1659,9 +1659,9 @@ const handleProductImageSettled = useCallback((productId) => {
       }
     } catch (error) {
       console.error("Loading orders failed:", error);
-      setOrdersError(error.message || "Could not load your orders.");
+      if (!silent) setOrdersError(error.message || "Could not load your orders.");
     } finally {
-      setOrdersLoading(false);
+      if (!silent) setOrdersLoading(false);
     }
   }, [lang, accountUser, products, productsLoaded]);
 

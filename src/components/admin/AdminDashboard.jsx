@@ -193,6 +193,9 @@ export default function AdminDashboard({
   const [stockProducts, setStockProducts] = useState([]);
   const [stockNotifications, setStockNotifications] = useState([]);
   const [loadingStock, setLoadingStock] = useState(false);
+  const [stockEditId, setStockEditId] = useState(null);
+  const [stockEditValue, setStockEditValue] = useState("");
+  const [stockSavingId, setStockSavingId] = useState(null);
   const [paymentDeliverySettings, setPaymentDeliverySettings] = useState({
     paymentMethods: [],
     deliveryZones: [],
@@ -283,16 +286,16 @@ const [savingAnnouncements, setSavingAnnouncements] = useState(false);
     return data;
   }, []);
 
-  const loadOrders = useCallback(async () => {
-    setLoadingOrders(true);
+  const loadOrders = useCallback(async ({ silent = false } = {}) => {
+    if (!silent) setLoadingOrders(true);
 
     try {
       const data = await request("/orders");
       setOrders(getOrderList(data));
     } catch (err) {
-      setError(err.message || "Could not load orders.");
+      if (!silent) setError(err.message || "Could not load orders.");
     } finally {
-      setLoadingOrders(false);
+      if (!silent) setLoadingOrders(false);
     }
   }, [request]);
 
@@ -351,8 +354,8 @@ const [savingAnnouncements, setSavingAnnouncements] = useState(false);
     }
   }, [request, loadOrders, lang]);
 
-  const loadOrderHistory = useCallback(async () => {
-  setHistoryLoading(true);
+  const loadOrderHistory = useCallback(async ({ silent = false } = {}) => {
+  if (!silent) setHistoryLoading(true);
 
   try {
     const data = await request("/order-history");
@@ -362,9 +365,9 @@ const [savingAnnouncements, setSavingAnnouncements] = useState(false);
         : data?.history || data?.items || data?.data || []
     );
   } catch (err) {
-    setError(err.message || "Could not load order history.");
+    if (!silent) setError(err.message || "Could not load order history.");
   } finally {
-    setHistoryLoading(false);
+    if (!silent) setHistoryLoading(false);
   }
 }, [request]);
 
@@ -435,43 +438,44 @@ const deleteAllHistory = async () => {
   }
 };
 
-  const loadUsers = useCallback(async () => {
-    setLoadingUsers(true);
+  const loadUsers = useCallback(async ({ silent = false } = {}) => {
+    if (!silent) setLoadingUsers(true);
 
     try {
       const data = await request("/users");
       setUsers(getUserList(data));
     } catch (err) {
-      setError(err.message || "Could not load users.");
+      if (!silent) setError(err.message || "Could not load users.");
     } finally {
-      setLoadingUsers(false);
+      if (!silent) setLoadingUsers(false);
     }
   }, [request]);
 
-  const loadMessages = useCallback(async () => {
-    setLoadingMessages(true);
+  const loadMessages = useCallback(async ({ silent = false } = {}) => {
+    if (!silent) setLoadingMessages(true);
     try {
       const data = await request("/messages");
       setMessages(Array.isArray(data.messages) ? data.messages : []);
     } catch (err) {
-      setError(err.message || "Could not load messages.");
+      if (!silent) setError(err.message || "Could not load messages.");
     } finally {
-      setLoadingMessages(false);
+      if (!silent) setLoadingMessages(false);
     }
   }, [request]);
 
-  const loadStockNotifications = useCallback(async () => {
+  const loadStockNotifications = useCallback(async ({ silent = false } = {}) => {
     try {
       const data = await request("/stock-notifications");
       setStockNotifications(Array.isArray(data.notifications) ? data.notifications : []);
     } catch (err) {
-      setError(err.message || "Could not load stock notifications.");
+      if (!silent) setError(err.message || "Could not load stock notifications.");
     }
   }, [request]);
 
-  const loadStockCatalog = useCallback(async () => {
-    setLoadingStock(true);
-    setError("");
+  const loadStockCatalog = useCallback(async ({ silent = false } = {}) => {
+    if (!silent) setLoadingStock(true);
+    if (!silent) setError("");
+
     try {
       const [productData, notificationData] = await Promise.all([
         request("/products"),
@@ -480,11 +484,86 @@ const deleteAllHistory = async () => {
       setStockProducts(Array.isArray(productData.products) ? productData.products : []);
       setStockNotifications(Array.isArray(notificationData.notifications) ? notificationData.notifications : []);
     } catch (err) {
-      setError(err.message || "Could not load product stock catalog.");
+      if (!silent) setError(err.message || "Could not load product stock catalog.");
     } finally {
-      setLoadingStock(false);
+      if (!silent) setLoadingStock(false);
     }
   }, [request]);
+
+  const saveStockQuantity = useCallback(async (product) => {
+    const productId = String(product.id);
+    const newStock = Number(stockEditValue);
+
+    if (!Number.isSafeInteger(newStock) || newStock < 0) {
+      setError(t("Enter a valid stock quantity (0 or more).", "সঠিক স্টক সংখ্যা লিখুন (০ বা তার বেশি)।"));
+      return;
+    }
+
+    setStockSavingId(productId);
+    setError("");
+    setMessage("");
+
+    try {
+      const data = await request(`/products/${encodeURIComponent(productId)}`, {
+        method: "PATCH",
+        body: JSON.stringify({ stock: newStock }),
+      });
+
+      const updatedProduct = data.product || data.data?.product || null;
+
+      setStockProducts((previous) =>
+        previous.map((item) =>
+          String(item.id) === productId
+            ? { ...item, ...(updatedProduct || {}), stock: newStock }
+            : item
+        )
+      );
+
+      setStockEditId(null);
+      setStockEditValue("");
+      setMessage(t("Stock quantity updated.", "স্টকের পরিমাণ আপডেট হয়েছে।"));
+    } catch (err) {
+      setError(err.message || "Could not update stock quantity.");
+    } finally {
+      setStockSavingId(null);
+    }
+  }, [request, stockEditValue, t]);
+
+  const toggleStockAvailability = useCallback(async (product) => {
+    const productId = String(product.id);
+    const newStock = Number(product.stock) > 0 ? 0 : 1;
+
+    setStockSavingId(productId);
+    setError("");
+    setMessage("");
+
+    try {
+      const data = await request(`/products/${encodeURIComponent(productId)}`, {
+        method: "PATCH",
+        body: JSON.stringify({ stock: newStock }),
+      });
+
+      const updatedProduct = data.product || data.data?.product || null;
+
+      setStockProducts((previous) =>
+        previous.map((item) =>
+          String(item.id) === productId
+            ? { ...item, ...(updatedProduct || {}), stock: newStock }
+            : item
+        )
+      );
+
+      setMessage(
+        newStock > 0
+          ? t("Product marked In Stock.", "পণ্যটি স্টকে আছে হিসেবে সেট হয়েছে।")
+          : t("Product marked Out of Stock.", "পণ্যটি স্টক শেষ হিসেবে সেট হয়েছে।")
+      );
+    } catch (err) {
+      setError(err.message || "Could not update stock availability.");
+    } finally {
+      setStockSavingId(null);
+    }
+  }, [request, t]);
 
 
   const [replyDrafts, setReplyDrafts] = useState({});
@@ -860,22 +939,55 @@ const deleteFilteredMessages = async () => {
     }));
   };
 useEffect(() => {
-  if (tab === "generalSettings") {
-    loadGeneralSettings();
-  } else if (tab === "paymentDelivery") {
-    loadPaymentDeliverySettings();
-  } else if (tab === "orders" || tab === "courier") {
-    loadOrders();
-  } else if (tab === "users") {
-    loadUsers();
-  } else if (tab === "messages") {
-    loadMessages();
-    loadStockNotifications();
-  } else if (tab === "stock") {
-    loadStockCatalog();
-  } else if (tab === "history") {
-    loadOrderHistory();
-  }
+  let refreshing = false;
+
+  const loadActiveTab = async (silent = false) => {
+    if (refreshing) return;
+
+    refreshing = true;
+
+    try {
+      if (tab === "generalSettings") {
+        await loadGeneralSettings();
+      } else if (tab === "paymentDelivery") {
+        await loadPaymentDeliverySettings();
+      } else if (tab === "orders" || tab === "courier") {
+        await loadOrders({ silent });
+      } else if (tab === "users") {
+        await loadUsers({ silent });
+      } else if (tab === "messages") {
+        await Promise.all([
+          loadMessages({ silent }),
+          loadStockNotifications({ silent }),
+        ]);
+      } else if (tab === "stock") {
+        await loadStockCatalog({ silent });
+      } else if (tab === "history") {
+        await loadOrderHistory({ silent });
+      }
+    } finally {
+      refreshing = false;
+    }
+  };
+
+  loadActiveTab(false);
+
+  const shouldPoll = [
+    "orders",
+    "courier",
+    "users",
+    "messages",
+    "stock",
+    "history",
+  ].includes(tab);
+
+  const timer = shouldPoll
+    ? window.setInterval(() => loadActiveTab(true), 15000)
+    : null;
+
+  return () => {
+    if (timer) window.clearInterval(timer);
+  };
 }, [
   tab,
   loadOrders,
@@ -887,7 +999,6 @@ useEffect(() => {
   loadPaymentDeliverySettings,
   loadGeneralSettings,
 ]);
-
   const updateOrderStatus = async (order, status) => {
     const orderId = getId(order);
 
@@ -1707,7 +1818,7 @@ const pageTitle =
               </div>
             </div>
 
-            {loadingStock ? (
+            {loadingStock && stockProducts.length === 0 ? (
               <EmptyState>{t("Loading product catalog...", "পণ্যের তালিকা লোড হচ্ছে...")}</EmptyState>
             ) : (
               <div style={{ overflowX: "auto" }}>
@@ -1727,11 +1838,82 @@ const pageTitle =
                           <td style={{ padding: 11, borderBottom: "1px solid #f1f5f9" }}>{product.id}</td>
                           <td style={{ padding: 11, borderBottom: "1px solid #f1f5f9", fontWeight: 650 }}>{product.title}</td>
                           <td style={{ padding: 11, borderBottom: "1px solid #f1f5f9" }}>{product.category}</td>
-                          <td style={{ padding: 11, borderBottom: "1px solid #f1f5f9", fontWeight: 750 }}>{Number(product.stock || 0)}</td>
+                          <td style={{ padding: 11, borderBottom: "1px solid #f1f5f9", fontWeight: 750 }}>
+                            {stockEditId === String(product.id) ? (
+                              <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                                <input
+                                  type="number"
+                                  min="0"
+                                  step="1"
+                                  autoFocus
+                                  value={stockEditValue}
+                                  disabled={stockSavingId === String(product.id)}
+                                  onChange={(event) => setStockEditValue(event.target.value)}
+                                  onKeyDown={(event) => {
+                                    if (event.key === "Enter") saveStockQuantity(product);
+                                    if (event.key === "Escape") {
+                                      setStockEditId(null);
+                                      setStockEditValue("");
+                                    }
+                                  }}
+                                  style={{ width: 78, padding: "7px 8px", border: "1px solid #cbd5e1", borderRadius: 7 }}
+                                />
+                                <button
+                                  type="button"
+                                  style={primaryButtonStyle}
+                                  disabled={stockSavingId === String(product.id)}
+                                  onClick={() => saveStockQuantity(product)}
+                                >
+                                  {stockSavingId === String(product.id) ? "..." : t("Save", "সেভ")}
+                                </button>
+                                <button
+                                  type="button"
+                                  disabled={stockSavingId === String(product.id)}
+                                  onClick={() => {
+                                    setStockEditId(null);
+                                    setStockEditValue("");
+                                  }}
+                                  style={{ border: "1px solid #cbd5e1", background: "transparent", borderRadius: 7, padding: "7px 9px", cursor: "pointer" }}
+                                >
+                                  {t("Cancel", "বাতিল")}
+                                </button>
+                              </div>
+                            ) : (
+                              <button
+                                type="button"
+                                title={t("Click to edit quantity", "পরিমাণ পরিবর্তন করতে ক্লিক করুন")}
+                                disabled={stockSavingId === String(product.id)}
+                                onClick={() => {
+                                  setStockEditId(String(product.id));
+                                  setStockEditValue(String(Number(product.stock || 0)));
+                                }}
+                                style={{ border: "1px solid #cbd5e1", background: "transparent", borderRadius: 7, padding: "6px 12px", fontWeight: 750, cursor: "pointer" }}
+                              >
+                                {Number(product.stock || 0)} ✎
+                              </button>
+                            )}
+                          </td>
                           <td style={{ padding: 11, borderBottom: "1px solid #f1f5f9" }}>
-                            <span style={{ color: available ? "#059669" : "#dc2626", fontWeight: 700 }}>
-                              {available ? t("In Stock", "স্টকে আছে") : t("Out of Stock", "স্টক শেষ")}
-                            </span>
+                            <button
+                              type="button"
+                              disabled={stockSavingId === String(product.id)}
+                              onClick={() => toggleStockAvailability(product)}
+                              title={t("Click to toggle stock availability", "স্টকের অবস্থা পরিবর্তন করতে ক্লিক করুন")}
+                              style={{
+                                border: "none",
+                                background: "transparent",
+                                padding: 0,
+                                color: available ? "#059669" : "#dc2626",
+                                fontWeight: 700,
+                                cursor: stockSavingId === String(product.id) ? "wait" : "pointer",
+                              }}
+                            >
+                              {stockSavingId === String(product.id)
+                                ? t("Saving...", "সেভ হচ্ছে...")
+                                : available
+                                  ? t("In Stock", "স্টকে আছে")
+                                  : t("Out of Stock", "স্টক শেষ")}
+                            </button>
                           </td>
                           <td style={{ padding: 11, borderBottom: "1px solid #f1f5f9" }}>
                             <button type="button" style={primaryButtonStyle} onClick={() => navigate("/", { state: { focusProductId: product.id } })}>
