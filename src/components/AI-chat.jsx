@@ -56,6 +56,8 @@ export default function AIChat({
   const [error, setError] = useState("");
 
   const [menuOpen, setMenuOpen] = useState(false);
+  const [imageFile, setImageFile] = useState(null);
+  const [imagePreview, setImagePreview] = useState("");
   const [cameraOpen, setCameraOpen] = useState(false);
 
   const fileInputRef = useRef(null);
@@ -95,6 +97,15 @@ export default function AIChat({
       videoRef.current.play().catch(() => {});
     }
   }, [cameraOpen]);
+
+  // Release image preview URL when it changes or component unmounts.
+  useEffect(() => {
+    return () => {
+      if (imagePreview) {
+        URL.revokeObjectURL(imagePreview);
+      }
+    };
+  }, [imagePreview]);
 
   // Release camera when component unmounts.
   useEffect(() => {
@@ -177,8 +188,9 @@ export default function AIChat({
 
     setError("");
 
-    // Image select hole sathe sathe analyze hobe
-    analyzeImage(file);
+    // Image shudhu preview hishebe thake, Send dile jabe
+    setImagePreview(URL.createObjectURL(file));
+    setImageFile(file);
   };
 
   const handleFileInput = (event) => {
@@ -236,6 +248,11 @@ export default function AIChat({
     );
   };
 
+  const removeSelectedImage = () => {
+    setImagePreview("");
+    setImageFile(null);
+  };
+
   // Delete the whole conversation and reset everything.
   const clearChat = () => {
     const ok = window.confirm(
@@ -253,6 +270,7 @@ export default function AIChat({
     setInput("");
     setError("");
     setLoading(false);
+    removeSelectedImage();
     inputRef.current?.focus();
   };
 
@@ -323,9 +341,11 @@ export default function AIChat({
     }
   };
 
-  // Image analyze kore bole product PreBotix-e ache kina
-  const analyzeImage = async (file) => {
-    if (!file || loading) return;
+  // Image (+ optional text) ekshathe pathay, product PreBotix-e ache kina bole
+  const sendImageMessage = async (event) => {
+    event?.preventDefault();
+
+    if (!imageFile || loading) return;
 
     setLoading(true);
     setError("");
@@ -377,7 +397,7 @@ export default function AIChat({
           reject(new Error("Could not read the selected image."));
         };
 
-        reader.readAsDataURL(file);
+        reader.readAsDataURL(imageFile);
       });
 
       const response = await fetch(`${API}/api/image-search`, {
@@ -387,6 +407,7 @@ export default function AIChat({
         },
         body: JSON.stringify({
           image: imageUrl,
+          caption,
           catalog: products.map((product) => ({
             id: product.id,
             title: product.title,
@@ -429,11 +450,7 @@ export default function AIChat({
 
       const userMessage = {
         role: "user",
-        text:
-          caption ||
-          (lang === "bn"
-            ? "এই ছবির পণ্যটি শনাক্ত করুন।"
-            : "Please identify this product."),
+        text: caption, // auto text nei: user ja likhbe shudhu seta
         image: imageUrl,
       };
 
@@ -452,6 +469,7 @@ export default function AIChat({
       setMessages((current) => [...current, userMessage, assistantMessage]);
 
       setInput("");
+      removeSelectedImage();
     } catch (err) {
       if (myRequestId !== requestIdRef.current) return;
 
@@ -463,6 +481,14 @@ export default function AIChat({
     } finally {
       setLoading(false);
       inputRef.current?.focus();
+    }
+  };
+
+  const handleComposerSubmit = (event) => {
+    if (imageFile) {
+      sendImageMessage(event);
+    } else {
+      sendMessage(event);
     }
   };
 
@@ -767,7 +793,26 @@ export default function AIChat({
           </p>
         )}
 
-        <form onSubmit={sendMessage} style={styles.form}>
+        {imagePreview && (
+          <div style={styles.previewBar}>
+            <img
+              src={imagePreview}
+              alt="Selected image"
+              style={styles.previewImage}
+            />
+
+            <button
+              type="button"
+              onClick={removeSelectedImage}
+              style={styles.removeImageButton}
+              aria-label="Remove image"
+            >
+              ×
+            </button>
+          </div>
+        )}
+
+        <form onSubmit={handleComposerSubmit} style={styles.form}>
           {/* Attachment menu */}
           <div
             ref={menuRef}
@@ -854,10 +899,10 @@ export default function AIChat({
 
           <button
             type="submit"
-            disabled={loading || !input.trim()}
+            disabled={loading || (!input.trim() && !imageFile)}
             style={{
               ...styles.sendButton,
-              opacity: loading || !input.trim() ? 0.55 : 1,
+              opacity: loading || (!input.trim() && !imageFile) ? 0.55 : 1,
             }}
           >
             {loading ? "…" : lang === "bn" ? "পাঠান" : "Send"}
