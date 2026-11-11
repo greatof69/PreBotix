@@ -25,7 +25,7 @@ import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
 const AccountModal = lazy(() => import("./components/AccountModal"));
 import StoreSearch from "./components/StoreSearch";
-const HomePage = lazy(() => import("./pages/HomePage"));
+import HomePage from "./pages/HomePage";
 import NotFoundPage from "./pages/NotFoundPage";
 import RoleGuard from "./components/RoleGuard";
 const AdminDashboard = lazy(() => import("./components/admin/AdminDashboard"));
@@ -48,6 +48,19 @@ const ProductBulkImport = lazy(() => import("./components/ProductBulkImport"));
 
 const API_BASE_URL =
   import.meta.env.VITE_API_URL || "http://localhost:5000";
+
+const PRODUCT_CACHE_KEY = "prebotix-products-cache-v1";
+
+function readCachedProducts() {
+  try {
+    const cached = localStorage.getItem(PRODUCT_CACHE_KEY);
+    const parsed = cached ? JSON.parse(cached) : [];
+
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+}
 
 // Role -> home path. Used after login and when a logged-in user opens /login.
 function getRoleOfUser(user) {
@@ -88,10 +101,28 @@ export default function App() {
     []
   );
 
-  // PRODUCTS FROM MONGODB API
-  const [products, setProducts] = useState([]);
-  const [productsLoaded, setProductsLoaded] = useState(false);
+  // PRODUCTS FROM MONGODB API + INSTANT LOCAL CACHE
+  const [products, setProducts] = useState(() => readCachedProducts());
+
+  const [productsLoaded, setProductsLoaded] = useState(
+    () => readCachedProducts().length > 0
+  );
+
   const [productsError, setProductsError] = useState("");
+
+  // Save the latest successful product data for the next visit.
+  useEffect(() => {
+    if (!productsLoaded) return;
+
+    try {
+      localStorage.setItem(
+        PRODUCT_CACHE_KEY,
+        JSON.stringify(products)
+      );
+    } catch (error) {
+      console.warn("[PreBotix] Product cache could not be saved:", error);
+    }
+  }, [products, productsLoaded]);
   // undefined = editor closed, null = "Add Product", object = "Edit Product".
   const [productEditor, setProductEditor] = useState(undefined);
   const [productEditorKey, setProductEditorKey] = useState(0);
@@ -244,7 +275,11 @@ export default function App() {
         if (error.name === "AbortError") return;
 
         console.error("Product loading failed:", error);
-        setProductsError(error.message);
+
+        // Keep cached products visible if the API is temporarily unavailable.
+        if (!productsLoaded) {
+          setProductsError(error.message);
+        }
       }
     }
 
