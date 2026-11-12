@@ -93,6 +93,24 @@ function getUserList(data) {
   return data?.users || data?.items || data?.data || [];
 }
 
+function readAdminListCache(key) {
+  try {
+    const cached = window.localStorage.getItem(key);
+    const parsed = cached ? JSON.parse(cached) : null;
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+}
+
+function saveAdminListCache(key, value) {
+  try {
+    window.localStorage.setItem(key, JSON.stringify(value));
+  } catch (err) {
+    console.warn("Could not save admin list cache:", err);
+  }
+}
+
 function isMessageInDateRange(createdAt, filter, startDate, endDate) {
   if (filter === "all") return true;
   if (!createdAt) return false;
@@ -181,15 +199,23 @@ export default function AdminDashboard({
 
   const [tab, setTab] = useState("orders");
 
-  const [orders, setOrders] = useState([]);
-  const [orderHistory, setOrderHistory] = useState([]);
+  const [orders, setOrders] = useState(() =>
+    readAdminListCache("prebotix-admin-orders-v1")
+  );
+  const [orderHistory, setOrderHistory] = useState(() =>
+    readAdminListCache("prebotix-admin-history-v1")
+  );
   const [historySearch, setHistorySearch] = useState("");
   const [historyDateFilter, setHistoryDateFilter] = useState("all");
   const [historyLoading, setHistoryLoading] = useState(false);
   const [historyActionId, setHistoryActionId] = useState("");
   const [deletingAllHistory, setDeletingAllHistory] = useState(false);
-  const [users, setUsers] = useState([]);
-  const [messages, setMessages] = useState([]);
+  const [users, setUsers] = useState(() =>
+    readAdminListCache("prebotix-admin-users-v1")
+  );
+  const [messages, setMessages] = useState(() =>
+    readAdminListCache("prebotix-admin-messages-v1")
+  );
   const [stockProducts, setStockProducts] = useState(() => {
     try {
       const cached = window.localStorage.getItem("prebotix-admin-stock-catalog-v1");
@@ -303,7 +329,9 @@ const [savingAnnouncements, setSavingAnnouncements] = useState(false);
 
     try {
       const data = await request("/orders");
-      setOrders(getOrderList(data));
+      const nextOrders = getOrderList(data);
+      setOrders(nextOrders);
+      saveAdminListCache("prebotix-admin-orders-v1", nextOrders);
     } catch (err) {
       if (!silent) setError(err.message || "Could not load orders.");
     } finally {
@@ -371,11 +399,11 @@ const [savingAnnouncements, setSavingAnnouncements] = useState(false);
 
   try {
     const data = await request("/order-history");
-    setOrderHistory(
-      Array.isArray(data)
-        ? data
-        : data?.history || data?.items || data?.data || []
-    );
+    const nextHistory = Array.isArray(data)
+      ? data
+      : data?.history || data?.items || data?.data || [];
+    setOrderHistory(nextHistory);
+    saveAdminListCache("prebotix-admin-history-v1", nextHistory);
   } catch (err) {
     if (!silent) setError(err.message || "Could not load order history.");
   } finally {
@@ -455,7 +483,9 @@ const deleteAllHistory = async () => {
 
     try {
       const data = await request("/users");
-      setUsers(getUserList(data));
+      const nextUsers = getUserList(data);
+      setUsers(nextUsers);
+      saveAdminListCache("prebotix-admin-users-v1", nextUsers);
     } catch (err) {
       if (!silent) setError(err.message || "Could not load users.");
     } finally {
@@ -467,7 +497,9 @@ const deleteAllHistory = async () => {
     if (!silent) setLoadingMessages(true);
     try {
       const data = await request("/messages");
-      setMessages(Array.isArray(data.messages) ? data.messages : []);
+      const nextMessages = Array.isArray(data.messages) ? data.messages : [];
+      setMessages(nextMessages);
+      saveAdminListCache("prebotix-admin-messages-v1", nextMessages);
     } catch (err) {
       if (!silent) setError(err.message || "Could not load messages.");
     } finally {
