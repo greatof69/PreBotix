@@ -218,6 +218,7 @@ export default function AdminDashboard({
   });
   
   const [loadingPaymentDelivery, setLoadingPaymentDelivery] = useState(false);
+  const [paymentDeliverySettingsLoaded, setPaymentDeliverySettingsLoaded] = useState(false);
   const [generalSettings, setGeneralSettings] = useState({
     websiteName: "PreBotix",
     logo: "",
@@ -233,6 +234,7 @@ export default function AdminDashboard({
 
 const [savingAnnouncements, setSavingAnnouncements] = useState(false);
   const [loadingGeneralSettings, setLoadingGeneralSettings] = useState(false);
+  const [generalSettingsLoaded, setGeneralSettingsLoaded] = useState(false);
   const [savingGeneralSettings, setSavingGeneralSettings] = useState(false);
   const [uploadingAsset, setUploadingAsset] = useState("");
 
@@ -780,6 +782,7 @@ const deleteFilteredMessages = async () => {
         announcement1: data?.settings?.announcement1 || "",
         announcement1Bn: data?.settings?.announcement1Bn || "",
       });
+      setGeneralSettingsLoaded(true);
     } catch (err) {
       setError(err.message || "Could not load general settings.");
     } finally {
@@ -896,6 +899,7 @@ const deleteFilteredMessages = async () => {
         checkoutInstructions: settings.checkoutInstructions || "",
         checkoutInstructionsBn: settings.checkoutInstructionsBn || "",
       });
+      setPaymentDeliverySettingsLoaded(true);
     } catch (err) {
       setError(err.message || "Could not load payment and delivery settings.");
     } finally {
@@ -1487,7 +1491,7 @@ const pageTitle =
               {t("General Website Settings", "ওয়েবসাইটের সাধারণ সেটিংস")}
             </SectionTitle>
 
-            {loadingGeneralSettings ? (
+            {loadingGeneralSettings && !generalSettingsLoaded ? (
               <EmptyState>{t("Loading settings...", "সেটিংস লোড হচ্ছে...")}</EmptyState>
             ) : (
               <div style={{ display: "grid", gap: 20 }}>
@@ -1684,7 +1688,7 @@ const pageTitle =
               {t("Payment & Delivery Settings", "পেমেন্ট ও ডেলিভারি সেটিংস")}
             </SectionTitle>
 
-            {loadingPaymentDelivery ? (
+            {loadingPaymentDelivery && !paymentDeliverySettingsLoaded ? (
               <EmptyState>{t("Loading settings...", "সেটিংস লোড হচ্ছে...")}</EmptyState>
             ) : (
               <>
@@ -2129,7 +2133,7 @@ const pageTitle =
                 </select>
               </div>
 
-              {loadingOrders ? (
+              {loadingOrders && orders.length === 0 ? (
                 <EmptyState>{t("Loading orders...", "অর্ডার লোড হচ্ছে...")}</EmptyState>
               ) : filteredOrders.length === 0 ? (
                 <EmptyState>{t("No matching orders found.", "কোনো অর্ডার পাওয়া যায়নি।")}</EmptyState>
@@ -2341,7 +2345,7 @@ const pageTitle =
               )}
             </p>
 
-            {loadingUsers ? (
+            {loadingUsers && users.length === 0 ? (
               <EmptyState>{t("Loading users...", "ব্যবহারকারী লোড হচ্ছে...")}</EmptyState>
             ) : users.length === 0 ? (
               <EmptyState>{t("No users found.", "কোনো ব্যবহারকারী পাওয়া যায়নি।")}</EmptyState>
@@ -2553,7 +2557,7 @@ const pageTitle =
               </button>
             </div>
 
-            {loadingMessages ? (
+            {loadingMessages && messages.length === 0 ? (
               <EmptyState>
                 {t("Loading messages...", "মেসেজ লোড হচ্ছে...")}
               </EmptyState>
@@ -2862,7 +2866,7 @@ const pageTitle =
               )}
             </p>
 
-            {loadingOrders ? (
+            {loadingOrders && orders.length === 0 ? (
               <EmptyState>
                 {t("Loading orders...", "অর্ডার লোড হচ্ছে...")}
               </EmptyState>
@@ -3187,7 +3191,7 @@ const pageTitle =
               </select>
             </div>
 
-            {historyLoading ? (
+            {historyLoading && orderHistory.length === 0 ? (
               <EmptyState>Loading Order History...</EmptyState>
             ) : visibleOrderHistory.length === 0 ? (
               <EmptyState>No History entries found.</EmptyState>
