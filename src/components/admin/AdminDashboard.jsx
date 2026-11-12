@@ -301,10 +301,6 @@ const [savingAnnouncements, setSavingAnnouncements] = useState(false);
   const [moderatorWorkSettings, setModeratorWorkSettings] = useState({
     scheduleEnabled: false,
     timezone: "Asia/Dhaka",
-    shiftStart: "",
-    shiftEnd: "",
-    weeklyOffDays: [],
-    lateGraceMinutes: 0,
     transitionGapMinutes: 0,
   });
   const [moderatorAttendance, setModeratorAttendance] = useState([]);
@@ -316,6 +312,8 @@ const [savingAnnouncements, setSavingAnnouncements] = useState(false);
   const [selectedModeratorShift, setSelectedModeratorShift] = useState({
     shiftStart: "",
     shiftEnd: "",
+    weeklyOffDays: [],
+    lateGraceMinutes: 0,
   });
   const [savingModeratorPersonalShift, setSavingModeratorPersonalShift] = useState(false);
   useEffect(() => {
@@ -1212,21 +1210,19 @@ const deleteFilteredMessages = async () => {
           setSelectedModeratorShift({
             shiftStart: firstModerator.shiftSettings?.shiftStart || "",
             shiftEnd: firstModerator.shiftSettings?.shiftEnd || "",
+            weeklyOffDays: Array.isArray(firstModerator.shiftSettings?.weeklyOffDays) ? firstModerator.shiftSettings.weeklyOffDays : [],
+            lateGraceMinutes: Number(firstModerator.shiftSettings?.lateGraceMinutes || 0),
           });
         }
       } else {
         setSelectedModeratorShiftId("");
-        setSelectedModeratorShift({ shiftStart: "", shiftEnd: "" });
+        setSelectedModeratorShift({ shiftStart: "", shiftEnd: "", weeklyOffDays: [], lateGraceMinutes: 0 });
       }
 
       if (settingsData?.settings) {
         setModeratorWorkSettings({
           scheduleEnabled: Boolean(settingsData.settings.scheduleEnabled),
           timezone: settingsData.settings.timezone || "Asia/Dhaka",
-          weeklyOffDays: Array.isArray(settingsData.settings.weeklyOffDays)
-            ? settingsData.settings.weeklyOffDays
-            : [],
-          lateGraceMinutes: Number(settingsData.settings.lateGraceMinutes || 0),
           transitionGapMinutes: Number(settingsData.settings.transitionGapMinutes || 0),
         });
       }
@@ -1322,8 +1318,7 @@ useEffect(() => {
         body: JSON.stringify({
           scheduleEnabled: moderatorWorkSettings.scheduleEnabled,
           timezone: moderatorWorkSettings.timezone,
-          weeklyOffDays: moderatorWorkSettings.weeklyOffDays,
-          lateGraceMinutes: moderatorWorkSettings.lateGraceMinutes,
+
           transitionGapMinutes: moderatorWorkSettings.transitionGapMinutes,
         }),
       });
@@ -1332,8 +1327,6 @@ useEffect(() => {
         setModeratorWorkSettings({
           scheduleEnabled: Boolean(data.settings.scheduleEnabled),
           timezone: data.settings.timezone || "Asia/Dhaka",
-          weeklyOffDays: data.settings.weeklyOffDays || [],
-          lateGraceMinutes: Number(data.settings.lateGraceMinutes || 0),
           transitionGapMinutes: Number(data.settings.transitionGapMinutes || 0),
         });
       }
@@ -1390,12 +1383,13 @@ useEffect(() => {
   };
 
   const toggleModeratorOffDay = (day) => {
-    setModeratorWorkSettings((current) => ({
-      ...current,
-      weeklyOffDays: current.weeklyOffDays.includes(day)
-        ? current.weeklyOffDays.filter((item) => item !== day)
-        : [...current.weeklyOffDays, day].sort((a, b) => a - b),
-    }));
+    setSelectedModeratorShift((current) => {
+      const days = Array.isArray(current.weeklyOffDays) ? current.weeklyOffDays : [];
+      return {
+        ...current,
+        weeklyOffDays: days.includes(day) ? days.filter((item) => item !== day) : [...days, day].sort((a, b) => a - b),
+      };
+    });
   };
 
   const updateOrderStatus = async (order, status) => {
@@ -3712,80 +3706,8 @@ const pageTitle =
                       setSelectedModeratorShift({
                         shiftStart: selected?.shiftSettings?.shiftStart || "",
                         shiftEnd: selected?.shiftSettings?.shiftEnd || "",
-                      });
-                    }}
-                  >
-                    {!moderatorShiftList.length && (
-                      <option value="">No moderators found</option>
-                    )}
-                    {moderatorShiftList.map((moderator) => (
-                      <option key={moderator._id} value={moderator._id}>
-                        {moderator.name || "Moderator"} ({moderator.email || "No email"})
-                        {moderator.isBlocked ? " - Blocked" : ""}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-
-                {selectedModeratorShiftId && (
-                  <>
-                    <div style={{
-                      display: "grid",
-                      gridTemplateColumns: "repeat(auto-fit,minmax(180px,1fr))",
-                      gap: 14,
-                    }}>
-                    </div>
-
-                    <div>
-                      <button
-                        type="button"
-                        style={primaryButtonStyle}
-                        disabled={savingModeratorPersonalShift}
-                        onClick={saveModeratorPersonalShift}
-                      >
-                        {savingModeratorPersonalShift
-                          ? "Saving..."
-                          : "Save Moderator Shift"}
-                      </button>
-                    </div>
-                  </>
-                )}
-              </div>
-
-              <div style={{
-                border: "1px solid #dbeafe",
-                background: "#f8fbff",
-                borderRadius: 12,
-                padding: 16,
-                display: "grid",
-                gap: 14,
-                marginBottom: 18,
-              }}>
-                <strong style={{ fontSize: 15 }}>
-                  {t("Individual Moderator Shift", "প্রতিটি মডারেটরের আলাদা শিফট")}
-                </strong>
-
-                <p style={{ margin: 0, color: "#64748b", fontSize: 13, lineHeight: 1.6 }}>
-                  Select a moderator and configure their personal shift. These times are saved separately for each moderator.
-                </p>
-
-                <label>
-                  <span style={{ display: "block", marginBottom: 6, fontSize: 13, fontWeight: 600 }}>
-                    Select Moderator
-                  </span>
-                  <select
-                    style={inputStyle}
-                    value={selectedModeratorShiftId}
-                    disabled={!moderatorShiftList.length || savingModeratorPersonalShift}
-                    onChange={(e) => {
-                      const selected = moderatorShiftList.find(
-                        (item) => String(item._id) === String(e.target.value)
-                      );
-
-                      setSelectedModeratorShiftId(e.target.value);
-                      setSelectedModeratorShift({
-                        shiftStart: selected?.shiftSettings?.shiftStart || "",
-                        shiftEnd: selected?.shiftSettings?.shiftEnd || "",
+                        weeklyOffDays: Array.isArray(selected?.shiftSettings?.weeklyOffDays) ? selected.shiftSettings.weeklyOffDays : [],
+                        lateGraceMinutes: Number(selected?.shiftSettings?.lateGraceMinutes || 0),
                       });
                     }}
                   >
@@ -3843,7 +3765,61 @@ const pageTitle =
                       </label>
                     </div>
 
+                    
+                    <div style={{
+                      display: "grid",
+                      gridTemplateColumns: "repeat(auto-fit,minmax(180px,1fr))",
+                      gap: 14,
+                    }}>
+                      <label>
+                        <span style={{ display: "block", marginBottom: 6, fontSize: 13, fontWeight: 600 }}>
+                          Late Grace Period (minutes)
+                        </span>
+                        <input
+                          type="number"
+                          min="0"
+                          max="300"
+                          step="1"
+                          style={inputStyle}
+                          value={selectedModeratorShift.lateGraceMinutes}
+                          onChange={(e) =>
+                            setSelectedModeratorShift((current) => ({
+                              ...current,
+                              lateGraceMinutes: e.target.value === "" ? "" : Number(e.target.value),
+                            }))
+                          }
+                        />
+                      </label>
+                    </div>
+
                     <div>
+                      <strong style={{ display: "block", marginBottom: 10, fontSize: 13 }}>
+                        Weekly Off Days
+                      </strong>
+                      <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                        {["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"].map((day, index) => (
+                          <label
+                            key={day}
+                            style={{
+                              display: "flex",
+                              alignItems: "center",
+                              gap: 6,
+                              padding: "8px 10px",
+                              border: "1px solid #d1d5db",
+                              borderRadius: 8,
+                              fontSize: 13,
+                            }}
+                          >
+                            <input
+                              type="checkbox"
+                              checked={(selectedModeratorShift.weeklyOffDays || []).includes(index)}
+                              onChange={() => toggleModeratorOffDay(index)}
+                            />
+                            {day}
+                          </label>
+                        ))}
+                      </div>
+                    </div><div>
                       <button
                         type="button"
                         style={primaryButtonStyle}
@@ -3898,25 +3874,6 @@ const pageTitle =
 
                   <label>
                     <span style={{ display: "block", marginBottom: 6, fontSize: 13, fontWeight: 600 }}>
-                      Late Grace Period (minutes)
-                    </span>
-                    <input
-                      type="number"
-                      min="0"
-                      max="300"
-                      style={inputStyle}
-                      value={moderatorWorkSettings.lateGraceMinutes}
-                      onChange={(e) =>
-                        setModeratorWorkSettings((current) => ({
-                          ...current,
-                          lateGraceMinutes: e.target.value === "" ? "" : Number(e.target.value),
-                        }))
-                      }
-                    />
-                  </label>
-
-                  <label>
-                    <span style={{ display: "block", marginBottom: 6, fontSize: 13, fontWeight: 600 }}>
                       Work Transition Gap (minutes)
                     </span>
                     <input
@@ -3937,35 +3894,6 @@ const pageTitle =
                       Waiting time required after one moderator checks out before the next moderator can check in. Set 0 to disable.
                     </small>
                   </label>
-                </div>
-
-                <div>
-                  <strong style={{ display: "block", marginBottom: 10, fontSize: 13 }}>
-                    Weekly Off Days
-                  </strong>
-                  <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-                    {["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"].map((day, index) => (
-                      <label
-                        key={day}
-                        style={{
-                          display: "flex",
-                          alignItems: "center",
-                          gap: 6,
-                          padding: "8px 10px",
-                          border: "1px solid #d1d5db",
-                          borderRadius: 8,
-                          fontSize: 13,
-                        }}
-                      >
-                        <input
-                          type="checkbox"
-                          checked={moderatorWorkSettings.weeklyOffDays.includes(index)}
-                          onChange={() => toggleModeratorOffDay(index)}
-                        />
-                        {day}
-                      </label>
-                    ))}
-                  </div>
                 </div>
 
                 <div>
@@ -4227,6 +4155,12 @@ const pageTitle =
     
   );
 }
+
+
+
+
+
+
 
 
 

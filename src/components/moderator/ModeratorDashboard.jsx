@@ -1,4 +1,4 @@
-﻿import { createPortal } from "react-dom";
+import { createPortal } from "react-dom";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import DashboardLayout from "../shared/DashboardLayout";
@@ -2806,7 +2806,7 @@ export default function ModeratorDashboard({
                       margin: "16px 0 0",
                       fontWeight: 600,
                     }}>
-                      {t("Next work can start in", "পরবর্তী কাজ শুরু করা যাবে")}{" "}
+                      {t("Global transition gap ends in", "Global transition gap শেষ হবে")}{" "}
                       {String(Math.floor(transitionRemainingMs / 60000)).padStart(2, "0")}m{" "}
                       {String(Math.floor((transitionRemainingMs % 60000) / 1000)).padStart(2, "0")}s
                     </p>
@@ -2825,7 +2825,7 @@ export default function ModeratorDashboard({
                         !!attendanceActionLoading ||
                         !!todayAttendance ||
                         !attendanceSettings?.scheduleEnabled ||
-                        transitionRemainingMs > 0 ||
+
                         !attendanceSettings?.shiftStart ||
                         !attendanceSettings?.shiftEnd
                       }
