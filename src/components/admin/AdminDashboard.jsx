@@ -194,7 +194,6 @@ export default function AdminDashboard({
   const [stockNotifications, setStockNotifications] = useState([]);
   const [loadingStock, setLoadingStock] = useState(false);
   const [stockEditId, setStockEditId] = useState(null);
-  const [stockUpdateTextId, setStockUpdateTextId] = useState(null);
   const [stockEditValue, setStockEditValue] = useState("");
   const [stockSearch, setStockSearch] = useState("");
   const [stockSavingId, setStockSavingId] = useState(null);
@@ -1890,9 +1889,7 @@ const pageTitle =
                                   }
                                 }}                                onBlur={() => {
                                   if (stockSavingId !== String(product.id)) {
-                                    setStockUpdateTextId(String(product.id));
-                                    setStockEditId(null);
-                                    setStockEditValue("");
+                                    saveStockQuantity(product);
                                   }
                                 }}
                                 style={{
@@ -1911,8 +1908,7 @@ const pageTitle =
                                 title={t("Click to edit quantity", "পরিমাণ পরিবর্তন করতে ক্লিক করুন")}
                                 disabled={stockSavingId === String(product.id)}
                                 onClick={() => {
-                                  setStockUpdateTextId(null);
-                                setStockEditId(String(product.id));
+                                  setStockEditId(String(product.id));
                                   setStockEditValue(String(Number(product.stock || 0)));
                                 }}
                                 style={{
@@ -1924,7 +1920,7 @@ const pageTitle =
                                   cursor: "pointer",
                                 }}
                               >
-                                {stockUpdateTextId === String(product.id) ? t("Update", "আপডেট") : Number(product.stock || 0)}
+                                {Number(product.stock || 0)}
                               </button>
                             )}
                           </td>
