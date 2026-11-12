@@ -1,5 +1,5 @@
 import { createPortal } from "react-dom";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import DashboardLayout from "../shared/DashboardLayout";
 import FloatingCalculator from "../shared/FloatingCalculator";
@@ -75,6 +75,31 @@ function getList(data, key) {
   const result = data?.[key] || data?.items || data?.data || [];
 
   return Array.isArray(result) ? result : [];
+}
+
+function readModeratorListCache(key) {
+  try {
+    const value = window.localStorage.getItem(key);
+    const parsed = value ? JSON.parse(value) : null;
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+}
+
+function hasModeratorListCache(key) {
+  try {
+    const value = window.localStorage.getItem(key);
+    return value !== null && Array.isArray(JSON.parse(value));
+  } catch {
+    return false;
+  }
+}
+
+function saveModeratorListCache(key, value) {
+  try {
+    window.localStorage.setItem(key, JSON.stringify(value));
+  } catch {}
 }
 
 function statusOf(order) {
@@ -197,9 +222,9 @@ export default function ModeratorDashboard({
 
   const [tab, setTab] = useState("dashboard");
 
-  const [orders, setOrders] = useState([]);
-  const [orderHistory, setOrderHistory] = useState([]);
-  const [messages, setMessages] = useState([]);
+  const [orders, setOrders] = useState(() => readModeratorListCache("prebotix-moderator-orders-v1"));
+  const [orderHistory, setOrderHistory] = useState(() => readModeratorListCache("prebotix-moderator-history-v1"));
+  const [messages, setMessages] = useState(() => readModeratorListCache("prebotix-moderator-messages-v1"));
   const [replyDrafts, setReplyDrafts] = useState({});
 
   const [historySearch, setHistorySearch] = useState("");
@@ -214,6 +239,34 @@ export default function ModeratorDashboard({
   const [loading, setLoading] = useState(false);
   const [historyLoading, setHistoryLoading] = useState(false);
   const [saving, setSaving] = useState(false);
+
+  const ordersLoadedRef = useRef(
+    hasModeratorListCache("prebotix-moderator-orders-v1")
+  );
+  const historyLoadedRef = useRef(
+    hasModeratorListCache("prebotix-moderator-history-v1")
+  );
+  const messagesLoadedRef = useRef(
+    hasModeratorListCache("prebotix-moderator-messages-v1")
+  );
+
+  useEffect(() => {
+    if (ordersLoadedRef.current) {
+      saveModeratorListCache("prebotix-moderator-orders-v1", orders);
+    }
+  }, [orders]);
+
+  useEffect(() => {
+    if (historyLoadedRef.current) {
+      saveModeratorListCache("prebotix-moderator-history-v1", orderHistory);
+    }
+  }, [orderHistory]);
+
+  useEffect(() => {
+    if (messagesLoadedRef.current) {
+      saveModeratorListCache("prebotix-moderator-messages-v1", messages);
+    }
+  }, [messages]);
 
   const [historyActionId, setHistoryActionId] = useState("");
   const [deletingMessageId, setDeletingMessageId] = useState("");
@@ -270,12 +323,15 @@ export default function ModeratorDashboard({
   // -------------------- Load Orders --------------------
 
   const loadOrders = useCallback(async ({ silent = false } = {}) => {
-    if (!silent) setLoading(true);
+    if (!silent && !ordersLoadedRef.current) setLoading(true);
     if (!silent) setError("");
 
     try {
       const data = await request("/orders");
-      setOrders(getList(data, "orders"));
+      const nextOrders = getList(data, "orders");
+      setOrders(nextOrders);
+      ordersLoadedRef.current = true;
+      saveModeratorListCache("prebotix-moderator-orders-v1", nextOrders);
     } catch (err) {
       if (!silent) setError(
         err.message ||
@@ -345,15 +401,16 @@ export default function ModeratorDashboard({
   // -------------------- Load History --------------------
 
   const loadOrderHistory = useCallback(async ({ silent = false } = {}) => {
-    if (!silent) setHistoryLoading(true);
+    if (!silent && !historyLoadedRef.current) setHistoryLoading(true);
     if (!silent) setError("");
 
     try {
       const data = await request("/order-history");
 
-      setOrderHistory(
-        getList(data, "history")
-      );
+      const nextHistory = getList(data, "history");
+      setOrderHistory(nextHistory);
+      historyLoadedRef.current = true;
+      saveModeratorListCache("prebotix-moderator-history-v1", nextHistory);
     } catch (err) {
       if (!silent) setError(
         err.message ||
@@ -712,12 +769,15 @@ export default function ModeratorDashboard({
   // -------------------- Customer Messages --------------------
 
   const loadMessages = useCallback(async ({ silent = false } = {}) => {
-    if (!silent) setLoading(true);
+    if (!silent && !messagesLoadedRef.current) setLoading(true);
     if (!silent) setError("");
 
     try {
       const data = await request("/messages");
-      setMessages(getList(data, "messages"));
+      const nextMessages = getList(data, "messages");
+      setMessages(nextMessages);
+      messagesLoadedRef.current = true;
+      saveModeratorListCache("prebotix-moderator-messages-v1", nextMessages);
     } catch (err) {
       if (!silent) setError(
         err.message ||
@@ -1306,7 +1366,7 @@ export default function ModeratorDashboard({
               </div>
             </div>
 
-            {loading ? (
+            {loading && !ordersLoadedRef.current ? (
               <p>{t("Loading orders...", "অর্ডার লোড হচ্ছে...")}</p>
             ) : visibleOrders.length === 0 ? (
               <p style={{ color: "#6b7280" }}>
@@ -1493,7 +1553,7 @@ export default function ModeratorDashboard({
               </div>
             </div>
 
-            {loading ? (
+            {loading && !ordersLoadedRef.current ? (
               <p>{t("Loading orders...", "অর্ডার লোড হচ্ছে...")}</p>
             ) : courierOrders.length === 0 ? (
               <p style={{ color: "#6b7280" }}>
@@ -1967,7 +2027,7 @@ export default function ModeratorDashboard({
               {t("orders", "টি অর্ডার")}
             </p>
 
-            {historyLoading ? (
+            {historyLoading && !historyLoadedRef.current ? (
               <p>{t("Loading History...", "হিস্টোরি লোড হচ্ছে...")}</p>
             ) : visibleOrderHistory.length === 0 ? (
               <p style={{ color: "#6b7280" }}>
@@ -2265,7 +2325,7 @@ export default function ModeratorDashboard({
             {/* Message list */}
 
             <div style={{ display: "grid", gap: 14, marginTop: 18 }}>
-              {loading ? (
+              {loading && !messagesLoadedRef.current ? (
                 <p>{t("Loading messages...", "বার্তা লোড হচ্ছে...")}</p>
               ) : filteredMessages.length === 0 ? (
                 <p style={{ color: "#6b7280" }}>
