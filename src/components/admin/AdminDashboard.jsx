@@ -508,15 +508,18 @@ const deleteAllHistory = async () => {
     if (!silent) setError("");
 
     try {
-      const [productData, notificationData] = await Promise.all([
-        request("/products"),
-        request("/stock-notifications"),
-      ]);
+      const productData = await request("/products");
       setStockProducts(Array.isArray(productData.products) ? productData.products : []);
       setStockCatalogLoaded(true);
-      setStockNotifications(Array.isArray(notificationData.notifications) ? notificationData.notifications : []);
     } catch (err) {
       if (!silent) setError(err.message || "Could not load product stock catalog.");
+    }
+
+    try {
+      const notificationData = await request("/stock-notifications");
+      setStockNotifications(Array.isArray(notificationData.notifications) ? notificationData.notifications : []);
+    } catch (err) {
+      if (!silent) console.warn("Could not load stock notifications:", err);
     } finally {
       if (!silent) setLoadingStock(false);
     }
