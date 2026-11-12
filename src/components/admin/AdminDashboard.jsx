@@ -272,7 +272,7 @@ export default function AdminDashboard({
   }));
   
   const [loadingPaymentDelivery, setLoadingPaymentDelivery] = useState(false);
-  const [paymentDeliverySettingsLoaded, setPaymentDeliverySettingsLoaded] = useState(() => hasAdminSettingsCache("prebotix-admin-payment-delivery-v1"));
+  const [paymentDeliverySettingsLoaded, setPaymentDeliverySettingsLoaded] = useState(true)
   const [generalSettings, setGeneralSettings] = useState(() => readAdminSettingsCache("prebotix-admin-general-settings-v1", {
     websiteName: "PreBotix",
     logo: "",
@@ -288,7 +288,7 @@ export default function AdminDashboard({
 
 const [savingAnnouncements, setSavingAnnouncements] = useState(false);
   const [loadingGeneralSettings, setLoadingGeneralSettings] = useState(false);
-  const [generalSettingsLoaded, setGeneralSettingsLoaded] = useState(() => hasAdminSettingsCache("prebotix-admin-general-settings-v1") && hasAdminSettingsCache("prebotix-admin-announcements-v1"));
+  const [generalSettingsLoaded, setGeneralSettingsLoaded] = useState(true)
   const [savingGeneralSettings, setSavingGeneralSettings] = useState(false);
   const [uploadingAsset, setUploadingAsset] = useState("");
   useEffect(() => {
