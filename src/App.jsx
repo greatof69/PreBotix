@@ -162,7 +162,14 @@ export default function App() {
 
   const [productBulkImportOpen, setProductBulkImportOpen] =
     useState(false);
-  const [storefrontSettings, setStorefrontSettings] = useState(null);
+  const [storefrontSettings, setStorefrontSettings] = useState(() => {
+    try {
+      const cached = window.localStorage.getItem("prebotix-storefront-settings-v1");
+      return cached ? JSON.parse(cached) : null;
+    } catch {
+      return null;
+    }
+  });
   const [rememberMe, setRememberMe] = useState(false);
   const [isAIChatOpen, setIsAIChatOpen] = useState(false);
 
@@ -171,7 +178,15 @@ export default function App() {
     fetch(`${API_BASE_URL}/api/storefront-settings`)
       .then((response) => (response.ok ? response.json() : null))
       .then((data) => {
-        if (active && data?.settings) setStorefrontSettings(data.settings);
+        if (active && data?.settings) {
+          try {
+            window.localStorage.setItem(
+              "prebotix-storefront-settings-v1",
+              JSON.stringify(data.settings)
+            );
+          } catch {}
+          setStorefrontSettings(data.settings);
+        }
       })
       .catch(() => {});
     return () => {
@@ -236,6 +251,12 @@ export default function App() {
           setProductsLoaded(true);
         }
         if (settingsResponse.ok && settingsData.settings) {
+          try {
+            window.localStorage.setItem(
+              "prebotix-storefront-settings-v1",
+              JSON.stringify(settingsData.settings)
+            );
+          } catch {}
           setStorefrontSettings(settingsData.settings);
         }
       } catch {
