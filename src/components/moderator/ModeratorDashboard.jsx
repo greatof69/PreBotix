@@ -910,14 +910,7 @@ export default function ModeratorDashboard({
 
     if (!ids.length) return;
 
-    const confirmed = window.confirm(
-      t(
-        `Delete all ${ids.length} filtered messages? This cannot be undone.`,
-        `ফিল্টার করা ${ids.length}টি মেসেজ মুছে ফেলবেন? এটি ফিরিয়ে আনা যাবে না।`
-      )
-    );
 
-    if (!confirmed) return;
 
     setDeletingAllMessages(true);
     setError("");
