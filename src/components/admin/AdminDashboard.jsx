@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+﻿import { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import DashboardLayout from "../shared/DashboardLayout";
 import { clearAuthSession, getAccessToken, authFetch } from "../../utils/authSession";
@@ -58,7 +58,7 @@ const successButtonStyle = {
 
 function formatBDT(value) {
   const amount = Number(value || 0);
-  return `à§³${amount.toLocaleString("en-BD")}`;
+  return `৳${amount.toLocaleString("en-BD")}`;
 }
 
 function getId(item) {
@@ -266,7 +266,7 @@ export default function AdminDashboard({
     freeDeliveryThreshold: 0,
     codFee: 0,
     checkoutTitle: "Payment & Delivery",
-    checkoutTitleBn: "à¦ªà§‡à¦®à§‡à¦¨à§à¦Ÿ à¦“ à¦¡à§‡à¦²à¦¿à¦­à¦¾à¦°à¦¿",
+    checkoutTitleBn: "পেমেন্ট ও ডেলিভারি",
     checkoutInstructions: "",
     checkoutInstructionsBn: "",
   }));
@@ -403,7 +403,7 @@ const [savingAnnouncements, setSavingAnnouncements] = useState(false);
     const confirmed = window.confirm(
       t(
         "Delete this courier order? This cannot be undone.",
-        "à¦à¦‡ à¦•à§à¦°à¦¿à¦¯à¦¼à¦¾à¦° à¦…à¦°à§à¦¡à¦¾à¦°à¦Ÿà¦¿ à¦®à§à¦›à¦¬à§‡à¦¨? à¦à¦Ÿà¦¿ à¦«à¦¿à¦°à¦¿à¦¯à¦¼à§‡ à¦†à¦¨à¦¾ à¦¯à¦¾à¦¬à§‡ à¦¨à¦¾à¥¤"
+        "এই কুরিয়ার অর্ডারটি মুছবেন? এটি ফিরিয়ে আনা যাবে না।"
       )
     );
     if (!confirmed) return;
@@ -416,7 +416,7 @@ const [savingAnnouncements, setSavingAnnouncements] = useState(false);
         method: "DELETE",
       });
 
-      setMessage(t("Courier order deleted.", "à¦•à§à¦°à¦¿à¦¯à¦¼à¦¾à¦° à¦…à¦°à§à¦¡à¦¾à¦° à¦®à§à¦›à§‡ à¦«à§‡à¦²à¦¾ à¦¹à¦¯à¦¼à§‡à¦›à§‡à¥¤"));
+      setMessage(t("Courier order deleted.", "কুরিয়ার অর্ডার মুছে ফেলা হয়েছে।"));
       await loadOrders();
     } catch (err) {
       setError(err.message || "Could not delete courier order.");
@@ -427,7 +427,7 @@ const [savingAnnouncements, setSavingAnnouncements] = useState(false);
     const typed = window.prompt(
       t(
         "You are about to permanently delete ALL courier orders. Type DELETE to confirm.",
-        "à¦†à¦ªà¦¨à¦¿ à¦¸à¦¬ à¦•à§à¦°à¦¿à¦¯à¦¼à¦¾à¦° à¦…à¦°à§à¦¡à¦¾à¦° à¦¸à§à¦¥à¦¾à¦¯à¦¼à§€à¦­à¦¾à¦¬à§‡ à¦®à§à¦›à¦¤à§‡ à¦¯à¦¾à¦šà§à¦›à§‡à¦¨à¥¤ à¦¨à¦¿à¦¶à§à¦šà¦¿à¦¤ à¦•à¦°à¦¤à§‡ DELETE à¦²à¦¿à¦–à§à¦¨à¥¤"
+        "আপনি সব কুরিয়ার অর্ডার স্থায়ীভাবে মুছতে যাচ্ছেন। নিশ্চিত করতে DELETE লিখুন।"
       )
     );
     if (String(typed || "").trim() !== "DELETE") return;
@@ -443,7 +443,7 @@ const [savingAnnouncements, setSavingAnnouncements] = useState(false);
       setMessage(
         t(
           "All courier orders deleted successfully.",
-          "à¦¸à¦¬ à¦•à§à¦°à¦¿à¦¯à¦¼à¦¾à¦° à¦…à¦°à§à¦¡à¦¾à¦° à¦®à§à¦›à§‡ à¦«à§‡à¦²à¦¾ à¦¹à¦¯à¦¼à§‡à¦›à§‡à¥¤"
+          "সব কুরিয়ার অর্ডার মুছে ফেলা হয়েছে।"
         )
       );
       await loadOrders();
@@ -622,7 +622,7 @@ const deleteAllHistory = async () => {
     const newStock = Number(stockEditValue);
 
     if (!Number.isSafeInteger(newStock) || newStock < 0) {
-      setError(t("Enter a valid stock quantity (0 or more).", "à¦¸à¦ à¦¿à¦• à¦¸à§à¦Ÿà¦• à¦¸à¦‚à¦–à§à¦¯à¦¾ à¦²à¦¿à¦–à§à¦¨ (à§¦ à¦¬à¦¾ à¦¤à¦¾à¦° à¦¬à§‡à¦¶à¦¿)à¥¤"));
+      setError(t("Enter a valid stock quantity (0 or more).", "সঠিক স্টক সংখ্যা লিখুন (০ বা তার বেশি)।"));
       return;
     }
 
@@ -648,7 +648,7 @@ const deleteAllHistory = async () => {
 
       setStockEditId(null);
       setStockEditValue("");
-      setMessage(t("Stock quantity updated.", "à¦¸à§à¦Ÿà¦•à§‡à¦° à¦ªà¦°à¦¿à¦®à¦¾à¦£ à¦†à¦ªà¦¡à§‡à¦Ÿ à¦¹à¦¯à¦¼à§‡à¦›à§‡à¥¤"));
+      setMessage(t("Stock quantity updated.", "স্টকের পরিমাণ আপডেট হয়েছে।"));
     } catch (err) {
       setError(err.message || "Could not update stock quantity.");
     } finally {
@@ -682,8 +682,8 @@ const deleteAllHistory = async () => {
 
       setMessage(
         newStock > 0
-          ? t("Product marked In Stock.", "à¦ªà¦£à§à¦¯à¦Ÿà¦¿ à¦¸à§à¦Ÿà¦•à§‡ à¦†à¦›à§‡ à¦¹à¦¿à¦¸à§‡à¦¬à§‡ à¦¸à§‡à¦Ÿ à¦¹à¦¯à¦¼à§‡à¦›à§‡à¥¤")
-          : t("Product marked Out of Stock.", "à¦ªà¦£à§à¦¯à¦Ÿà¦¿ à¦¸à§à¦Ÿà¦• à¦¶à§‡à¦· à¦¹à¦¿à¦¸à§‡à¦¬à§‡ à¦¸à§‡à¦Ÿ à¦¹à¦¯à¦¼à§‡à¦›à§‡à¥¤")
+          ? t("Product marked In Stock.", "পণ্যটি স্টকে আছে হিসেবে সেট হয়েছে।")
+          : t("Product marked Out of Stock.", "পণ্যটি স্টক শেষ হিসেবে সেট হয়েছে।")
       );
     } catch (err) {
       setError(err.message || "Could not update stock availability.");
@@ -703,7 +703,7 @@ const deleteAllHistory = async () => {
     const visibility = replyVisibility[id] || "public";
 
     if (!reply) {
-      setError(t("Please write a reply first.", "à¦†à¦—à§‡ à¦‰à¦¤à§à¦¤à¦° à¦²à¦¿à¦–à§à¦¨à¥¤"));
+      setError(t("Please write a reply first.", "আগে উত্তর লিখুন।"));
       return;
     }
 
@@ -729,14 +729,14 @@ const deleteAllHistory = async () => {
         visibility === "private"
           ? t(
             "Private reply saved. Moderator cannot see it.",
-            "à¦ªà§à¦°à¦¾à¦‡à¦­à§‡à¦Ÿ à¦‰à¦¤à§à¦¤à¦° à¦¸à¦‚à¦°à¦•à§à¦·à¦¿à¦¤ à¦¹à¦¯à¦¼à§‡à¦›à§‡à¥¤ à¦®à¦¡à¦¾à¦°à§‡à¦Ÿà¦° à¦¦à§‡à¦–à¦¤à§‡ à¦ªà¦¾à¦°à¦¬à§‡à¦¨ à¦¨à¦¾à¥¤"
+            "প্রাইভেট উত্তর সংরক্ষিত হয়েছে। মডারেটর দেখতে পারবেন না।"
           )
-          : t("Reply sent successfully.", "à¦‰à¦¤à§à¦¤à¦° à¦ªà¦¾à¦ à¦¾à¦¨à§‹ à¦¹à¦¯à¦¼à§‡à¦›à§‡à¥¤")
+          : t("Reply sent successfully.", "উত্তর পাঠানো হয়েছে।")
       );
 
       await loadMessages();
     } catch (err) {
-      setError(err.message || t("Could not send reply.", "à¦‰à¦¤à§à¦¤à¦° à¦ªà¦¾à¦ à¦¾à¦¨à§‹ à¦¯à¦¾à¦¯à¦¼à¦¨à¦¿à¥¤"));
+      setError(err.message || t("Could not send reply.", "উত্তর পাঠানো যায়নি।"));
     } finally {
       setSaving(false);
     }
@@ -779,7 +779,7 @@ const deleteFullMessage = async (item) => {
     setMessage(
       t(
         "Customer message and all replies deleted.",
-        "à¦•à¦¾à¦¸à§à¦Ÿà¦®à¦¾à¦° à¦®à§‡à¦¸à§‡à¦œ à¦“ à¦¸à¦¬ à¦‰à¦¤à§à¦¤à¦° à¦®à§à¦›à§‡ à¦«à§‡à¦²à¦¾ à¦¹à§Ÿà§‡à¦›à§‡à¥¤"
+        "কাস্টমার মেসেজ ও সব উত্তর মুছে ফেলা হয়েছে।"
       )
     );
   } catch (err) {
@@ -787,7 +787,7 @@ const deleteFullMessage = async (item) => {
       err.message ||
         t(
           "Could not delete customer message.",
-          "à¦®à§‡à¦¸à§‡à¦œ à¦®à§à¦›à¦¤à§‡ à¦¸à¦®à¦¸à§à¦¯à¦¾ à¦¹à§Ÿà§‡à¦›à§‡à¥¤"
+          "মেসেজ মুছতে সমস্যা হয়েছে।"
         )
     );
   } finally {
@@ -838,13 +838,13 @@ const deleteFilteredMessages = async () => {
     setMessage(
       t(
         `${ids.length} customer messages and their replies deleted.`,
-        `${ids.length}à¦Ÿà¦¿ à¦•à¦¾à¦¸à§à¦Ÿà¦®à¦¾à¦° à¦®à§‡à¦¸à§‡à¦œ à¦“ à¦¸à¦¬ à¦‰à¦¤à§à¦¤à¦° à¦®à§à¦›à§‡ à¦«à§‡à¦²à¦¾ à¦¹à§Ÿà§‡à¦›à§‡à¥¤`
+        `${ids.length}টি কাস্টমার মেসেজ ও সব উত্তর মুছে ফেলা হয়েছে।`
       )
     );
   } catch (err) {
     setError(
       err.message ||
-        t("Could not delete filtered messages.", "à¦®à§‡à¦¸à§‡à¦œ à¦®à§à¦›à¦¤à§‡ à¦¸à¦®à¦¸à§à¦¯à¦¾ à¦¹à§Ÿà§‡à¦›à§‡à¥¤")
+        t("Could not delete filtered messages.", "মেসেজ মুছতে সমস্যা হয়েছে।")
     );
     await loadMessages();
   } finally {
@@ -1096,7 +1096,7 @@ const deleteFilteredMessages = async () => {
         freeDeliveryThreshold: settings.freeDeliveryThreshold ?? 0,
         codFee: settings.codFee ?? 0,
         checkoutTitle: settings.checkoutTitle || "Payment & Delivery",
-        checkoutTitleBn: settings.checkoutTitleBn || "à¦ªà§‡à¦®à§‡à¦¨à§à¦Ÿ à¦“ à¦¡à§‡à¦²à¦¿à¦­à¦¾à¦°à¦¿",
+        checkoutTitleBn: settings.checkoutTitleBn || "পেমেন্ট ও ডেলিভারি",
         checkoutInstructions: settings.checkoutInstructions || "",
         checkoutInstructionsBn: settings.checkoutInstructionsBn || "",
       });
@@ -1136,17 +1136,17 @@ const deleteFilteredMessages = async () => {
     const newMethod = {
       id: provider,
       name: isBkash ? "bKash" : "Nagad",
-      nameBn: isBkash ? "à¦¬à¦¿à¦•à¦¾à¦¶" : "à¦¨à¦—à¦¦",
+      nameBn: isBkash ? "বিকাশ" : "নগদ",
       description: isBkash
         ? "Pay using bKash."
         : "Pay using Nagad.",
       descriptionBn: isBkash
-        ? "à¦¬à¦¿à¦•à¦¾à¦¶à§‡à¦° à¦®à¦¾à¦§à§à¦¯à¦®à§‡ à¦ªà§‡à¦®à§‡à¦¨à§à¦Ÿ à¦•à¦°à§à¦¨à¥¤"
-        : "à¦¨à¦—à¦¦à§‡à¦° à¦®à¦¾à¦§à§à¦¯à¦®à§‡ à¦ªà§‡à¦®à§‡à¦¨à§à¦Ÿ à¦•à¦°à§à¦¨à¥¤",
+        ? "বিকাশের মাধ্যমে পেমেন্ট করুন।"
+        : "নগদের মাধ্যমে পেমেন্ট করুন।",
       enabled: true,
       type: "manual",
       instructions: "Send the payment to the receiver number and enter your sender number and transaction ID at checkout.",
-      instructionsBn: "à¦°à¦¿à¦¸à¦¿à¦­à¦¾à¦° à¦¨à¦®à§à¦¬à¦°à§‡ à¦Ÿà¦¾à¦•à¦¾ à¦ªà¦¾à¦ à¦¿à§Ÿà§‡ à¦šà§‡à¦•à¦†à¦‰à¦Ÿà§‡ à¦ªà§à¦°à§‡à¦°à¦•à§‡à¦° à¦¨à¦®à§à¦¬à¦° à¦“ Transaction ID à¦¦à¦¿à¦¨à¥¤",
+      instructionsBn: "রিসিভার নম্বরে টাকা পাঠিয়ে চেকআউটে প্রেরকের নম্বর ও Transaction ID দিন।",
       receiverNumber: "",
     };
 
@@ -1386,7 +1386,7 @@ const deleteOrder = async (order) => {
     setMessage(
       t(
         "Order deleted successfully.",
-        "à¦…à¦°à§à¦¡à¦¾à¦° à¦®à§à¦›à§‡ à¦«à§‡à¦²à¦¾ à¦¹à¦¯à¦¼à§‡à¦›à§‡à¥¤"
+        "অর্ডার মুছে ফেলা হয়েছে।"
       )
     );
   } catch (err) {
@@ -1394,7 +1394,7 @@ const deleteOrder = async (order) => {
       err.message ||
         t(
           "Could not delete order.",
-          "à¦…à¦°à§à¦¡à¦¾à¦° à¦®à§à¦›à¦¤à§‡ à¦¸à¦®à¦¸à§à¦¯à¦¾ à¦¹à¦¯à¦¼à§‡à¦›à§‡à¥¤"
+          "অর্ডার মুছতে সমস্যা হয়েছে।"
         )
     );
 
@@ -1422,7 +1422,7 @@ const deleteOrder = async (order) => {
     const typed = window.prompt(
       t(
         `You are about to permanently delete ${scope} order(s). Type DELETE to confirm.`,
-        `à¦†à¦ªà¦¨à¦¿ ${scope} à¦…à¦°à§à¦¡à¦¾à¦° à¦¸à§à¦¥à¦¾à¦¯à¦¼à§€à¦­à¦¾à¦¬à§‡ à¦®à§à¦›à¦¤à§‡ à¦¯à¦¾à¦šà§à¦›à§‡à¦¨à¥¤ à¦¨à¦¿à¦¶à§à¦šà¦¿à¦¤ à¦•à¦°à¦¤à§‡ DELETE à¦²à¦¿à¦–à§à¦¨à¥¤`
+        `আপনি ${scope} অর্ডার স্থায়ীভাবে মুছতে যাচ্ছেন। নিশ্চিত করতে DELETE লিখুন।`
       )
     );
 
@@ -1445,10 +1445,10 @@ const deleteOrder = async (order) => {
         await request(`/orders/all${query}`, { method: "DELETE" });
       }
 
-      setMessage(t("Orders deleted. Stock restored.", "à¦…à¦°à§à¦¡à¦¾à¦° à¦®à§à¦›à§‡ à¦«à§‡à¦²à¦¾ à¦¹à¦¯à¦¼à§‡à¦›à§‡à¥¤ à¦¸à§à¦Ÿà¦• à¦«à§‡à¦°à¦¤ à¦à¦¸à§‡à¦›à§‡à¥¤"));
+      setMessage(t("Orders deleted. Stock restored.", "অর্ডার মুছে ফেলা হয়েছে। স্টক ফেরত এসেছে।"));
       await loadOrders();
     } catch (err) {
-      setError(err.message || t("Could not delete orders.", "à¦…à¦°à§à¦¡à¦¾à¦° à¦®à§à¦›à¦¤à§‡ à¦¸à¦®à¦¸à§à¦¯à¦¾ à¦¹à¦¯à¦¼à§‡à¦›à§‡à¥¤"));
+      setError(err.message || t("Could not delete orders.", "অর্ডার মুছতে সমস্যা হয়েছে।"));
       await loadOrders();
     } finally {
       setDeletingAllOrders(false);
@@ -1638,26 +1638,26 @@ const deleteOrder = async (order) => {
     {
       id: "orders",
       label: "Order Management",
-      labelBn: "à¦…à¦°à§à¦¡à¦¾à¦° à¦®à§à¦¯à¦¾à¦¨à§‡à¦œà¦®à§‡à¦¨à§à¦Ÿ",
-      icon: "ðŸ“‹",
+      labelBn: "অর্ডার ম্যানেজমেন্ট",
+      icon: "📋",
     },
     {
       id: "users",
       label: "Account Management",
-      labelBn: "à¦…à§à¦¯à¦¾à¦•à¦¾à¦‰à¦¨à§à¦Ÿ à¦®à§à¦¯à¦¾à¦¨à§‡à¦œà¦®à§‡à¦¨à§à¦Ÿ",
-      icon: "ðŸ‘¥",
+      labelBn: "অ্যাকাউন্ট ম্যানেজমেন্ট",
+      icon: "👥",
     },
     {
       id: "generalSettings",
       label: "General Settings",
-      labelBn: "à¦¸à¦¾à¦§à¦¾à¦°à¦£ à¦¸à§‡à¦Ÿà¦¿à¦‚à¦¸",
-      icon: "âš™ï¸",
+      labelBn: "সাধারণ সেটিংস",
+      icon: "⚙️",
     },
     {
       id: "moderatorApplications",
       label: "Moderator Applications",
-      labelBn: "à¦®à¦¡à¦¾à¦°à§‡à¦Ÿà¦° à¦†à¦¬à§‡à¦¦à¦¨",
-      icon: "ðŸ›¡ï¸",
+      labelBn: "মডারেটর আবেদন",
+      icon: "🛡️",
     },
     {
       id: "moderatorWork",
@@ -1668,54 +1668,54 @@ const deleteOrder = async (order) => {
       {
       id: "stock",
       label: "Product Stock",
-      labelBn: "à¦ªà¦£à§à¦¯à§‡à¦° à¦¸à§à¦Ÿà¦•",
-      icon: "ðŸ“¦",
+      labelBn: "পণ্যের স্টক",
+      icon: "📦",
     },
     {
       id: "messages",
       label: "Customer Messages",
-      labelBn: "à¦—à§à¦°à¦¾à¦¹à¦•à§‡à¦° à¦®à§‡à¦¸à§‡à¦œ",
-      icon: "ðŸ’¬",
+      labelBn: "গ্রাহকের মেসেজ",
+      icon: "💬",
     },
     {
       id: "paymentDelivery",
       label: "Payment & Delivery Settings",
-      labelBn: "à¦ªà§‡à¦®à§‡à¦¨à§à¦Ÿ à¦“ à¦¡à§‡à¦²à¦¿à¦­à¦¾à¦°à¦¿ à¦¸à§‡à¦Ÿà¦¿à¦‚à¦¸",
-      icon: "ðŸ’³",
+      labelBn: "পেমেন্ট ও ডেলিভারি সেটিংস",
+      icon: "💳",
     },
     {
       id: "courier",
       label: "Courier Orders",
-      labelBn: "à¦•à§à¦°à¦¿à§Ÿà¦¾à¦° à¦…à¦°à§à¦¡à¦¾à¦°",
-      icon: "ðŸ“¦",
+      labelBn: "কুরিয়ার অর্ডার",
+      icon: "📦",
     },
     {
       id: "history",
       label: "Order History",
-      labelBn: "à¦…à¦°à§à¦¡à¦¾à¦° à¦¹à¦¿à¦¸à§à¦Ÿà§‹à¦°à¦¿",
-      icon: "ðŸ—‚ï¸",
+      labelBn: "অর্ডার হিস্টোরি",
+      icon: "🗂️",
     },
   ];
 
   
 const pageTitle =
   tab === "users"
-    ? t("Account Management", "à¦…à§à¦¯à¦¾à¦•à¦¾à¦‰à¦¨à§à¦Ÿ à¦®à§à¦¯à¦¾à¦¨à§‡à¦œà¦®à§‡à¦¨à§à¦Ÿ")
+    ? t("Account Management", "অ্যাকাউন্ট ম্যানেজমেন্ট")
     : tab === "moderatorApplications"
-      ? t("Moderator Applications", "à¦®à¦¡à¦¾à¦°à§‡à¦Ÿà¦° à¦†à¦¬à§‡à¦¦à¦¨")
+      ? t("Moderator Applications", "মডারেটর আবেদন")
       : tab === "moderatorWork"
         ? t("Moderator Work & Attendance", "মডারেটর শিফট ও উপস্থিতি")
         : tab === "stock"
-        ? t("Product Stock Catalog", "à¦ªà¦£à§à¦¯à§‡à¦° à¦¸à§à¦Ÿà¦• à¦•à§à¦¯à¦¾à¦Ÿà¦¾à¦²à¦—")
+        ? t("Product Stock Catalog", "পণ্যের স্টক ক্যাটালগ")
         : tab === "messages"
-        ? t("Customer Messages", "à¦—à§à¦°à¦¾à¦¹à¦•à§‡à¦° à¦®à§‡à¦¸à§‡à¦œ")
+        ? t("Customer Messages", "গ্রাহকের মেসেজ")
         : tab === "paymentDelivery"
-          ? t("Payment & Delivery Settings", "à¦ªà§‡à¦®à§‡à¦¨à§à¦Ÿ à¦“ à¦¡à§‡à¦²à¦¿à¦­à¦¾à¦°à¦¿ à¦¸à§‡à¦Ÿà¦¿à¦‚à¦¸")
+          ? t("Payment & Delivery Settings", "পেমেন্ট ও ডেলিভারি সেটিংস")
           : tab === "courier"
-            ? t("Courier Orders", "à¦•à§à¦°à¦¿à§Ÿà¦¾à¦° à¦…à¦°à§à¦¡à¦¾à¦°")
+            ? t("Courier Orders", "কুরিয়ার অর্ডার")
             : tab === "history"
-              ? t("Order History", "à¦…à¦°à§à¦¡à¦¾à¦° à¦¹à¦¿à¦¸à§à¦Ÿà§‹à¦°à¦¿")
-              : t("Order Management", "à¦…à¦°à§à¦¡à¦¾à¦° à¦®à§à¦¯à¦¾à¦¨à§‡à¦œà¦®à§‡à¦¨à§à¦Ÿ");
+              ? t("Order History", "অর্ডার হিস্টোরি")
+              : t("Order Management", "অর্ডার ম্যানেজমেন্ট");
 
 
   return (
@@ -1724,7 +1724,7 @@ const pageTitle =
       title={pageTitle}
       subtitle={t(
         "Manage orders and user accounts",
-        "à¦…à¦°à§à¦¡à¦¾à¦° à¦“ à¦¬à§à¦¯à¦¬à¦¹à¦¾à¦°à¦•à¦¾à¦°à§€ à¦…à§à¦¯à¦¾à¦•à¦¾à¦‰à¦¨à§à¦Ÿ à¦ªà¦°à¦¿à¦šà¦¾à¦²à¦¨à¦¾ à¦•à¦°à§à¦¨"
+        "অর্ডার ও ব্যবহারকারী অ্যাকাউন্ট পরিচালনা করুন"
       )}
       activeTab={tab}
       onTabChange={(nextTab) => {
@@ -1785,15 +1785,15 @@ const pageTitle =
         {tab === "generalSettings" && (
           <section style={cardStyle}>
             <SectionTitle>
-              {t("General Website Settings", "à¦“à§Ÿà§‡à¦¬à¦¸à¦¾à¦‡à¦Ÿà§‡à¦° à¦¸à¦¾à¦§à¦¾à¦°à¦£ à¦¸à§‡à¦Ÿà¦¿à¦‚à¦¸")}
+              {t("General Website Settings", "ওয়েবসাইটের সাধারণ সেটিংস")}
             </SectionTitle>
 
             {loadingGeneralSettings && !generalSettingsLoaded ? (
-              <EmptyState>{t("Loading settings...", "à¦¸à§‡à¦Ÿà¦¿à¦‚à¦¸ à¦²à§‹à¦¡ à¦¹à¦šà§à¦›à§‡...")}</EmptyState>
+              <EmptyState>{t("Loading settings...", "সেটিংস লোড হচ্ছে...")}</EmptyState>
             ) : (
               <div style={{ display: "grid", gap: 20 }}>
                 <label style={{ display: "grid", gap: 7, fontSize: 13, fontWeight: 600 }}>
-                  {t("Website Name", "à¦“à§Ÿà§‡à¦¬à¦¸à¦¾à¦‡à¦Ÿà§‡à¦° à¦¨à¦¾à¦®")}
+                  {t("Website Name", "ওয়েবসাইটের নাম")}
                   <input
                     style={inputStyle}
                     maxLength={100}
@@ -1807,7 +1807,7 @@ const pageTitle =
                 </label>
 
                 <label style={{ display: "grid", gap: 7, fontSize: 13, fontWeight: 600 }}>
-                  {t("Site Description", "à¦“à§Ÿà§‡à¦¬à¦¸à¦¾à¦‡à¦Ÿà§‡à¦° à¦¬à¦¿à¦¬à¦°à¦£")}
+                  {t("Site Description", "ওয়েবসাইটের বিবরণ")}
                   <textarea
                     style={{ ...inputStyle, minHeight: 100, resize: "vertical" }}
                     maxLength={500}
@@ -1816,7 +1816,7 @@ const pageTitle =
                       ...current,
                       siteDescription: e.target.value,
                     }))}
-                    placeholder={t("Describe your website...", "à¦“à§Ÿà§‡à¦¬à¦¸à¦¾à¦‡à¦Ÿ à¦¸à¦®à§à¦ªà¦°à§à¦•à§‡ à¦²à¦¿à¦–à§à¦¨...")}
+                    placeholder={t("Describe your website...", "ওয়েবসাইট সম্পর্কে লিখুন...")}
                   />
                   <span style={{ color: "#6b7280", fontWeight: 400 }}>
                     {generalSettings.siteDescription.length}/500
@@ -1829,8 +1829,8 @@ const pageTitle =
                   gap: 18,
                 }}>
                   {[
-                    { key: "logo", label: t("Website Logo", "à¦“à§Ÿà§‡à¦¬à¦¸à¦¾à¦‡à¦Ÿà§‡à¦° à¦²à§‹à¦—à§‹") },
-                    { key: "favicon", label: t("Website Favicon", "à¦“à§Ÿà§‡à¦¬à¦¸à¦¾à¦‡à¦Ÿà§‡à¦° à¦«à§‡à¦­à¦¿à¦•à¦¨") },
+                    { key: "logo", label: t("Website Logo", "ওয়েবসাইটের লোগো") },
+                    { key: "favicon", label: t("Website Favicon", "ওয়েবসাইটের ফেভিকন") },
                   ].map((asset) => (
                     <div key={asset.key} style={{
                       border: "1px solid #e5e7eb",
@@ -1863,7 +1863,7 @@ const pageTitle =
                           />
                         ) : (
                           <span style={{ color: "#9ca3af", fontSize: 13 }}>
-                            {t("No image uploaded", "à¦•à§‹à¦¨à§‹ à¦›à¦¬à¦¿ à¦†à¦ªà¦²à§‹à¦¡ à¦•à¦°à¦¾ à¦¹à§Ÿà¦¨à¦¿")}
+                            {t("No image uploaded", "কোনো ছবি আপলোড করা হয়নি")}
                           </span>
                         )}
                       </div>
@@ -1888,7 +1888,7 @@ const pageTitle =
 
                       {uploadingAsset === asset.key && (
                         <span style={{ fontSize: 12, color: "#2563eb" }}>
-                          {t("Uploading...", "à¦†à¦ªà¦²à§‹à¦¡ à¦¹à¦šà§à¦›à§‡...")}
+                          {t("Uploading...", "আপলোড হচ্ছে...")}
                         </span>
                       )}
                     </div>
@@ -1906,8 +1906,8 @@ const pageTitle =
                     onClick={saveGeneralSettings}
                   >
                     {savingGeneralSettings
-                      ? t("Saving...", "à¦¸à§‡à¦­ à¦¹à¦šà§à¦›à§‡...")
-                      : t("Save General Settings", "à¦¸à¦¾à¦§à¦¾à¦°à¦£ à¦¸à§‡à¦Ÿà¦¿à¦‚à¦¸ à¦¸à§‡à¦­ à¦•à¦°à§à¦¨")}
+                      ? t("Saving...", "সেভ হচ্ছে...")
+                      : t("Save General Settings", "সাধারণ সেটিংস সেভ করুন")}
                   </button>
                 </div>
 
@@ -1917,7 +1917,7 @@ const pageTitle =
                       display: "grid",
                       gap: 16,
                     }}>
-                      <h3>{t("Announcement Settings", "à¦˜à§‹à¦·à¦£à¦¾ à¦¸à§‡à¦Ÿà¦¿à¦‚à¦¸")}</h3>
+                      <h3>{t("Announcement Settings", "ঘোষণা সেটিংস")}</h3>
 
                       {[
                         {
@@ -1982,14 +1982,14 @@ const pageTitle =
         {tab === "paymentDelivery" && (
           <section style={cardStyle}>
             <SectionTitle>
-              {t("Payment & Delivery Settings", "à¦ªà§‡à¦®à§‡à¦¨à§à¦Ÿ à¦“ à¦¡à§‡à¦²à¦¿à¦­à¦¾à¦°à¦¿ à¦¸à§‡à¦Ÿà¦¿à¦‚à¦¸")}
+              {t("Payment & Delivery Settings", "পেমেন্ট ও ডেলিভারি সেটিংস")}
             </SectionTitle>
 
             {loadingPaymentDelivery && !paymentDeliverySettingsLoaded ? (
-              <EmptyState>{t("Loading settings...", "à¦¸à§‡à¦Ÿà¦¿à¦‚à¦¸ à¦²à§‹à¦¡ à¦¹à¦šà§à¦›à§‡...")}</EmptyState>
+              <EmptyState>{t("Loading settings...", "সেটিংস লোড হচ্ছে...")}</EmptyState>
             ) : (
               <>
-                <h3>{t("Checkout information", "à¦šà§‡à¦•à¦†à¦‰à¦Ÿ à¦¤à¦¥à§à¦¯")}</h3>
+                <h3>{t("Checkout information", "চেকআউট তথ্য")}</h3>
                 <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(220px,1fr))", gap: 14 }}>
                   {[
                     ["checkoutTitle", "Checkout title"],
@@ -2010,7 +2010,7 @@ const pageTitle =
                     </label>
                   ))}
                   <label style={{ display: "grid", gap: 6, fontSize: 13, fontWeight: 600 }}>
-                    {t("Free delivery threshold (à§³)", "à¦«à§à¦°à¦¿ à¦¡à§‡à¦²à¦¿à¦­à¦¾à¦°à¦¿ à¦¸à§€à¦®à¦¾ (à§³)")}
+                    {t("Free delivery threshold (৳)", "ফ্রি ডেলিভারি সীমা (৳)")}
                     <input type="number" min="0" style={inputStyle}
                       value={paymentDeliverySettings.freeDeliveryThreshold}
                       onChange={(e) => setPaymentDeliverySettings((current) => ({
@@ -2018,7 +2018,7 @@ const pageTitle =
                       }))} />
                   </label>
                   <label style={{ display: "grid", gap: 6, fontSize: 13, fontWeight: 600 }}>
-                    {t("COD fee (à§³)", "à¦•à§à¦¯à¦¾à¦¶ à¦…à¦¨ à¦¡à§‡à¦²à¦¿à¦­à¦¾à¦°à¦¿ à¦«à¦¿ (à§³)")}
+                    {t("COD fee (৳)", "ক্যাশ অন ডেলিভারি ফি (৳)")}
                     <input type="number" min="0" style={inputStyle}
                       value={paymentDeliverySettings.codFee}
                       onChange={(e) => setPaymentDeliverySettings((current) => ({
@@ -2027,7 +2027,7 @@ const pageTitle =
                   </label>
                 </div>
 
-                <h3 style={{ marginTop: 28 }}>{t("Payment methods", "à¦ªà§‡à¦®à§‡à¦¨à§à¦Ÿ à¦ªà¦¦à§à¦§à¦¤à¦¿")}</h3>
+                <h3 style={{ marginTop: 28 }}>{t("Payment methods", "পেমেন্ট পদ্ধতি")}</h3>
                 <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginBottom: 16 }}>
                   {!paymentDeliverySettings.paymentMethods.some((method) => method.id === "bkash") && (
                     <button type="button" style={primaryButtonStyle}
@@ -2044,7 +2044,7 @@ const pageTitle =
                 </div>
                 {paymentDeliverySettings.paymentMethods.length === 0 ? (
                   <EmptyState>
-                    {t("No payment methods are configured in the backend yet.", "Backend-à¦ à¦•à§‹à¦¨à§‹ à¦ªà§‡à¦®à§‡à¦¨à§à¦Ÿ à¦ªà¦¦à§à¦§à¦¤à¦¿ à¦ªà¦¾à¦“à§Ÿà¦¾ à¦¯à¦¾à§Ÿà¦¨à¦¿à¥¤")}
+                    {t("No payment methods are configured in the backend yet.", "Backend-এ কোনো পেমেন্ট পদ্ধতি পাওয়া যায়নি।")}
                   </EmptyState>
                 ) : paymentDeliverySettings.paymentMethods.map((method, index) => (
                   <div key={method.id} style={{ border: "1px solid #e5e7eb", borderRadius: 10, padding: 14, marginBottom: 12 }}>
@@ -2053,30 +2053,30 @@ const pageTitle =
                       <label style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13 }}>
                         <input type="checkbox" checked={Boolean(method.enabled)}
                           onChange={(e) => updatePaymentMethod(index, "enabled", e.target.checked)} />
-                        {t("Enabled", "à¦¸à¦•à§à¦°à¦¿à§Ÿ")}
+                        {t("Enabled", "সক্রিয়")}
                       </label>
                     </div>
                     <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(200px,1fr))", gap: 12, marginTop: 12 }}>
                       <label style={{ display: "grid", gap: 5, fontSize: 13 }}>
-                        {t("Display name", "à¦ªà§à¦°à¦¦à¦°à§à¦¶à¦¿à¦¤ à¦¨à¦¾à¦®")}
+                        {t("Display name", "প্রদর্শিত নাম")}
                         <input style={inputStyle} value={method.name || ""}
                           onChange={(e) => updatePaymentMethod(index, "name", e.target.value)} />
                       </label>
                       <label style={{ display: "grid", gap: 5, fontSize: 13 }}>
-                        {t("Bangla name", "à¦¬à¦¾à¦‚à¦²à¦¾ à¦¨à¦¾à¦®")}
+                        {t("Bangla name", "বাংলা নাম")}
                         <input style={inputStyle} value={method.nameBn || ""}
                           onChange={(e) => updatePaymentMethod(index, "nameBn", e.target.value)} />
                       </label>
                       {(method.type === "manual" || ["bkash", "nagad"].includes(method.id.toLowerCase())) && (
                         <label style={{ display: "grid", gap: 5, fontSize: 13 }}>
-                          {t("Receiver number", "à¦°à¦¿à¦¸à¦¿à¦­à¦¾à¦° à¦¨à¦®à§à¦¬à¦°")}
+                          {t("Receiver number", "রিসিভার নম্বর")}
                           <input style={inputStyle} value={method.receiverNumber || ""}
                             onChange={(e) => updatePaymentMethod(index, "receiverNumber", e.target.value)}
                             placeholder="01XXXXXXXXX" />
                         </label>
                       )}
                       <label style={{ display: "grid", gap: 5, fontSize: 13 }}>
-                        {t("Payment instructions", "à¦ªà§‡à¦®à§‡à¦¨à§à¦Ÿ à¦¨à¦¿à¦°à§à¦¦à§‡à¦¶à¦¨à¦¾")}
+                        {t("Payment instructions", "পেমেন্ট নির্দেশনা")}
                         <textarea style={inputStyle} value={method.instructions || ""}
                           onChange={(e) => updatePaymentMethod(index, "instructions", e.target.value)} />
                       </label>
@@ -2084,30 +2084,30 @@ const pageTitle =
                   </div>
                 ))}
 
-                <h3 style={{ marginTop: 28 }}>{t("Delivery zones", "à¦¡à§‡à¦²à¦¿à¦­à¦¾à¦°à¦¿ à¦à¦²à¦¾à¦•à¦¾")}</h3>
+                <h3 style={{ marginTop: 28 }}>{t("Delivery zones", "ডেলিভারি এলাকা")}</h3>
                 {paymentDeliverySettings.deliveryZones.length === 0 ? (
-                  <EmptyState>{t("No delivery zones are configured.", "à¦•à§‹à¦¨à§‹ à¦¡à§‡à¦²à¦¿à¦­à¦¾à¦°à¦¿ à¦à¦²à¦¾à¦•à¦¾ à¦¸à§‡à¦Ÿ à¦•à¦°à¦¾ à¦¨à§‡à¦‡à¥¤")}</EmptyState>
+                  <EmptyState>{t("No delivery zones are configured.", "কোনো ডেলিভারি এলাকা সেট করা নেই।")}</EmptyState>
                 ) : paymentDeliverySettings.deliveryZones.map((zone, index) => (
                   <div key={zone.id} style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(150px,1fr))", gap: 12, alignItems: "end", border: "1px solid #e5e7eb", borderRadius: 10, padding: 12, marginBottom: 10 }}>
                     <label style={{ display: "grid", gap: 5, fontSize: 13 }}>
-                      {t("Zone name", "à¦à¦²à¦¾à¦•à¦¾à¦° à¦¨à¦¾à¦®")}
+                      {t("Zone name", "এলাকার নাম")}
                       <input style={inputStyle} value={zone.name || ""}
                         onChange={(e) => updateDeliveryZone(index, "name", e.target.value)} />
                     </label>
                     <label style={{ display: "grid", gap: 5, fontSize: 13 }}>
-                      {t("Bangla name", "à¦¬à¦¾à¦‚à¦²à¦¾ à¦¨à¦¾à¦®")}
+                      {t("Bangla name", "বাংলা নাম")}
                       <input style={inputStyle} value={zone.nameBn || ""}
                         onChange={(e) => updateDeliveryZone(index, "nameBn", e.target.value)} />
                     </label>
                     <label style={{ display: "grid", gap: 5, fontSize: 13 }}>
-                      {t("Delivery fee (à§³)", "à¦¡à§‡à¦²à¦¿à¦­à¦¾à¦°à¦¿ à¦«à¦¿ (à§³)")}
+                      {t("Delivery fee (৳)", "ডেলিভারি ফি (৳)")}
                       <input type="number" min="0" style={inputStyle} value={zone.fee ?? 0}
                         onChange={(e) => updateDeliveryZone(index, "fee", e.target.value)} />
                     </label>
                     <label style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13, minHeight: 42 }}>
                       <input type="checkbox" checked={Boolean(zone.enabled)}
                         onChange={(e) => updateDeliveryZone(index, "enabled", e.target.checked)} />
-                      {t("Enabled", "à¦¸à¦•à§à¦°à¦¿à§Ÿ")}
+                      {t("Enabled", "সক্রিয়")}
                     </label>
                   </div>
                 ))}
@@ -2115,7 +2115,7 @@ const pageTitle =
                 <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 22 }}>
                   <button type="button" style={primaryButtonStyle} disabled={saving}
                     onClick={savePaymentDeliverySettings}>
-                    {saving ? t("Saving...", "à¦¸à§‡à¦­ à¦¹à¦šà§à¦›à§‡...") : t("Save payment & delivery settings", "à¦ªà§‡à¦®à§‡à¦¨à§à¦Ÿ à¦“ à¦¡à§‡à¦²à¦¿à¦­à¦¾à¦°à¦¿ à¦¸à§‡à¦Ÿà¦¿à¦‚à¦¸ à¦¸à§‡à¦­ à¦•à¦°à§à¦¨")}
+                    {saving ? t("Saving...", "সেভ হচ্ছে...") : t("Save payment & delivery settings", "পেমেন্ট ও ডেলিভারি সেটিংস সেভ করুন")}
                   </button>
                 </div>
               </>
@@ -2128,28 +2128,28 @@ const pageTitle =
             <SectionTitle
               right={
                 <button type="button" style={buttonStyle} onClick={loadStockCatalog} disabled={loadingStock}>
-                  {loadingStock ? t("Loading...", "à¦²à§‹à¦¡ à¦¹à¦šà§à¦›à§‡...") : t("Refresh", "à¦°à¦¿à¦«à§à¦°à§‡à¦¶")}
+                  {loadingStock ? t("Loading...", "লোড হচ্ছে...") : t("Refresh", "রিফ্রেশ")}
                 </button>
               }
             >
-              {t("Product Stock Catalog", "à¦ªà¦£à§à¦¯à§‡à¦° à¦¸à§à¦Ÿà¦• à¦•à§à¦¯à¦¾à¦Ÿà¦¾à¦²à¦—")}
+              {t("Product Stock Catalog", "পণ্যের স্টক ক্যাটালগ")}
             </SectionTitle>
 
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(150px,1fr))", gap: 12, marginBottom: 18 }}>
               <div style={{ ...cardStyle, padding: 14 }}>
-                <small style={{ color: "#64748b" }}>{t("Total products", "à¦®à§‹à¦Ÿ à¦ªà¦£à§à¦¯")}</small>
+                <small style={{ color: "#64748b" }}>{t("Total products", "মোট পণ্য")}</small>
                 <div style={{ fontSize: 25, fontWeight: 800 }}>{stockProducts.length}</div>
               </div>
               <div style={{ ...cardStyle, padding: 14 }}>
-                <small style={{ color: "#059669" }}>{t("In stock", "à¦¸à§à¦Ÿà¦•à§‡ à¦†à¦›à§‡")}</small>
+                <small style={{ color: "#059669" }}>{t("In stock", "স্টকে আছে")}</small>
                 <div style={{ fontSize: 25, fontWeight: 800 }}>{stockProducts.filter((p) => Number(p.stock) > 0).length}</div>
               </div>
               <div style={{ ...cardStyle, padding: 14 }}>
-                <small style={{ color: "#dc2626" }}>{t("Out of stock", "à¦¸à§à¦Ÿà¦• à¦¶à§‡à¦·")}</small>
+                <small style={{ color: "#dc2626" }}>{t("Out of stock", "স্টক শেষ")}</small>
                 <div style={{ fontSize: 25, fontWeight: 800 }}>{stockProducts.filter((p) => Number(p.stock) <= 0).length}</div>
               </div>
               <div style={{ ...cardStyle, padding: 14 }}>
-                <small style={{ color: "#2563eb" }}>{t("Pending notify requests", "à¦…à¦ªà§‡à¦•à§à¦·à¦®à¦¾à¦£ à¦¨à§‹à¦Ÿà¦¿à¦«à¦¿à¦•à§‡à¦¶à¦¨")}</small>
+                <small style={{ color: "#2563eb" }}>{t("Pending notify requests", "অপেক্ষমাণ নোটিফিকেশন")}</small>
                 <div style={{ fontSize: 25, fontWeight: 800 }}>{stockNotifications.filter((n) => n.status === "pending").length}</div>
               </div>
             </div>
@@ -2159,8 +2159,8 @@ const pageTitle =
                 type="search"
                 value={stockSearch}
                 onChange={(event) => setStockSearch(event.target.value)}
-                placeholder={t("Search product by name, ID or category...", "à¦¨à¦¾à¦®, ID à¦…à¦¥à¦¬à¦¾ à¦•à§à¦¯à¦¾à¦Ÿà¦¾à¦—à¦°à¦¿ à¦¦à¦¿à§Ÿà§‡ à¦ªà¦£à§à¦¯ à¦–à§à¦à¦œà§à¦¨...")}
-                aria-label={t("Search products", "à¦ªà¦£à§à¦¯ à¦–à§à¦à¦œà§à¦¨")}
+                placeholder={t("Search product by name, ID or category...", "নাম, ID অথবা ক্যাটাগরি দিয়ে পণ্য খুঁজুন...")}
+                aria-label={t("Search products", "পণ্য খুঁজুন")}
                 style={{
                   width: "100%",
                   maxWidth: 460,
@@ -2175,13 +2175,13 @@ const pageTitle =
               />
             </div>
             {loadingStock && stockProducts.length === 0 ? (
-              <EmptyState>{t("Loading product catalog...", "à¦ªà¦£à§à¦¯à§‡à¦° à¦¤à¦¾à¦²à¦¿à¦•à¦¾ à¦²à§‹à¦¡ à¦¹à¦šà§à¦›à§‡...")}</EmptyState>
+              <EmptyState>{t("Loading product catalog...", "পণ্যের তালিকা লোড হচ্ছে...")}</EmptyState>
             ) : (
               <div style={{ overflowX: "auto" }}>
                 <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 620 }}>
                   <thead>
                     <tr style={{ background: "#f8fafc", textAlign: "left" }}>
-                      {["ID", t("Product", "à¦ªà¦£à§à¦¯"), t("Category", "à¦•à§à¦¯à¦¾à¦Ÿà¦¾à¦—à¦°à¦¿"), t("Stock quantity", "à¦¸à§à¦Ÿà¦• à¦ªà¦°à¦¿à¦®à¦¾à¦£"), t("Status", "à¦…à¦¬à¦¸à§à¦¥à¦¾"), t("Action", "à¦…à§à¦¯à¦¾à¦•à¦¶à¦¨")].map((heading) => (
+                      {["ID", t("Product", "পণ্য"), t("Category", "ক্যাটাগরি"), t("Stock quantity", "স্টক পরিমাণ"), t("Status", "অবস্থা"), t("Action", "অ্যাকশন")].map((heading) => (
                         <th key={heading} style={{ padding: 11, borderBottom: "1px solid #e5e7eb", fontSize: 12 }}>{heading}</th>
                       ))}
                     </tr>
@@ -2241,7 +2241,7 @@ const pageTitle =
                             ) : (
                               <button
                                 type="button"
-                                title={t("Click to edit quantity", "à¦ªà¦°à¦¿à¦®à¦¾à¦£ à¦ªà¦°à¦¿à¦¬à¦°à§à¦¤à¦¨ à¦•à¦°à¦¤à§‡ à¦•à§à¦²à¦¿à¦• à¦•à¦°à§à¦¨")}
+                                title={t("Click to edit quantity", "পরিমাণ পরিবর্তন করতে ক্লিক করুন")}
                                 disabled={stockSavingId === String(product.id)}
                                 onClick={() => {
                                   setStockEditId(String(product.id));
@@ -2265,7 +2265,7 @@ const pageTitle =
                               type="button"
                               disabled={stockSavingId === String(product.id)}
                               onClick={() => toggleStockAvailability(product)}
-                              title={t("Click to toggle stock availability", "à¦¸à§à¦Ÿà¦•à§‡à¦° à¦…à¦¬à¦¸à§à¦¥à¦¾ à¦ªà¦°à¦¿à¦¬à¦°à§à¦¤à¦¨ à¦•à¦°à¦¤à§‡ à¦•à§à¦²à¦¿à¦• à¦•à¦°à§à¦¨")}
+                              title={t("Click to toggle stock availability", "স্টকের অবস্থা পরিবর্তন করতে ক্লিক করুন")}
                               style={{
                                 border: "none",
                                 background: "transparent",
@@ -2276,15 +2276,15 @@ const pageTitle =
                               }}
                             >
                               {stockSavingId === String(product.id)
-                                ? t("Saving...", "à¦¸à§‡à¦­ à¦¹à¦šà§à¦›à§‡...")
+                                ? t("Saving...", "সেভ হচ্ছে...")
                                 : available
-                                  ? t("In Stock", "à¦¸à§à¦Ÿà¦•à§‡ à¦†à¦›à§‡")
-                                  : t("Out of Stock", "à¦¸à§à¦Ÿà¦• à¦¶à§‡à¦·")}
+                                  ? t("In Stock", "স্টকে আছে")
+                                  : t("Out of Stock", "স্টক শেষ")}
                             </button>
                           </td>
                           <td style={{ padding: 11, borderBottom: "1px solid #f1f5f9" }}>
                             <button type="button" style={primaryButtonStyle} onClick={() => navigate("/", { state: { focusProductId: product.id } })}>
-                              {t("View product", "à¦ªà¦£à§à¦¯ à¦¦à§‡à¦–à§à¦¨")}
+                              {t("View product", "পণ্য দেখুন")}
                             </button>
                           </td>
                         </tr>
@@ -2294,7 +2294,7 @@ const pageTitle =
                       const query = stockSearch.trim().toLowerCase();
                       return !query || [product.id, product.title, product.category].some((value) => String(value ?? "").toLowerCase().includes(query));
                     }) && (
-                      <tr><td colSpan={6} style={{ padding: 18, textAlign: "center", color: "#64748b" }}>{t("No products found.", "à¦•à§‹à¦¨à§‹ à¦ªà¦£à§à¦¯ à¦ªà¦¾à¦“à§Ÿà¦¾ à¦¯à¦¾à§Ÿà¦¨à¦¿à¥¤")}</td></tr>
+                      <tr><td colSpan={6} style={{ padding: 18, textAlign: "center", color: "#64748b" }}>{t("No products found.", "কোনো পণ্য পাওয়া যায়নি।")}</td></tr>
                     )}
                   </tbody>
                 </table>
@@ -2302,22 +2302,22 @@ const pageTitle =
             )}
 
             <div style={{ marginTop: 26 }}>
-              <SectionTitle>{t("Notify Me Requests", "Notify Me à¦…à¦¨à§à¦°à§‹à¦§")}</SectionTitle>
+              <SectionTitle>{t("Notify Me Requests", "Notify Me অনুরোধ")}</SectionTitle>
               {stockNotifications.length ? (
                 <div style={{ display: "grid", gap: 9 }}>
                   {stockNotifications.map((item) => (
                     <div key={item._id} style={{ border: "1px solid #e5e7eb", borderRadius: 10, padding: 12, display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(150px,1fr))", gap: 8, alignItems: "center" }}>
                       <strong>{item.productTitle}</strong>
-                      <span style={{ fontSize: 13 }}>{item.customerName || "Customer"} Â· {item.email}</span>
+                      <span style={{ fontSize: 13 }}>{item.customerName || "Customer"} · {item.email}</span>
                       <span style={{ fontSize: 12, color: "#64748b" }}>{new Date(item.createdAt).toLocaleString()}</span>
                       <span style={{ fontSize: 12, fontWeight: 700, color: item.status === "notified" ? "#059669" : "#d97706" }}>
-                        {item.status === "notified" ? t("Email sent", "à¦‡à¦®à§‡à¦‡à¦² à¦ªà¦¾à¦ à¦¾à¦¨à§‹ à¦¹à§Ÿà§‡à¦›à§‡") : t("Pending", "à¦…à¦ªà§‡à¦•à§à¦·à¦®à¦¾à¦£")}
+                        {item.status === "notified" ? t("Email sent", "ইমেইল পাঠানো হয়েছে") : t("Pending", "অপেক্ষমাণ")}
                       </span>
                     </div>
                   ))}
                 </div>
               ) : (
-                <EmptyState>{t("No stock notification requests yet.", "à¦à¦–à¦¨à§‹ à¦•à§‹à¦¨à§‹ Notify Me à¦…à¦¨à§à¦°à§‹à¦§ à¦¨à§‡à¦‡à¥¤")}</EmptyState>
+                <EmptyState>{t("No stock notification requests yet.", "এখনো কোনো Notify Me অনুরোধ নেই।")}</EmptyState>
               )}
             </div>
           </section>
@@ -2334,7 +2334,7 @@ const pageTitle =
             >
               <div style={cardStyle}>
                 <div style={{ color: "#6b7280", fontSize: 13 }}>
-                  {t("Total Orders", "à¦®à§‹à¦Ÿ à¦…à¦°à§à¦¡à¦¾à¦°")}
+                  {t("Total Orders", "মোট অর্ডার")}
                 </div>
                 <div style={{ fontSize: 28, fontWeight: 800, marginTop: 9 }}>
                   {orders.length}
@@ -2343,7 +2343,7 @@ const pageTitle =
 
               <div style={cardStyle}>
                 <div style={{ color: "#6b7280", fontSize: 13 }}>
-                  {t("Pending Orders", "à¦…à¦ªà§‡à¦•à§à¦·à¦®à¦¾à¦£ à¦…à¦°à§à¦¡à¦¾à¦°")}
+                  {t("Pending Orders", "অপেক্ষমাণ অর্ডার")}
                 </div>
                 <div style={{ fontSize: 28, fontWeight: 800, marginTop: 9 }}>
                   {pendingOrders}
@@ -2352,7 +2352,7 @@ const pageTitle =
 
               <div style={cardStyle}>
                 <div style={{ color: "#6b7280", fontSize: 13 }}>
-                  {t("Confirmed / In Progress", "à¦¨à¦¿à¦¶à§à¦šà¦¿à¦¤ / à¦šà¦²à¦®à¦¾à¦¨")}
+                  {t("Confirmed / In Progress", "নিশ্চিত / চলমান")}
                 </div>
                 <div style={{ fontSize: 28, fontWeight: 800, marginTop: 9 }}>
                   {confirmedOrders}
@@ -2373,8 +2373,8 @@ const pageTitle =
                       onClick={loadOrders}
                     >
                       {loadingOrders
-                        ? t("Loading...", "à¦²à§‹à¦¡ à¦¹à¦šà§à¦›à§‡...")
-                        : t("Refresh Orders", "à¦…à¦°à§à¦¡à¦¾à¦° à¦°à¦¿à¦«à§à¦°à§‡à¦¶")}
+                        ? t("Loading...", "লোড হচ্ছে...")
+                        : t("Refresh Orders", "অর্ডার রিফ্রেশ")}
                     </button>
 
                     <button
@@ -2389,15 +2389,15 @@ const pageTitle =
                       onClick={deleteAllOrders}
                     >
                       {deletingAllOrders
-                        ? t("Deleting...", "à¦®à§à¦›à§‡ à¦«à§‡à¦²à¦¾ à¦¹à¦šà§à¦›à§‡...")
+                        ? t("Deleting...", "মুছে ফেলা হচ্ছে...")
                         : orderFilter === "all" && !search.trim()
-                          ? t(`Delete All (${filteredOrders.length})`, `à¦¸à¦¬ à¦®à§à¦›à§à¦¨ (${filteredOrders.length})`)
-                          : t(`Delete Filtered (${filteredOrders.length})`, `à¦«à¦¿à¦²à§à¦Ÿà¦¾à¦° à¦•à¦°à¦¾ à¦®à§à¦›à§à¦¨ (${filteredOrders.length})`)}
+                          ? t(`Delete All (${filteredOrders.length})`, `সব মুছুন (${filteredOrders.length})`)
+                          : t(`Delete Filtered (${filteredOrders.length})`, `ফিল্টার করা মুছুন (${filteredOrders.length})`)}
                     </button>
                   </div>
                 }
               >
-                {t("Order Management", "à¦…à¦°à§à¦¡à¦¾à¦° à¦®à§à¦¯à¦¾à¦¨à§‡à¦œà¦®à§‡à¦¨à§à¦Ÿ")}
+                {t("Order Management", "অর্ডার ম্যানেজমেন্ট")}
               </SectionTitle>
 
               <div
@@ -2410,7 +2410,7 @@ const pageTitle =
               >
                 <input
                   style={{ ...inputStyle, flex: "1 1 220px" }}
-                  placeholder={t("Search order ID, customer or status", "à¦…à¦°à§à¦¡à¦¾à¦° à¦†à¦‡à¦¡à¦¿, à¦•à¦¾à¦¸à§à¦Ÿà¦®à¦¾à¦° à¦¬à¦¾ à¦¸à§à¦Ÿà§à¦¯à¦¾à¦Ÿà¦¾à¦¸ à¦–à§à¦à¦œà§à¦¨")}
+                  placeholder={t("Search order ID, customer or status", "অর্ডার আইডি, কাস্টমার বা স্ট্যাটাস খুঁজুন")}
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                 />
@@ -2420,7 +2420,7 @@ const pageTitle =
                   value={orderFilter}
                   onChange={(e) => setOrderFilter(e.target.value)}
                 >
-                  <option value="all">{t("All Orders", "à¦¸à¦¬ à¦…à¦°à§à¦¡à¦¾à¦°")}</option>
+                  <option value="all">{t("All Orders", "সব অর্ডার")}</option>
                   <option value="pending">Pending</option>
                   <option value="confirmed">Confirmed</option>
                   <option value="processing">Processing</option>
@@ -2431,9 +2431,9 @@ const pageTitle =
               </div>
 
               {loadingOrders && orders.length === 0 ? (
-                <EmptyState>{t("Loading orders...", "à¦…à¦°à§à¦¡à¦¾à¦° à¦²à§‹à¦¡ à¦¹à¦šà§à¦›à§‡...")}</EmptyState>
+                <EmptyState>{t("Loading orders...", "অর্ডার লোড হচ্ছে...")}</EmptyState>
               ) : filteredOrders.length === 0 ? (
-                <EmptyState>{t("No matching orders found.", "à¦•à§‹à¦¨à§‹ à¦…à¦°à§à¦¡à¦¾à¦° à¦ªà¦¾à¦“à§Ÿà¦¾ à¦¯à¦¾à§Ÿà¦¨à¦¿à¥¤")}</EmptyState>
+                <EmptyState>{t("No matching orders found.", "কোনো অর্ডার পাওয়া যায়নি।")}</EmptyState>
               ) : (
                 <div style={{ overflowX: "auto" }}>
                   <table
@@ -2517,7 +2517,7 @@ const pageTitle =
                                 {String(order?.paymentMethod || "cod").toUpperCase()}
                               </div>
                               <div style={{ marginTop: 4, color: "#6b7280", fontSize: 12 }}>
-                                {t("Payment status:", "à¦ªà§‡à¦®à§‡à¦¨à§à¦Ÿ à¦¸à§à¦Ÿà§à¦¯à¦¾à¦Ÿà¦¾à¦¸:")}{" "}
+                                {t("Payment status:", "পেমেন্ট স্ট্যাটাস:")}{" "}
                                 {String(order?.paymentStatus || "unpaid").toLowerCase()}
                               </div>
                               {String(order?.paymentStatus || "").toLowerCase() === "failed" &&
@@ -2530,18 +2530,18 @@ const pageTitle =
                                     color: "#b91c1c",
                                     fontSize: 12,
                                   }}>
-                                    <strong>{t("Rejection reason:", "à¦ªà§à¦°à¦¤à§à¦¯à¦¾à¦–à§à¦¯à¦¾à¦¨à§‡à¦° à¦•à¦¾à¦°à¦£:")}</strong>{" "}
+                                    <strong>{t("Rejection reason:", "প্রত্যাখ্যানের কারণ:")}</strong>{" "}
                                     {order.paymentRejectionReason}
                                   </div>
                                 )}
                               {order?.paymentSenderNumber && (
                                 <div style={{ marginTop: 4, fontSize: 12 }}>
-                                  {t("Sender:", "à¦ªà§à¦°à§‡à¦°à¦•:")} {order.paymentSenderNumber}
+                                  {t("Sender:", "প্রেরক:")} {order.paymentSenderNumber}
                                 </div>
                               )}
                               {order?.paymentTransactionId && (
                                 <div style={{ marginTop: 4, fontSize: 12, overflowWrap: "anywhere" }}>
-                                  {t("Transaction ID:", "à¦Ÿà§à¦°à¦¾à¦¨à¦œà§à¦¯à¦¾à¦•à¦¶à¦¨ à¦†à¦‡à¦¡à¦¿:")}{" "}
+                                  {t("Transaction ID:", "ট্রানজ্যাকশন আইডি:")}{" "}
                                   {order.paymentTransactionId}
                                 </div>
                               )}
@@ -2554,7 +2554,7 @@ const pageTitle =
                                       disabled={saving}
                                       onClick={() => updateAdminPaymentStatus(order, "paid")}
                                     >
-                                      {t("Verify", "à¦¯à¦¾à¦šà¦¾à¦‡ à¦•à¦°à§à¦¨")}
+                                      {t("Verify", "যাচাই করুন")}
                                     </button>
                                     <button
                                       type="button"
@@ -2562,7 +2562,7 @@ const pageTitle =
                                       disabled={saving}
                                       onClick={() => updateAdminPaymentStatus(order, "failed")}
                                     >
-                                      {t("Reject", "à¦¬à¦¾à¦¤à¦¿à¦² à¦•à¦°à§à¦¨")}
+                                      {t("Reject", "বাতিল করুন")}
                                     </button>
                                   </div>
                                 )}
@@ -2577,7 +2577,7 @@ const pageTitle =
                                     disabled={saving}
                                     onClick={() => updateOrderStatus(order, "confirmed")}
                                   >
-                                    {t("Confirm", "à¦¨à¦¿à¦¶à§à¦šà¦¿à¦¤ à¦•à¦°à§à¦¨")}
+                                    {t("Confirm", "নিশ্চিত করুন")}
                                   </button>
                                 )}
 
@@ -2588,7 +2588,7 @@ const pageTitle =
                                     disabled={saving}
                                     onClick={() => updateOrderStatus(order, "cancelled")}
                                   >
-                                    {t("Cancel", "à¦¬à¦¾à¦¤à¦¿à¦²")}
+                                    {t("Cancel", "বাতিল")}
                                   </button>
                                 )}
 
@@ -2599,8 +2599,8 @@ const pageTitle =
                                   onClick={() => deleteOrder(order)}
                                 >
                                   {deletingOrderId === id
-                                    ? t("Deleting...", "à¦®à§à¦›à¦›à§‡...")
-                                    : t("Delete", "à¦®à§à¦›à§à¦¨")}
+                                    ? t("Deleting...", "মুছছে...")
+                                    : t("Delete", "মুছুন")}
                                 </button>
                               </div>
                             </td>
@@ -2627,25 +2627,25 @@ const pageTitle =
                   onClick={loadUsers}
                 >
                   {loadingUsers
-                    ? t("Loading...", "à¦²à§‹à¦¡ à¦¹à¦šà§à¦›à§‡...")
-                    : t("Refresh Users", "à¦¬à§à¦¯à¦¬à¦¹à¦¾à¦°à¦•à¦¾à¦°à§€ à¦°à¦¿à¦«à§à¦°à§‡à¦¶")}
+                    ? t("Loading...", "লোড হচ্ছে...")
+                    : t("Refresh Users", "ব্যবহারকারী রিফ্রেশ")}
                 </button>
               }
             >
-              {t("Customers & Role Management", "à¦—à§à¦°à¦¾à¦¹à¦• à¦“ à¦°à§‹à¦² à¦ªà¦°à¦¿à¦šà¦¾à¦²à¦¨à¦¾")}
+              {t("Customers & Role Management", "গ্রাহক ও রোল পরিচালনা")}
             </SectionTitle>
 
             <p style={{ color: "#6b7280", fontSize: 13, marginTop: -6 }}>
               {t(
                 "Only administrators should be able to manage user roles.",
-                "à¦¶à§à¦§à§ à¦…à§à¦¯à¦¾à¦¡à¦®à¦¿à¦¨ à¦¬à§à¦¯à¦¬à¦¹à¦¾à¦°à¦•à¦¾à¦°à§€à¦° à¦°à§‹à¦² à¦ªà¦°à¦¿à¦šà¦¾à¦²à¦¨à¦¾ à¦•à¦°à¦¤à§‡ à¦ªà¦¾à¦°à¦¬à§‡à¦¨à¥¤"
+                "শুধু অ্যাডমিন ব্যবহারকারীর রোল পরিচালনা করতে পারবেন।"
               )}
             </p>
 
             {loadingUsers && users.length === 0 ? (
-              <EmptyState>{t("Loading users...", "à¦¬à§à¦¯à¦¬à¦¹à¦¾à¦°à¦•à¦¾à¦°à§€ à¦²à§‹à¦¡ à¦¹à¦šà§à¦›à§‡...")}</EmptyState>
+              <EmptyState>{t("Loading users...", "ব্যবহারকারী লোড হচ্ছে...")}</EmptyState>
             ) : users.length === 0 ? (
-              <EmptyState>{t("No users found.", "à¦•à§‹à¦¨à§‹ à¦¬à§à¦¯à¦¬à¦¹à¦¾à¦°à¦•à¦¾à¦°à§€ à¦ªà¦¾à¦“à¦¯à¦¼à¦¾ à¦¯à¦¾à¦¯à¦¼à¦¨à¦¿à¥¤")}</EmptyState>
+              <EmptyState>{t("No users found.", "কোনো ব্যবহারকারী পাওয়া যায়নি।")}</EmptyState>
             ) : (
               <div style={{ overflowX: "auto" }}>
                 <table
@@ -2657,7 +2657,7 @@ const pageTitle =
                 >
                   <thead>
                     <tr style={{ background: "#f9fafb", textAlign: "left" }}>
-                      {[t("User", "à¦¬à§à¦¯à¦¬à¦¹à¦¾à¦°à¦•à¦¾à¦°à§€"), t("Email", "à¦‡à¦®à§‡à¦‡à¦²"), t("Role", "à¦°à§‹à¦²"), t("Change Role", "à¦°à§‹à¦² à¦ªà¦°à¦¿à¦¬à¦°à§à¦¤à¦¨")].map((heading) => (
+                      {[t("User", "ব্যবহারকারী"), t("Email", "ইমেইল"), t("Role", "রোল"), t("Change Role", "রোল পরিবর্তন")].map((heading) => (
                         <th
                           key={heading}
                           style={{
@@ -2699,7 +2699,7 @@ const pageTitle =
                           <td style={{ padding: 12, borderBottom: "1px solid #eee" }}>
                             {isProtectedAdmin ? (
                               <span style={{ color: "#6b7280", fontSize: 13 }}>
-                                {t("Protected admin", "à¦¸à§à¦°à¦•à§à¦·à¦¿à¦¤ à¦…à§à¦¯à¦¾à¦¡à¦®à¦¿à¦¨")}
+                                {t("Protected admin", "সুরক্ষিত অ্যাডমিন")}
                               </span>
                             ) : (
                               <select
@@ -2730,30 +2730,30 @@ const pageTitle =
               <SectionTitle
                 right={
                   <button type="button" style={buttonStyle} onClick={loadStockNotifications}>
-                    {t("Refresh", "à¦°à¦¿à¦«à§à¦°à§‡à¦¶")}
+                    {t("Refresh", "রিফ্রেশ")}
                   </button>
                 }
               >
-                {t("Stock Availability Notifications", "à¦¸à§à¦Ÿà¦• à¦¨à§‹à¦Ÿà¦¿à¦«à¦¿à¦•à§‡à¦¶à¦¨")}
+                {t("Stock Availability Notifications", "স্টক নোটিফিকেশন")}
               </SectionTitle>
               <p style={{ margin: "0 0 12px", color: "#475569", fontSize: 13 }}>
-                {t("Customers who requested an email when an out-of-stock product becomes available.", "à¦ªà¦£à§à¦¯ à¦¸à§à¦Ÿà¦•à§‡ à¦à¦²à§‡ à¦¯à§‡à¦¸à¦¬ à¦—à§à¦°à¦¾à¦¹à¦• à¦‡à¦®à§‡à¦‡à¦² à¦ªà§‡à¦¤à§‡ à¦šà§‡à§Ÿà§‡à¦›à§‡à¦¨à¥¤")}
+                {t("Customers who requested an email when an out-of-stock product becomes available.", "পণ্য স্টকে এলে যেসব গ্রাহক ইমেইল পেতে চেয়েছেন।")}
               </p>
               {stockNotifications.length ? (
                 <div style={{ display: "grid", gap: 8 }}>
                   {stockNotifications.map((item) => (
                     <div key={item._id} style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(145px,1fr))", gap: 8, alignItems: "center", padding: 10, borderRadius: 8, background: "#fff", border: "1px solid #dbeafe" }}>
                       <strong style={{ fontSize: 13 }}>{item.productTitle}</strong>
-                      <span style={{ fontSize: 12 }}>{item.customerName || "Customer"} Â· {item.email}</span>
+                      <span style={{ fontSize: 12 }}>{item.customerName || "Customer"} · {item.email}</span>
                       <span style={{ fontSize: 12, color: "#64748b" }}>{new Date(item.createdAt).toLocaleString()}</span>
                       <strong style={{ fontSize: 12, color: item.status === "notified" ? "#059669" : "#d97706" }}>
-                        {item.status === "notified" ? t("Email sent", "à¦‡à¦®à§‡à¦‡à¦² à¦ªà¦¾à¦ à¦¾à¦¨à§‹ à¦¹à§Ÿà§‡à¦›à§‡") : t("Pending", "à¦…à¦ªà§‡à¦•à§à¦·à¦®à¦¾à¦£")}
+                        {item.status === "notified" ? t("Email sent", "ইমেইল পাঠানো হয়েছে") : t("Pending", "অপেক্ষমাণ")}
                       </strong>
                     </div>
                   ))}
                 </div>
               ) : (
-                <EmptyState>{t("No stock notification requests yet.", "à¦à¦–à¦¨à§‹ à¦•à§‹à¦¨à§‹ à¦¸à§à¦Ÿà¦• à¦¨à§‹à¦Ÿà¦¿à¦«à¦¿à¦•à§‡à¦¶à¦¨ à¦¨à§‡à¦‡à¥¤")}</EmptyState>
+                <EmptyState>{t("No stock notification requests yet.", "এখনো কোনো স্টক নোটিফিকেশন নেই।")}</EmptyState>
               )}
             </div>
             <SectionTitle
@@ -2767,22 +2767,22 @@ const pageTitle =
                   }}
                 >
                   <select
-                    aria-label={t("Filter customer messages by date", "à¦®à§‡à¦¸à§‡à¦œà§‡à¦° à¦¤à¦¾à¦°à¦¿à¦– à¦«à¦¿à¦²à§à¦Ÿà¦¾à¦°")}
+                    aria-label={t("Filter customer messages by date", "মেসেজের তারিখ ফিল্টার")}
                     style={{ ...inputStyle, width: "auto", minWidth: 155 }}
                     value={messageDateFilter}
                     onChange={(e) => setMessageDateFilter(e.target.value)}
                   >
-                    <option value="all">{t("All Messages", "à¦¸à¦¬ à¦®à§‡à¦¸à§‡à¦œ")}</option>
-                    <option value="today">{t("Today", "à¦†à¦œ")}</option>
-                    <option value="7days">{t("Last 7 Days", "à¦—à¦¤ à§­ à¦¦à¦¿à¦¨")}</option>
-                    <option value="30days">{t("Last 30 Days", "à¦—à¦¤ à§©à§¦ à¦¦à¦¿à¦¨")}</option>
-                    <option value="custom">{t("Custom Dates", "à¦¤à¦¾à¦°à¦¿à¦– à¦¬à§‡à¦›à§‡ à¦¨à¦¿à¦¨")}</option>
+                    <option value="all">{t("All Messages", "সব মেসেজ")}</option>
+                    <option value="today">{t("Today", "আজ")}</option>
+                    <option value="7days">{t("Last 7 Days", "গত ৭ দিন")}</option>
+                    <option value="30days">{t("Last 30 Days", "গত ৩০ দিন")}</option>
+                    <option value="custom">{t("Custom Dates", "তারিখ বেছে নিন")}</option>
                   </select>
 
                   {messageDateFilter === "custom" && (
                     <>
                       <input
-                        aria-label={t("Start date", "à¦¶à§à¦°à§à¦° à¦¤à¦¾à¦°à¦¿à¦–")}
+                        aria-label={t("Start date", "শুরুর তারিখ")}
                         type="date"
                         style={{ ...inputStyle, width: "auto" }}
                         value={messageStartDate}
@@ -2791,7 +2791,7 @@ const pageTitle =
                       />
 
                       <input
-                        aria-label={t("End date", "à¦¶à§‡à¦· à¦¤à¦¾à¦°à¦¿à¦–")}
+                        aria-label={t("End date", "শেষ তারিখ")}
                         type="date"
                         style={{ ...inputStyle, width: "auto" }}
                         value={messageEndDate}
@@ -2808,13 +2808,13 @@ const pageTitle =
                     onClick={loadMessages}
                   >
                     {loadingMessages
-                      ? t("Loading...", "à¦²à§‹à¦¡ à¦¹à¦šà§à¦›à§‡...")
-                      : t("Refresh", "à¦°à¦¿à¦«à§à¦°à§‡à¦¶")}
+                      ? t("Loading...", "লোড হচ্ছে...")
+                      : t("Refresh", "রিফ্রেশ")}
                   </button>
                 </div>
               }
             >
-              {t("Customer Messages", "à¦•à¦¾à¦¸à§à¦Ÿà¦®à¦¾à¦°à§‡à¦° à¦®à§‡à¦¸à§‡à¦œ")}
+              {t("Customer Messages", "কাস্টমারের মেসেজ")}
             </SectionTitle>
 
             <div
@@ -2828,10 +2828,10 @@ const pageTitle =
               }}
             >
               <span style={{ color: "#6b7280", fontSize: 13 }}>
-                {t("Showing", "à¦¦à§‡à¦–à¦¾à¦¨à§‹ à¦¹à¦šà§à¦›à§‡")}{" "}
+                {t("Showing", "দেখানো হচ্ছে")}{" "}
                 <strong>{filteredMessages.length}</strong>{" "}
-                {t("of", "à¦®à§‹à¦Ÿ")} {messages.length}{" "}
-                {t("customer messages", "à¦Ÿà¦¿ à¦•à¦¾à¦¸à§à¦Ÿà¦®à¦¾à¦° à¦®à§‡à¦¸à§‡à¦œ")}
+                {t("of", "মোট")} {messages.length}{" "}
+                {t("customer messages", "টি কাস্টমার মেসেজ")}
               </span>
 
               <button
@@ -2846,27 +2846,27 @@ const pageTitle =
                 onClick={deleteFilteredMessages}
               >
                 {deletingAllMessages
-                  ? t("Deleting...", "à¦®à§à¦›à§‡ à¦«à§‡à¦²à¦¾ à¦¹à¦šà§à¦›à§‡...")
+                  ? t("Deleting...", "মুছে ফেলা হচ্ছে...")
                   : t(
                       "Delete All Filtered Messages",
-                      "à¦«à¦¿à¦²à§à¦Ÿà¦¾à¦° à¦•à¦°à¦¾ à¦¸à¦¬ à¦®à§‡à¦¸à§‡à¦œ à¦®à§à¦›à§à¦¨"
+                      "ফিল্টার করা সব মেসেজ মুছুন"
                     )}
               </button>
             </div>
 
             {loadingMessages && messages.length === 0 ? (
               <EmptyState>
-                {t("Loading messages...", "à¦®à§‡à¦¸à§‡à¦œ à¦²à§‹à¦¡ à¦¹à¦šà§à¦›à§‡...")}
+                {t("Loading messages...", "মেসেজ লোড হচ্ছে...")}
               </EmptyState>
             ) : messages.length === 0 ? (
               <EmptyState>
-                {t("No customer messages found.", "à¦•à§‹à¦¨à§‹ à¦•à¦¾à¦¸à§à¦Ÿà¦®à¦¾à¦° à¦®à§‡à¦¸à§‡à¦œ à¦ªà¦¾à¦“à§Ÿà¦¾ à¦¯à¦¾à§Ÿà¦¨à¦¿à¥¤")}
+                {t("No customer messages found.", "কোনো কাস্টমার মেসেজ পাওয়া যায়নি।")}
               </EmptyState>
             ) : filteredMessages.length === 0 ? (
               <EmptyState>
                 {t(
                   "No customer messages match this date filter.",
-                  "à¦à¦‡ à¦¤à¦¾à¦°à¦¿à¦– à¦«à¦¿à¦²à§à¦Ÿà¦¾à¦°à§‡ à¦•à§‹à¦¨à§‹ à¦•à¦¾à¦¸à§à¦Ÿà¦®à¦¾à¦° à¦®à§‡à¦¸à§‡à¦œ à¦¨à§‡à¦‡à¥¤"
+                  "এই তারিখ ফিল্টারে কোনো কাস্টমার মেসেজ নেই।"
                 )}
               </EmptyState>
             ) : (
@@ -2907,7 +2907,7 @@ const pageTitle =
 
                           <div style={{ color: "#6b7280", fontSize: 13, marginTop: 5 }}>
                             {item.email || "\u2014"}
-                            {item.phone ? ` Â· ${item.phone}` : ""}
+                            {item.phone ? ` · ${item.phone}` : ""}
                           </div>
 
                           <div style={{ color: "#6b7280", fontSize: 12, marginTop: 5 }}>
@@ -2930,8 +2930,8 @@ const pageTitle =
                           onClick={() => deleteFullMessage(item)}
                         >
                           {isDeleting
-                            ? t("Deleting...", "à¦®à§à¦›à§‡ à¦«à§‡à¦²à¦¾ à¦¹à¦šà§à¦›à§‡...")
-                            : t("Delete Message", "à¦®à§‡à¦¸à§‡à¦œ à¦®à§à¦›à§à¦¨")}
+                            ? t("Deleting...", "মুছে ফেলা হচ্ছে...")
+                            : t("Delete Message", "মেসেজ মুছুন")}
                         </button>
                       </div>
 
@@ -2957,7 +2957,7 @@ const pageTitle =
                       {history.length > 0 && (
                         <div style={{ marginTop: 16 }}>
                           <strong>
-                            {t("Reply History", "à¦‰à¦¤à§à¦¤à¦°à§‡à¦° à¦‡à¦¤à¦¿à¦¹à¦¾à¦¸")} ({history.length})
+                            {t("Reply History", "উত্তরের ইতিহাস")} ({history.length})
                           </strong>
 
                           <div style={{ display: "grid", gap: 10, marginTop: 10 }}>
@@ -2984,7 +2984,7 @@ const pageTitle =
                                 >
                                   <span>
                                     {reply.senderRole === "admin"
-                                      ? t("Support Team", "à¦¸à¦¾à¦ªà§‹à¦°à§à¦Ÿ à¦Ÿà¦¿à¦®")
+                                      ? t("Support Team", "সাপোর্ট টিম")
                                       : reply.senderRole === "moderator"
                                         ? `Moderator (${String(reply.senderName || "Staff")
                                           .replace(/^Moderator\s*\(/i, "")
@@ -2995,14 +2995,14 @@ const pageTitle =
                                         reply.admin?.name ||
                                         reply.user?.name ||
                                         reply.authorName ||
-                                        t("Support Team", "à¦¸à¦¾à¦ªà§‹à¦°à§à¦Ÿ à¦Ÿà¦¿à¦®")}
+                                        t("Support Team", "সাপোর্ট টিম")}
                                   </span>
 
                                   <span>
                                     {String(reply.visibility || "public").toLowerCase() === "private"
-                                      ? t("Private", "à¦ªà§à¦°à¦¾à¦‡à¦­à§‡à¦Ÿ")
-                                      : t("Public", "à¦ªà¦¾à¦¬à¦²à¦¿à¦•")}
-                                    {" Â· "}
+                                      ? t("Private", "প্রাইভেট")
+                                      : t("Public", "পাবলিক")}
+                                    {" · "}
                                     {reply.createdAt
                                       ? new Date(reply.createdAt).toLocaleString(
                                           lang === "bn" ? "bn-BD" : "en-BD"
@@ -3042,8 +3042,8 @@ const pageTitle =
                           }
                         >
                           {replyingId === id
-                            ? t("Close Reply", "à¦‰à¦¤à§à¦¤à¦° à¦¬à¦¨à§à¦§ à¦•à¦°à§à¦¨")
-                            : t("Reply to Message", "à¦®à§‡à¦¸à§‡à¦œà§‡à¦° à¦‰à¦¤à§à¦¤à¦° à¦¦à¦¿à¦¨")}
+                            ? t("Close Reply", "উত্তর বন্ধ করুন")
+                            : t("Reply to Message", "মেসেজের উত্তর দিন")}
                         </button>
 
                         {replyingId === id && (
@@ -3051,7 +3051,7 @@ const pageTitle =
                             <textarea
                               rows={4}
                               style={{ ...inputStyle, resize: "vertical" }}
-                              placeholder={t("Write your reply...", "à¦†à¦ªà¦¨à¦¾à¦° à¦‰à¦¤à§à¦¤à¦° à¦²à¦¿à¦–à§à¦¨...")}
+                              placeholder={t("Write your reply...", "আপনার উত্তর লিখুন...")}
                               value={replyDrafts[id] || ""}
                               disabled={saving || isDeleting || deletingAllMessages}
                               onChange={(e) =>
@@ -3071,7 +3071,7 @@ const pageTitle =
                               }}
                             >
                               <label style={{ fontSize: 13, color: "#4b5563" }}>
-                                {t("Reply visibility:", "à¦‰à¦¤à§à¦¤à¦°à§‡à¦° à¦§à¦°à¦¨:")}
+                                {t("Reply visibility:", "উত্তরের ধরন:")}
                               </label>
 
                               <select
@@ -3086,10 +3086,10 @@ const pageTitle =
                                 }
                               >
                                 <option value="public">
-                                  {t("Public Reply", "à¦ªà¦¾à¦¬à¦²à¦¿à¦• à¦‰à¦¤à§à¦¤à¦°")}
+                                  {t("Public Reply", "পাবলিক উত্তর")}
                                 </option>
                                 <option value="private">
-                                  {t("Private Reply", "à¦ªà§à¦°à¦¾à¦‡à¦­à§‡à¦Ÿ à¦‰à¦¤à§à¦¤à¦°")}
+                                  {t("Private Reply", "প্রাইভেট উত্তর")}
                                 </option>
                               </select>
 
@@ -3105,8 +3105,8 @@ const pageTitle =
                                 onClick={() => replyToMessage(item)}
                               >
                                 {saving
-                                  ? t("Sending...", "à¦ªà¦¾à¦ à¦¾à¦¨à§‹ à¦¹à¦šà§à¦›à§‡...")
-                                  : t("Send Reply", "à¦‰à¦¤à§à¦¤à¦° à¦ªà¦¾à¦ à¦¾à¦¨")}
+                                  ? t("Sending...", "পাঠানো হচ্ছে...")
+                                  : t("Send Reply", "উত্তর পাঠান")}
                               </button>
                             </div>
                           </div>
@@ -3147,31 +3147,31 @@ const pageTitle =
                   onClick={loadOrders}
                 >
                   {loadingOrders
-                    ? t("Loading...", "à¦²à§‹à¦¡ à¦¹à¦šà§à¦›à§‡...")
-                    : t("Refresh Orders", "à¦…à¦°à§à¦¡à¦¾à¦° à¦°à¦¿à¦«à§à¦°à§‡à¦¶")}
+                    ? t("Loading...", "লোড হচ্ছে...")
+                    : t("Refresh Orders", "অর্ডার রিফ্রেশ")}
                 </button>
                 </div>
               }
             >
-              {t("Courier Orders", "à¦•à§à¦°à¦¿à¦¯à¦¼à¦¾à¦° à¦…à¦°à§à¦¡à¦¾à¦°")}
+              {t("Courier Orders", "কুরিয়ার অর্ডার")}
             </SectionTitle>
 
             <p style={{ color: "#6b7280", fontSize: 13 }}>
               {t(
                 "Confirmed and active orders ready for courier processing.",
-                "à¦•à§à¦°à¦¿à¦¯à¦¼à¦¾à¦° à¦ªà§à¦°à¦¸à§‡à¦¸à¦¿à¦‚à¦¯à¦¼à§‡à¦° à¦œà¦¨à§à¦¯ à¦¨à¦¿à¦¶à§à¦šà¦¿à¦¤ à¦“ à¦šà¦²à¦®à¦¾à¦¨ à¦…à¦°à§à¦¡à¦¾à¦°à¥¤"
+                "কুরিয়ার প্রসেসিংয়ের জন্য নিশ্চিত ও চলমান অর্ডার।"
               )}
             </p>
 
             {loadingOrders && orders.length === 0 ? (
               <EmptyState>
-                {t("Loading orders...", "à¦…à¦°à§à¦¡à¦¾à¦° à¦²à§‹à¦¡ à¦¹à¦šà§à¦›à§‡...")}
+                {t("Loading orders...", "অর্ডার লোড হচ্ছে...")}
               </EmptyState>
             ) : courierOrders.length === 0 ? (
               <EmptyState>
                 {t(
                   "No confirmed courier orders found. Confirm a pending order first, then refresh.",
-                  "à¦•à§‹à¦¨à§‹ à¦¨à¦¿à¦¶à§à¦šà¦¿à¦¤ à¦•à§à¦°à¦¿à¦¯à¦¼à¦¾à¦° à¦…à¦°à§à¦¡à¦¾à¦° à¦¨à§‡à¦‡à¥¤ à¦ªà§à¦°à¦¥à¦®à§‡ Pending à¦…à¦°à§à¦¡à¦¾à¦° Confirm à¦•à¦°à§‡ Refresh à¦•à¦°à§à¦¨à¥¤"
+                  "কোনো নিশ্চিত কুরিয়ার অর্ডার নেই। প্রথমে Pending অর্ডার Confirm করে Refresh করুন।"
                 )}
               </EmptyState>
             ) : (
@@ -3246,21 +3246,21 @@ const pageTitle =
 
                       <div style={{ marginTop: 10, lineHeight: 1.8 }}>
                         <div>
-                          <strong>{t("Phone:", "à¦«à§‹à¦¨:")}</strong>{" "}
+                          <strong>{t("Phone:", "ফোন:")}</strong>{" "}
                           {address.phone || "N/A"}
                         </div>
                         <div>
-                          <strong>{t("Address:", "à¦ à¦¿à¦•à¦¾à¦¨à¦¾:")}</strong>{" "}
+                          <strong>{t("Address:", "ঠিকানা:")}</strong>{" "}
                           {[address.addressLine, address.city]
                             .filter(Boolean)
                             .join(", ") || "N/A"}
                         </div>
                         <div>
-                          <strong>{t("Payment:", "à¦ªà§‡à¦®à§‡à¦¨à§à¦Ÿ:")}</strong>{" "}
+                          <strong>{t("Payment:", "পেমেন্ট:")}</strong>{" "}
                           {order?.paymentMethodLabel ||
                             order?.paymentMethod ||
                             "N/A"}
-                          {" Â· "}
+                          {" · "}
                           {order?.paymentStatus || "unpaid"}
                         </div>
                       </div>
@@ -3273,13 +3273,13 @@ const pageTitle =
                           background: "#f9fafb",
                         }}
                       >
-                        <strong>{t("Items", "à¦ªà¦£à§à¦¯à¦¸à¦®à§‚à¦¹")}</strong>
+                        <strong>{t("Items", "পণ্যসমূহ")}</strong>
                         {items.length ? (
                           <ul style={{ margin: "8px 0", paddingLeft: 20 }}>
                             {items.map((item, itemIndex) => (
                               <li key={item?._id || itemIndex}>
                                 {item?.name || item?.title || "Product"}
-                                {" Ã— "}
+                                {" × "}
                                 {item?.quantity || 1}
                               </li>
                             ))}
@@ -3288,17 +3288,17 @@ const pageTitle =
                           <p>N/A</p>
                         )}
 
-                        <div>{t("Subtotal", "à¦¸à¦¾à¦¬à¦Ÿà§‹à¦Ÿà¦¾à¦²")}: {formatBDT(order?.subtotal)}</div>
-                        <div>{t("Delivery Fee", "à¦¡à§‡à¦²à¦¿à¦­à¦¾à¦°à¦¿ à¦šà¦¾à¦°à§à¦œ")}: {formatBDT(order?.deliveryFee)}</div>
-                        <div>{t("COD Fee", "COD à¦šà¦¾à¦°à§à¦œ")}: {formatBDT(order?.codFee)}</div>
+                        <div>{t("Subtotal", "সাবটোটাল")}: {formatBDT(order?.subtotal)}</div>
+                        <div>{t("Delivery Fee", "ডেলিভারি চার্জ")}: {formatBDT(order?.deliveryFee)}</div>
+                        <div>{t("COD Fee", "COD চার্জ")}: {formatBDT(order?.codFee)}</div>
                         <strong>
-                          {t("Order Total", "à¦¸à¦°à§à¦¬à¦®à§‹à¦Ÿ")}: {formatBDT(getOrderTotal(order))}
+                          {t("Order Total", "সর্বমোট")}: {formatBDT(getOrderTotal(order))}
                         </strong>
                       </div>
 
                       {address.note && (
                         <p>
-                          <strong>{t("Customer Note:", "à¦•à§à¦°à§‡à¦¤à¦¾à¦° à¦¨à§‹à¦Ÿ:")}</strong>{" "}
+                          <strong>{t("Customer Note:", "ক্রেতার নোট:")}</strong>{" "}
                           {address.note}
                         </p>
                       )}
@@ -3321,20 +3321,20 @@ const pageTitle =
                               setMessage(
                                 t(
                                   "Courier booking details copied.",
-                                  "à¦•à§à¦°à¦¿à¦¯à¦¼à¦¾à¦° à¦¬à§à¦•à¦¿à¦‚à¦¯à¦¼à§‡à¦° à¦¤à¦¥à§à¦¯ à¦•à¦ªà¦¿ à¦¹à¦¯à¦¼à§‡à¦›à§‡à¥¤"
+                                  "কুরিয়ার বুকিংয়ের তথ্য কপি হয়েছে।"
                                 )
                               );
                             } catch {
                               setError(
                                 t(
                                   "Clipboard access failed. Allow clipboard permission in your browser.",
-                                  "à¦•à¦ªà¦¿ à¦•à¦°à¦¾ à¦¯à¦¾à¦¯à¦¼à¦¨à¦¿à¥¤ à¦¬à§à¦°à¦¾à¦‰à¦œà¦¾à¦°à§‡à¦° Clipboard permission à¦ªà¦°à§€à¦•à§à¦·à¦¾ à¦•à¦°à§à¦¨à¥¤"
+                                  "কপি করা যায়নি। ব্রাউজারের Clipboard permission পরীক্ষা করুন।"
                                 )
                               );
                             }
                           }}
                         >
-                          {t("Copy Courier Details", "à¦•à§à¦°à¦¿à¦¯à¦¼à¦¾à¦° à¦¤à¦¥à§à¦¯ à¦•à¦ªà¦¿ à¦•à¦°à§à¦¨")}
+                          {t("Copy Courier Details", "কুরিয়ার তথ্য কপি করুন")}
                         </button>
 
                         {status === "confirmed" && (
@@ -3344,7 +3344,7 @@ const pageTitle =
                             disabled={saving}
                             onClick={() => updateOrderStatus(order, "processing")}
                           >
-                            {t("Mark Processing", "à¦ªà§à¦°à¦¸à§‡à¦¸à¦¿à¦‚ à¦¶à§à¦°à§ à¦•à¦°à§à¦¨")}
+                            {t("Mark Processing", "প্রসেসিং শুরু করুন")}
                           </button>
                         )}
 
@@ -3355,7 +3355,7 @@ const pageTitle =
                             disabled={saving}
                             onClick={() => updateOrderStatus(order, "shipped")}
                           >
-                            {t("Mark Shipped", "à¦¶à¦¿à¦ªà¦¡ à¦¹à¦¿à¦¸à§‡à¦¬à§‡ à¦šà¦¿à¦¹à§à¦¨à¦¿à¦¤ à¦•à¦°à§à¦¨")}
+                            {t("Mark Shipped", "শিপড হিসেবে চিহ্নিত করুন")}
                           </button>
                         )}
 
@@ -3366,7 +3366,7 @@ const pageTitle =
                             disabled={saving}
                             onClick={() => updateOrderStatus(order, "delivered")}
                           >
-                            {t("Mark Delivered", "à¦¡à§‡à¦²à¦¿à¦­à¦¾à¦°à§à¦¡ à¦¹à¦¿à¦¸à§‡à¦¬à§‡ à¦šà¦¿à¦¹à§à¦¨à¦¿à¦¤ à¦•à¦°à§à¦¨")}
+                            {t("Mark Delivered", "ডেলিভার্ড হিসেবে চিহ্নিত করুন")}
                           </button>
                         )}
 
@@ -3417,7 +3417,7 @@ const pageTitle =
             <p style={{ color: "#6b7280", fontSize: 12, marginTop: 16 }}>
               {t(
                 "Copying prepares details for manual courier booking. It does not create a Pathao booking or tracking number.",
-                "à¦•à¦ªà¦¿ à¦•à¦°à¦²à§‡ à¦®à§à¦¯à¦¾à¦¨à§à¦¯à¦¼à¦¾à¦² à¦•à§à¦°à¦¿à¦¯à¦¼à¦¾à¦° à¦¬à§à¦•à¦¿à¦‚à¦¯à¦¼à§‡à¦° à¦¤à¦¥à§à¦¯ à¦¤à§ˆà¦°à¦¿ à¦¹à¦¬à§‡à¥¤ à¦à¦¤à§‡ Pathao à¦¬à§à¦•à¦¿à¦‚ à¦¬à¦¾ à¦Ÿà§à¦°à§à¦¯à¦¾à¦•à¦¿à¦‚ à¦¨à¦®à§à¦¬à¦° à¦¤à§ˆà¦°à¦¿ à¦¹à¦¬à§‡ à¦¨à¦¾à¥¤"
+                "কপি করলে ম্যানুয়াল কুরিয়ার বুকিংয়ের তথ্য তৈরি হবে। এতে Pathao বুকিং বা ট্র্যাকিং নম্বর তৈরি হবে না।"
               )}
             </p>
           </section>
@@ -3437,13 +3437,13 @@ const pageTitle =
                 </button>
               }
             >
-              {t("Moderator Applications", "à¦®à¦¡à¦¾à¦°à§‡à¦Ÿà¦° à¦†à¦¬à§‡à¦¦à¦¨à¦¸à¦®à§‚à¦¹")}
+              {t("Moderator Applications", "মডারেটর আবেদনসমূহ")}
             </SectionTitle>
 
             <p style={{ color: "#6b7280", fontSize: 13, marginTop: 0 }}>
               {t(
                 "Review applications and securely download applicant CVs. Only approved applicants receive moderator access.",
-                "à¦†à¦¬à§‡à¦¦à¦¨ à¦¯à¦¾à¦šà¦¾à¦‡ à¦•à¦°à§à¦¨ à¦à¦¬à¦‚ à¦¨à¦¿à¦°à¦¾à¦ªà¦¦à§‡ CV à¦¡à¦¾à¦‰à¦¨à¦²à§‹à¦¡ à¦•à¦°à§à¦¨à¥¤ à¦…à¦¨à§à¦®à§‹à¦¦à¦¿à¦¤ à¦†à¦¬à§‡à¦¦à¦¨à¦•à¦¾à¦°à§€à¦°à¦¾à¦‡ à¦®à¦¡à¦¾à¦°à§‡à¦Ÿà¦° à¦…à§à¦¯à¦¾à¦•à§à¦¸à§‡à¦¸ à¦ªà¦¾à¦¬à§‡à¥¤"
+                "আবেদন যাচাই করুন এবং নিরাপদে CV ডাউনলোড করুন। অনুমোদিত আবেদনকারীরাই মডারেটর অ্যাক্সেস পাবে।"
               )}
             </p>
 
@@ -3868,8 +3868,8 @@ const pageTitle =
                     onClick={loadOrderHistory}
                   >
                     {historyLoading
-                      ? t("Loading...", "à¦²à§‹à¦¡ à¦¹à¦šà§à¦›à§‡...")
-                      : t("Refresh History", "à¦¹à¦¿à¦¸à§à¦Ÿà§‹à¦°à¦¿ à¦°à¦¿à¦«à§à¦°à§‡à¦¶")}
+                      ? t("Loading...", "লোড হচ্ছে...")
+                      : t("Refresh History", "হিস্টোরি রিফ্রেশ")}
                   </button>
 
                   <button
@@ -3888,7 +3888,7 @@ const pageTitle =
                 </div>
               }
             >
-              {t("Order History", "à¦…à¦°à§à¦¡à¦¾à¦° à¦¹à¦¿à¦¸à§à¦Ÿà§‹à¦°à¦¿")}
+              {t("Order History", "অর্ডার হিস্টোরি")}
             </SectionTitle>
 
             <div
@@ -3904,7 +3904,7 @@ const pageTitle =
                 onChange={(event) => setHistorySearch(event.target.value)}
                 placeholder={t(
                   "Search order, customer, email or phone",
-                  "à¦…à¦°à§à¦¡à¦¾à¦°, à¦—à§à¦°à¦¾à¦¹à¦•, à¦‡à¦®à§‡à¦‡à¦² à¦¬à¦¾ à¦«à§‹à¦¨ à¦–à§à¦à¦œà§à¦¨"
+                  "অর্ডার, গ্রাহক, ইমেইল বা ফোন খুঁজুন"
                 )}
                 style={{ ...inputStyle, flex: "1 1 240px" }}
               />
@@ -3914,10 +3914,10 @@ const pageTitle =
                 onChange={(event) => setHistoryDateFilter(event.target.value)}
                 style={{ ...inputStyle, flex: "0 1 180px" }}
               >
-                <option value="all">{t("All dates", "à¦¸à¦¬ à¦¤à¦¾à¦°à¦¿à¦–")}</option>
-                <option value="today">{t("Today", "à¦†à¦œ")}</option>
-                <option value="7days">{t("Last 7 days", "à¦—à¦¤ à§­ à¦¦à¦¿à¦¨")}</option>
-                <option value="30days">{t("Last 30 days", "à¦—à¦¤ à§©à§¦ à¦¦à¦¿à¦¨")}</option>
+                <option value="all">{t("All dates", "সব তারিখ")}</option>
+                <option value="today">{t("Today", "আজ")}</option>
+                <option value="7days">{t("Last 7 days", "গত ৭ দিন")}</option>
+                <option value="30days">{t("Last 30 days", "গত ৩০ দিন")}</option>
               </select>
             </div>
 
@@ -3979,8 +3979,8 @@ const pageTitle =
                       onClick={() => deleteHistoryEntry(item._id)}
                     >
                       {historyActionId === item._id
-                        ? t("Deleting...", "à¦®à§à¦›à§‡ à¦«à§‡à¦²à¦¾ à¦¹à¦šà§à¦›à§‡...")
-                        : t("Delete History Entry", "à¦¹à¦¿à¦¸à§à¦Ÿà§‹à¦°à¦¿ à¦à¦¨à§à¦Ÿà§à¦°à¦¿ à¦®à§à¦›à§à¦¨")}
+                        ? t("Deleting...", "মুছে ফেলা হচ্ছে...")
+                        : t("Delete History Entry", "হিস্টোরি এন্ট্রি মুছুন")}
                     </button>
                   </article>
                 ))}
@@ -4003,6 +4003,3 @@ const pageTitle =
     
   );
 }
-
-
-

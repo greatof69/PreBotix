@@ -107,7 +107,7 @@ function statusOf(order) {
 }
 
 function money(value) {
-  return `à§³${Number(value || 0).toLocaleString("en-BD")}`;
+  return `৳${Number(value || 0).toLocaleString("en-BD")}`;
 }
 
 function getCustomerName(order) {
@@ -357,7 +357,7 @@ export default function ModeratorDashboard({
     } catch (err) {
       if (!silent) setError(
         err.message ||
-          t("Could not load orders.", "à¦…à¦°à§à¦¡à¦¾à¦° à¦²à§‹à¦¡ à¦•à¦°à¦¾ à¦¯à¦¾à¦¯à¦¼à¦¨à¦¿à¥¤")
+          t("Could not load orders.", "অর্ডার লোড করা যায়নি।")
       );
     } finally {
       if (!silent) setLoading(false);
@@ -370,7 +370,7 @@ export default function ModeratorDashboard({
     const confirmed = window.confirm(
       t(
         "Delete this courier order? This cannot be undone.",
-        "à¦à¦‡ à¦•à§à¦°à¦¿à¦¯à¦¼à¦¾à¦° à¦…à¦°à§à¦¡à¦¾à¦°à¦Ÿà¦¿ à¦®à§à¦›à¦¬à§‡à¦¨? à¦à¦Ÿà¦¿ à¦«à¦¿à¦°à¦¿à¦¯à¦¼à§‡ à¦†à¦¨à¦¾ à¦¯à¦¾à¦¬à§‡ à¦¨à¦¾à¥¤"
+        "এই কুরিয়ার অর্ডারটি মুছবেন? এটি ফিরিয়ে আনা যাবে না।"
       )
     );
     if (!confirmed) return;
@@ -383,7 +383,7 @@ export default function ModeratorDashboard({
         method: "DELETE",
       });
 
-      setNotice(t("Courier order deleted.", "à¦•à§à¦°à¦¿à¦¯à¦¼à¦¾à¦° à¦…à¦°à§à¦¡à¦¾à¦° à¦®à§à¦›à§‡ à¦«à§‡à¦²à¦¾ à¦¹à¦¯à¦¼à§‡à¦›à§‡à¥¤"));
+      setNotice(t("Courier order deleted.", "কুরিয়ার অর্ডার মুছে ফেলা হয়েছে।"));
       await loadOrders();
     } catch (err) {
       setError(err.message || "Could not delete courier order.");
@@ -394,7 +394,7 @@ export default function ModeratorDashboard({
     const typed = window.prompt(
       t(
         "You are about to permanently delete ALL courier orders. Type DELETE to confirm.",
-        "à¦†à¦ªà¦¨à¦¿ à¦¸à¦¬ à¦•à§à¦°à¦¿à¦¯à¦¼à¦¾à¦° à¦…à¦°à§à¦¡à¦¾à¦° à¦¸à§à¦¥à¦¾à¦¯à¦¼à§€à¦­à¦¾à¦¬à§‡ à¦®à§à¦›à¦¤à§‡ à¦¯à¦¾à¦šà§à¦›à§‡à¦¨à¥¤ à¦¨à¦¿à¦¶à§à¦šà¦¿à¦¤ à¦•à¦°à¦¤à§‡ DELETE à¦²à¦¿à¦–à§à¦¨à¥¤"
+        "আপনি সব কুরিয়ার অর্ডার স্থায়ীভাবে মুছতে যাচ্ছেন। নিশ্চিত করতে DELETE লিখুন।"
       )
     );
     if (String(typed || "").trim() !== "DELETE") return;
@@ -410,7 +410,7 @@ export default function ModeratorDashboard({
       setNotice(
         t(
           "All courier orders deleted successfully.",
-          "à¦¸à¦¬ à¦•à§à¦°à¦¿à¦¯à¦¼à¦¾à¦° à¦…à¦°à§à¦¡à¦¾à¦° à¦®à§à¦›à§‡ à¦«à§‡à¦²à¦¾ à¦¹à¦¯à¦¼à§‡à¦›à§‡à¥¤"
+          "সব কুরিয়ার অর্ডার মুছে ফেলা হয়েছে।"
         )
       );
       await loadOrders();
@@ -438,7 +438,7 @@ export default function ModeratorDashboard({
         err.message ||
           t(
             "Could not load Order History.",
-            "à¦…à¦°à§à¦¡à¦¾à¦° à¦¹à¦¿à¦¸à§à¦Ÿà§‹à¦°à¦¿ à¦²à§‹à¦¡ à¦•à¦°à¦¾ à¦¯à¦¾à¦¯à¦¼à¦¨à¦¿à¥¤"
+            "অর্ডার হিস্টোরি লোড করা যায়নি।"
           )
       );
     } finally {
@@ -452,7 +452,7 @@ export default function ModeratorDashboard({
     const orderId = idOf(order);
 
     if (!orderId) {
-      setError(t("Order ID is missing.", "à¦…à¦°à§à¦¡à¦¾à¦° à¦†à¦‡à¦¡à¦¿ à¦ªà¦¾à¦“à¦¯à¦¼à¦¾ à¦¯à¦¾à¦¯à¦¼à¦¨à¦¿à¥¤"));
+      setError(t("Order ID is missing.", "অর্ডার আইডি পাওয়া যায়নি।"));
       return;
     }
 
@@ -467,7 +467,7 @@ export default function ModeratorDashboard({
       setError(
         t(
           "Only delivered and paid orders can be completed.",
-          "à¦¶à§à¦§à§ Delivered à¦à¦¬à¦‚ Paid à¦…à¦°à§à¦¡à¦¾à¦° à¦¹à¦¿à¦¸à§à¦Ÿà§‹à¦°à¦¿à¦¤à§‡ à¦¨à§‡à¦“à¦¯à¦¼à¦¾ à¦¯à¦¾à¦¬à§‡à¥¤"
+          "শুধু Delivered এবং Paid অর্ডার হিস্টোরিতে নেওয়া যাবে।"
         )
       );
       return;
@@ -488,7 +488,7 @@ export default function ModeratorDashboard({
       setNotice(
         t(
           "Order added to History successfully.",
-          "à¦…à¦°à§à¦¡à¦¾à¦° à¦¸à¦«à¦²à¦­à¦¾à¦¬à§‡ à¦¹à¦¿à¦¸à§à¦Ÿà§‹à¦°à¦¿à¦¤à§‡ à¦¯à§‹à¦— à¦¹à¦¯à¦¼à§‡à¦›à§‡à¥¤"
+          "অর্ডার সফলভাবে হিস্টোরিতে যোগ হয়েছে।"
         )
       );
 
@@ -501,7 +501,7 @@ export default function ModeratorDashboard({
         err.message ||
           t(
             "Could not complete order.",
-            "à¦…à¦°à§à¦¡à¦¾à¦° à¦¹à¦¿à¦¸à§à¦Ÿà§‹à¦°à¦¿à¦¤à§‡ à¦¨à§‡à¦“à¦¯à¦¼à¦¾ à¦¯à¦¾à¦¯à¦¼à¦¨à¦¿à¥¤"
+            "অর্ডার হিস্টোরিতে নেওয়া যায়নি।"
           )
       );
     } finally {
@@ -519,7 +519,7 @@ export default function ModeratorDashboard({
     if (!orderId || statusOf(order) !== "delivered" || paymentMethod !== "cod" || paymentStatus === "paid") {
       setError(t(
         "Only delivered unpaid COD orders can be marked as paid.",
-        "à¦¶à§à¦§à§ Delivered à¦à¦¬à¦‚ Unpaid COD à¦…à¦°à§à¦¡à¦¾à¦° Paid à¦•à¦°à¦¾ à¦¯à¦¾à¦¬à§‡à¥¤"
+        "শুধু Delivered এবং Unpaid COD অর্ডার Paid করা যাবে।"
       ));
       return;
     }
@@ -538,13 +538,13 @@ export default function ModeratorDashboard({
 
       setNotice(t(
         "COD cash received. Payment marked as paid. You can now click Done.",
-        "COD-à¦à¦° à¦Ÿà¦¾à¦•à¦¾ à¦ªà¦¾à¦“à¦¯à¦¼à¦¾ à¦—à§‡à¦›à§‡à¥¤ Payment Paid à¦¹à¦¯à¦¼à§‡à¦›à§‡à¥¤ à¦à¦–à¦¨ Done à¦šà¦¾à¦ªà¦¤à§‡ à¦ªà¦¾à¦°à¦¬à§‡à¦¨à¥¤"
+        "COD-এর টাকা পাওয়া গেছে। Payment Paid হয়েছে। এখন Done চাপতে পারবেন।"
       ));
       await loadOrders();
     } catch (err) {
       setError(err.message || t(
         "Could not mark COD payment as paid.",
-        "COD à¦ªà§‡à¦®à§‡à¦¨à§à¦Ÿ Paid à¦•à¦°à¦¾ à¦¯à¦¾à¦¯à¦¼à¦¨à¦¿à¥¤"
+        "COD পেমেন্ট Paid করা যায়নি।"
       ));
     } finally {
       setSaving(false);
@@ -568,7 +568,7 @@ export default function ModeratorDashboard({
     ) {
       setError(t(
         "Only pending bKash/Nagad payments can be verified or rejected.",
-        "à¦¶à§à¦§à§ Pending bKash/Nagad à¦ªà§‡à¦®à§‡à¦¨à§à¦Ÿ Verify à¦…à¦¥à¦¬à¦¾ Reject à¦•à¦°à¦¾ à¦¯à¦¾à¦¬à§‡à¥¤"
+        "শুধু Pending bKash/Nagad পেমেন্ট Verify অথবা Reject করা যাবে।"
       ));
       return;
     }
@@ -580,8 +580,8 @@ export default function ModeratorDashboard({
     if (paymentStatus === "failed") {
       const enteredReason = window.prompt(
         t(
-          "Enter payment rejection reason (1â€“500 characters):",
-          "à¦ªà§‡à¦®à§‡à¦¨à§à¦Ÿ Reject à¦•à¦°à¦¾à¦° à¦•à¦¾à¦°à¦£ à¦²à¦¿à¦–à§à¦¨ (à§§â€“à§«à§¦à§¦ à¦…à¦•à§à¦·à¦°):"
+          "Enter payment rejection reason (1–500 characters):",
+          "পেমেন্ট Reject করার কারণ লিখুন (১–৫০০ অক্ষর):"
         )
       );
 
@@ -591,8 +591,8 @@ export default function ModeratorDashboard({
 
       if (!reason || reason.length > 500) {
         setError(t(
-          "Rejection reason must contain 1â€“500 characters.",
-          "Reject à¦•à¦°à¦¾à¦° à¦•à¦¾à¦°à¦£ à§§â€“à§«à§¦à§¦ à¦…à¦•à§à¦·à¦°à§‡à¦° à¦®à¦§à§à¦¯à§‡ à¦¹à¦¤à§‡ à¦¹à¦¬à§‡à¥¤"
+          "Rejection reason must contain 1–500 characters.",
+          "Reject করার কারণ ১–৫০০ অক্ষরের মধ্যে হতে হবে।"
         ));
         return;
       }
@@ -615,11 +615,11 @@ export default function ModeratorDashboard({
         paymentStatus === "paid"
           ? t(
               "Payment verified successfully. Admin and Moderator dashboards will show the updated status.",
-              "à¦ªà§‡à¦®à§‡à¦¨à§à¦Ÿ Verify à¦¹à¦¯à¦¼à§‡à¦›à§‡à¥¤ Admin à¦“ Moderator Dashboard-à¦ à¦†à¦ªà¦¡à§‡à¦Ÿà§‡à¦¡ à¦¸à§à¦Ÿà§à¦¯à¦¾à¦Ÿà¦¾à¦¸ à¦¦à§‡à¦–à¦¾ à¦¯à¦¾à¦¬à§‡à¥¤"
+              "পেমেন্ট Verify হয়েছে। Admin ও Moderator Dashboard-এ আপডেটেড স্ট্যাটাস দেখা যাবে।"
             )
           : t(
               "Payment rejected successfully. The rejection reason has been saved.",
-              "à¦ªà§‡à¦®à§‡à¦¨à§à¦Ÿ Reject à¦¹à¦¯à¦¼à§‡à¦›à§‡à¥¤ Reject à¦•à¦°à¦¾à¦° à¦•à¦¾à¦°à¦£ à¦¸à¦‚à¦°à¦•à§à¦·à¦£ à¦•à¦°à¦¾ à¦¹à¦¯à¦¼à§‡à¦›à§‡à¥¤"
+              "পেমেন্ট Reject হয়েছে। Reject করার কারণ সংরক্ষণ করা হয়েছে।"
             )
       );
 
@@ -627,7 +627,7 @@ export default function ModeratorDashboard({
     } catch (err) {
       setError(err.message || t(
         "Could not update payment status.",
-        "à¦ªà§‡à¦®à§‡à¦¨à§à¦Ÿ à¦¸à§à¦Ÿà§à¦¯à¦¾à¦Ÿà¦¾à¦¸ à¦†à¦ªà¦¡à§‡à¦Ÿ à¦•à¦°à¦¾ à¦¯à¦¾à¦¯à¦¼à¦¨à¦¿à¥¤"
+        "পেমেন্ট স্ট্যাটাস আপডেট করা যায়নি।"
       ));
     } finally {
       setSaving(false);
@@ -657,7 +657,7 @@ export default function ModeratorDashboard({
       setNotice(
         t(
           "History entry deleted. Original order remains unchanged.",
-          "à¦¹à¦¿à¦¸à§à¦Ÿà§‹à¦°à¦¿ à¦à¦¨à§à¦Ÿà§à¦°à¦¿ à¦®à§à¦›à§‡ à¦«à§‡à¦²à¦¾ à¦¹à¦¯à¦¼à§‡à¦›à§‡à¥¤ à¦®à§‚à¦² à¦…à¦°à§à¦¡à¦¾à¦° à¦…à¦ªà¦°à¦¿à¦¬à¦°à§à¦¤à¦¿à¦¤ à¦†à¦›à§‡à¥¤"
+          "হিস্টোরি এন্ট্রি মুছে ফেলা হয়েছে। মূল অর্ডার অপরিবর্তিত আছে।"
         )
       );
     } catch (err) {
@@ -665,7 +665,7 @@ export default function ModeratorDashboard({
         err.message ||
           t(
             "Could not delete History entry.",
-            "à¦¹à¦¿à¦¸à§à¦Ÿà§‹à¦°à¦¿ à¦à¦¨à§à¦Ÿà§à¦°à¦¿ à¦®à§à¦›à¦¤à§‡ à¦¸à¦®à¦¸à§à¦¯à¦¾ à¦¹à¦¯à¦¼à§‡à¦›à§‡à¥¤"
+            "হিস্টোরি এন্ট্রি মুছতে সমস্যা হয়েছে।"
           )
       );
     } finally {
@@ -680,7 +680,7 @@ export default function ModeratorDashboard({
 
     if (!orderId) {
       setError(
-        t("Order ID is missing.", "à¦…à¦°à§à¦¡à¦¾à¦° à¦†à¦‡à¦¡à¦¿ à¦ªà¦¾à¦“à¦¯à¦¼à¦¾ à¦¯à¦¾à¦¯à¦¼à¦¨à¦¿à¥¤")
+        t("Order ID is missing.", "অর্ডার আইডি পাওয়া যায়নি।")
       );
       return;
     }
@@ -695,7 +695,7 @@ export default function ModeratorDashboard({
 
     if (!allowedStatuses.includes(status)) {
       setError(
-        t("Invalid order status.", "à¦…à¦°à§à¦¡à¦¾à¦°à§‡à¦° à¦¸à§à¦Ÿà§à¦¯à¦¾à¦Ÿà¦¾à¦¸ à¦¸à¦ à¦¿à¦• à¦¨à¦¯à¦¼à¥¤")
+        t("Invalid order status.", "অর্ডারের স্ট্যাটাস সঠিক নয়।")
       );
       return;
     }
@@ -708,7 +708,7 @@ export default function ModeratorDashboard({
       const confirmed = window.confirm(
         t(
           "Are you sure you want to cancel this order?",
-          "à¦†à¦ªà¦¨à¦¿ à¦•à¦¿ à¦¨à¦¿à¦¶à§à¦šà¦¿à¦¤ à¦¯à§‡ à¦à¦‡ à¦…à¦°à§à¦¡à¦¾à¦°à¦Ÿà¦¿ à¦¬à¦¾à¦¤à¦¿à¦² à¦•à¦°à¦¤à§‡ à¦šà¦¾à¦¨?"
+          "আপনি কি নিশ্চিত যে এই অর্ডারটি বাতিল করতে চান?"
         )
       );
 
@@ -718,7 +718,7 @@ export default function ModeratorDashboard({
         window.prompt(
           t(
             "Enter the cancellation reason:",
-            "à¦…à¦°à§à¦¡à¦¾à¦° à¦¬à¦¾à¦¤à¦¿à¦²à§‡à¦° à¦•à¦¾à¦°à¦£ à¦²à¦¿à¦–à§à¦¨:"
+            "অর্ডার বাতিলের কারণ লিখুন:"
           )
         ) || "";
 
@@ -726,7 +726,7 @@ export default function ModeratorDashboard({
         setError(
           t(
             "Cancellation reason is required.",
-            "à¦…à¦°à§à¦¡à¦¾à¦° à¦¬à¦¾à¦¤à¦¿à¦²à§‡à¦° à¦•à¦¾à¦°à¦£ à¦²à¦¿à¦–à¦¤à§‡ à¦¹à¦¬à§‡à¥¤"
+            "অর্ডার বাতিলের কারণ লিখতে হবে।"
           )
         );
         return;
@@ -755,23 +755,23 @@ export default function ModeratorDashboard({
       const messages = {
         confirmed: [
           "Order confirmed successfully.",
-          "à¦…à¦°à§à¦¡à¦¾à¦° à¦¨à¦¿à¦¶à§à¦šà¦¿à¦¤ à¦¹à¦¯à¦¼à§‡à¦›à§‡à¥¤",
+          "অর্ডার নিশ্চিত হয়েছে।",
         ],
         processing: [
           "Order marked as processing.",
-          "à¦…à¦°à§à¦¡à¦¾à¦° à¦ªà§à¦°à¦¸à§‡à¦¸à¦¿à¦‚ à¦¹à¦¿à¦¸à§‡à¦¬à§‡ à¦šà¦¿à¦¹à§à¦¨à¦¿à¦¤ à¦¹à¦¯à¦¼à§‡à¦›à§‡à¥¤",
+          "অর্ডার প্রসেসিং হিসেবে চিহ্নিত হয়েছে।",
         ],
         shipped: [
           "Order marked as shipped.",
-          "à¦…à¦°à§à¦¡à¦¾à¦° à¦ªà¦¾à¦ à¦¾à¦¨à§‹ à¦¹à¦¯à¦¼à§‡à¦›à§‡à¥¤",
+          "অর্ডার পাঠানো হয়েছে।",
         ],
         delivered: [
           "Order marked as delivered.",
-          "à¦…à¦°à§à¦¡à¦¾à¦° à¦¡à§‡à¦²à¦¿à¦­à¦¾à¦°à¦¿ à¦¸à¦®à§à¦ªà¦¨à§à¦¨ à¦¹à¦¯à¦¼à§‡à¦›à§‡à¥¤",
+          "অর্ডার ডেলিভারি সম্পন্ন হয়েছে।",
         ],
         cancelled: [
           "Order cancelled successfully.",
-          "à¦…à¦°à§à¦¡à¦¾à¦° à¦¬à¦¾à¦¤à¦¿à¦² à¦¹à¦¯à¦¼à§‡à¦›à§‡à¥¤",
+          "অর্ডার বাতিল হয়েছে।",
         ],
       };
 
@@ -781,7 +781,7 @@ export default function ModeratorDashboard({
     } catch (err) {
       setError(
         err.message ||
-          t("Could not update order.", "à¦…à¦°à§à¦¡à¦¾à¦° à¦†à¦ªà¦¡à§‡à¦Ÿ à¦•à¦°à¦¾ à¦¯à¦¾à¦¯à¦¼à¦¨à¦¿à¥¤")
+          t("Could not update order.", "অর্ডার আপডেট করা যায়নি।")
       );
     } finally {
       setSaving(false);
@@ -803,7 +803,7 @@ export default function ModeratorDashboard({
     } catch (err) {
       if (!silent) setError(
         err.message ||
-          t("Could not load messages.", "à¦®à§‡à¦¸à§‡à¦œ à¦²à§‹à¦¡ à¦•à¦°à¦¾ à¦¯à¦¾à¦¯à¦¼à¦¨à¦¿à¥¤")
+          t("Could not load messages.", "মেসেজ লোড করা যায়নি।")
       );
     } finally {
       if (!silent) setLoading(false);
@@ -818,7 +818,7 @@ export default function ModeratorDashboard({
       setError(
         t(
           "Please enter a reply first.",
-          "à¦†à¦—à§‡ à¦à¦•à¦Ÿà¦¿ à¦‰à¦¤à§à¦¤à¦° à¦²à¦¿à¦–à§à¦¨à¥¤"
+          "আগে একটি উত্তর লিখুন।"
         )
       );
       return;
@@ -847,7 +847,7 @@ export default function ModeratorDashboard({
       setNotice(
         t(
           "Reply sent successfully.",
-          "à¦‰à¦¤à§à¦¤à¦° à¦¸à¦«à¦²à¦­à¦¾à¦¬à§‡ à¦ªà¦¾à¦ à¦¾à¦¨à§‹ à¦¹à¦¯à¦¼à§‡à¦›à§‡à¥¤"
+          "উত্তর সফলভাবে পাঠানো হয়েছে।"
         )
       );
 
@@ -855,7 +855,7 @@ export default function ModeratorDashboard({
     } catch (err) {
       setError(
         err.message ||
-          t("Could not send reply.", "à¦‰à¦¤à§à¦¤à¦° à¦ªà¦¾à¦ à¦¾à¦¨à§‹ à¦¯à¦¾à¦¯à¦¼à¦¨à¦¿à¥¤")
+          t("Could not send reply.", "উত্তর পাঠানো যায়নি।")
       );
     } finally {
       setSaving(false);
@@ -876,7 +876,7 @@ export default function ModeratorDashboard({
     const confirmed = window.confirm(
       t(
         "Delete this customer message?",
-        "à¦à¦‡ à¦—à§à¦°à¦¾à¦¹à¦•à§‡à¦° à¦®à§‡à¦¸à§‡à¦œà¦Ÿà¦¿ à¦®à§à¦›à¦¬à§‡à¦¨?"
+        "এই গ্রাহকের মেসেজটি মুছবেন?"
       )
     );
 
@@ -906,13 +906,13 @@ export default function ModeratorDashboard({
       setNotice(
         t(
           "Message deleted successfully.",
-          "à¦®à§‡à¦¸à§‡à¦œ à¦®à§à¦›à§‡ à¦«à§‡à¦²à¦¾ à¦¹à¦¯à¦¼à§‡à¦›à§‡à¥¤"
+          "মেসেজ মুছে ফেলা হয়েছে।"
         )
       );
     } catch (err) {
       setError(
         err.message ||
-          t("Could not delete message.", "à¦®à§‡à¦¸à§‡à¦œ à¦®à§à¦›à¦¤à§‡ à¦¸à¦®à¦¸à§à¦¯à¦¾ à¦¹à¦¯à¦¼à§‡à¦›à§‡à¥¤")
+          t("Could not delete message.", "মেসেজ মুছতে সমস্যা হয়েছে।")
       );
     } finally {
       setDeletingMessageId("");
@@ -965,7 +965,7 @@ export default function ModeratorDashboard({
       setNotice(
         t(
           `${ids.length} messages deleted successfully.`,
-          `${ids.length}à¦Ÿà¦¿ à¦®à§‡à¦¸à§‡à¦œ à¦®à§à¦›à§‡ à¦«à§‡à¦²à¦¾ à¦¹à¦¯à¦¼à§‡à¦›à§‡à¥¤`
+          `${ids.length}টি মেসেজ মুছে ফেলা হয়েছে।`
         )
       );
     } catch (err) {
@@ -973,7 +973,7 @@ export default function ModeratorDashboard({
         err.message ||
           t(
             "Could not delete all filtered messages.",
-            "à¦«à¦¿à¦²à§à¦Ÿà¦¾à¦° à¦•à¦°à¦¾ à¦¸à¦¬ à¦®à§‡à¦¸à§‡à¦œ à¦®à§à¦›à¦¤à§‡ à¦¸à¦®à¦¸à§à¦¯à¦¾ à¦¹à¦¯à¦¼à§‡à¦›à§‡à¥¤"
+            "ফিল্টার করা সব মেসেজ মুছতে সমস্যা হয়েছে।"
           )
       );
 
@@ -1031,7 +1031,7 @@ export default function ModeratorDashboard({
   }
 
   const attendanceTime = (value) => {
-    if (!value) return "â€”";
+    if (!value) return "—";
 
     try {
       return new Intl.DateTimeFormat(
@@ -1104,63 +1104,63 @@ export default function ModeratorDashboard({
   const navItems = [
     {
       id: "dashboard",
-      label: t("Dashboard", "à¦¡à§à¦¯à¦¾à¦¶à¦¬à§‹à¦°à§à¦¡"),
-      labelBn: "à¦¡à§à¦¯à¦¾à¦¶à¦¬à§‹à¦°à§à¦¡",
-      icon: "â–¦",
+      label: t("Dashboard", "ড্যাশবোর্ড"),
+      labelBn: "ড্যাশবোর্ড",
+      icon: "▦",
     },
     {
       id: "orders",
-      label: t("Assigned Orders", "à¦¬à¦°à¦¾à¦¦à§à¦¦ à¦…à¦°à§à¦¡à¦¾à¦°"),
-      labelBn: "à¦¬à¦°à¦¾à¦¦à§à¦¦ à¦…à¦°à§à¦¡à¦¾à¦°",
-      icon: "â–¤",
+      label: t("Assigned Orders", "বরাদ্দ অর্ডার"),
+      labelBn: "বরাদ্দ অর্ডার",
+      icon: "▤",
     },
     {
       id: "courier",
-      label: t("Courier Orders", "à¦•à§à¦°à¦¿à¦¯à¦¼à¦¾à¦° à¦…à¦°à§à¦¡à¦¾à¦°"),
-      labelBn: "à¦•à§à¦°à¦¿à¦¯à¦¼à¦¾à¦° à¦…à¦°à§à¦¡à¦¾à¦°",
-      icon: "ðŸ“¦",
+      label: t("Courier Orders", "কুরিয়ার অর্ডার"),
+      labelBn: "কুরিয়ার অর্ডার",
+      icon: "📦",
     },
     {
       id: "history",
-      label: t("Order History", "à¦…à¦°à§à¦¡à¦¾à¦° à¦¹à¦¿à¦¸à§à¦Ÿà§‹à¦°à¦¿"),
-      labelBn: "à¦…à¦°à§à¦¡à¦¾à¦° à¦¹à¦¿à¦¸à§à¦Ÿà§‹à¦°à¦¿",
-      icon: "ðŸ—‚ï¸",
+      label: t("Order History", "অর্ডার হিস্টোরি"),
+      labelBn: "অর্ডার হিস্টোরি",
+      icon: "🗂️",
     },
     {
       id: "messages",
-      label: t("Customer Messages", "à¦—à§à¦°à¦¾à¦¹à¦•à§‡à¦° à¦¬à¦¾à¦°à§à¦¤à¦¾"),
-      labelBn: "à¦—à§à¦°à¦¾à¦¹à¦•à§‡à¦° à¦¬à¦¾à¦°à§à¦¤à¦¾",
-      icon: "âœ‰",
+      label: t("Customer Messages", "গ্রাহকের বার্তা"),
+      labelBn: "গ্রাহকের বার্তা",
+      icon: "✉",
     },
     {
       id: "sales",
-      label: t("My Sales", "à¦†à¦®à¦¾à¦° à¦¬à¦¿à¦•à§à¦°à¦¯à¦¼"),
-      labelBn: "à¦†à¦®à¦¾à¦° à¦¬à¦¿à¦•à§à¦°à¦¯à¦¼",
-      icon: "â†—",
+      label: t("My Sales", "আমার বিক্রয়"),
+      labelBn: "আমার বিক্রয়",
+      icon: "↗",
     },
     {
       id: "attendance",
-      label: t("Attendance", "à¦‰à¦ªà¦¸à§à¦¥à¦¿à¦¤à¦¿"),
-      labelBn: "à¦‰à¦ªà¦¸à§à¦¥à¦¿à¦¤à¦¿",
-      icon: "â—·",
+      label: t("Attendance", "উপস্থিতি"),
+      labelBn: "উপস্থিতি",
+      icon: "◷",
     },
     {
       id: "earnings",
-      label: t("Earnings", "à¦†à¦¯à¦¼"),
-      labelBn: "à¦†à¦¯à¦¼",
-      icon: "à§³",
+      label: t("Earnings", "আয়"),
+      labelBn: "আয়",
+      icon: "৳",
     },
     {
       id: "profile",
-      label: t("Profile", "à¦ªà§à¦°à§‹à¦«à¦¾à¦‡à¦²"),
-      labelBn: "à¦ªà§à¦°à§‹à¦«à¦¾à¦‡à¦²",
-      icon: "â™™",
+      label: t("Profile", "প্রোফাইল"),
+      labelBn: "প্রোফাইল",
+      icon: "♙",
     },
   ];
 
   const title =
     navItems.find((item) => item.id === tab)?.label ||
-    t("Moderator Dashboard", "à¦®à¦¡à¦¾à¦°à§‡à¦Ÿà¦° à¦¡à§à¦¯à¦¾à¦¶à¦¬à§‹à¦°à§à¦¡");
+    t("Moderator Dashboard", "মডারেটর ড্যাশবোর্ড");
 
   // -------------------- Dashboard Data --------------------
 
@@ -1253,7 +1253,7 @@ export default function ModeratorDashboard({
       title={title}
       subtitle={t(
         "Manage your assigned work",
-        "à¦†à¦ªà¦¨à¦¾à¦° à¦¬à¦°à¦¾à¦¦à§à¦¦ à¦•à¦¾à¦œ à¦ªà¦°à¦¿à¦šà¦¾à¦²à¦¨à¦¾ à¦•à¦°à§à¦¨"
+        "আপনার বরাদ্দ কাজ পরিচালনা করুন"
       )}
       activeTab={tab}
       onTabChange={(nextTab) => {
@@ -1315,19 +1315,19 @@ export default function ModeratorDashboard({
             >
               {[
                 [
-                  t("Assigned Orders", "à¦¬à¦°à¦¾à¦¦à§à¦¦ à¦…à¦°à§à¦¡à¦¾à¦°"),
+                  t("Assigned Orders", "বরাদ্দ অর্ডার"),
                   orders.length,
                 ],
                 [
-                  t("Pending", "à¦…à¦ªà§‡à¦•à§à¦·à¦®à¦¾à¦£"),
+                  t("Pending", "অপেক্ষমাণ"),
                   pendingCount,
                 ],
                 [
-                  t("In Progress", "à¦šà¦²à¦®à¦¾à¦¨"),
+                  t("In Progress", "চলমান"),
                   confirmedCount,
                 ],
                 [
-                  t("Cancelled", "à¦¬à¦¾à¦¤à¦¿à¦²"),
+                  t("Cancelled", "বাতিল"),
                   cancelledCount,
                 ],
               ].map(([label, value]) => (
@@ -1352,14 +1352,14 @@ export default function ModeratorDashboard({
               <h2 style={{ fontSize: 18, marginTop: 0 }}>
                 {t(
                   "Recent Assigned Orders",
-                  "à¦¸à¦¾à¦®à§à¦ªà§à¦°à¦¤à¦¿à¦• à¦¬à¦°à¦¾à¦¦à§à¦¦ à¦…à¦°à§à¦¡à¦¾à¦°"
+                  "সাম্প্রতিক বরাদ্দ অর্ডার"
                 )}
               </h2>
 
               <p style={{ color: "#6b7280", fontSize: 13 }}>
                 {t(
                   "Manage orders and courier progress from the sections below.",
-                  "à¦¨à¦¿à¦šà§‡à¦° à¦¬à¦¿à¦­à¦¾à¦—à¦—à§à¦²à§‹ à¦¥à§‡à¦•à§‡ à¦…à¦°à§à¦¡à¦¾à¦° à¦“ à¦•à§à¦°à¦¿à¦¯à¦¼à¦¾à¦°à§‡à¦° à¦…à¦—à§à¦°à¦—à¦¤à¦¿ à¦ªà¦°à¦¿à¦šà¦¾à¦²à¦¨à¦¾ à¦•à¦°à§à¦¨à¥¤"
+                  "নিচের বিভাগগুলো থেকে অর্ডার ও কুরিয়ারের অগ্রগতি পরিচালনা করুন।"
                 )}
               </p>
 
@@ -1375,7 +1375,7 @@ export default function ModeratorDashboard({
                   style={primaryButton}
                   onClick={() => setTab("orders")}
                 >
-                  {t("View Orders", "à¦…à¦°à§à¦¡à¦¾à¦° à¦¦à§‡à¦–à§à¦¨")}
+                  {t("View Orders", "অর্ডার দেখুন")}
                 </button>
 
                 <button
@@ -1383,7 +1383,7 @@ export default function ModeratorDashboard({
                   style={buttonStyle}
                   onClick={() => setTab("courier")}
                 >
-                  {t("Courier Orders", "à¦•à§à¦°à¦¿à¦¯à¦¼à¦¾à¦° à¦…à¦°à§à¦¡à¦¾à¦°")}
+                  {t("Courier Orders", "কুরিয়ার অর্ডার")}
                 </button>
 
                 <button
@@ -1391,7 +1391,7 @@ export default function ModeratorDashboard({
                   style={buttonStyle}
                   onClick={() => setTab("history")}
                 >
-                  {t("Order History", "à¦…à¦°à§à¦¡à¦¾à¦° à¦¹à¦¿à¦¸à§à¦Ÿà§‹à¦°à¦¿")}
+                  {t("Order History", "অর্ডার হিস্টোরি")}
                 </button>
               </div>
             </section>
@@ -1413,7 +1413,7 @@ export default function ModeratorDashboard({
               }}
             >
               <h2 style={{ fontSize: 18, margin: 0 }}>
-                {t("Assigned Orders", "à¦¬à¦°à¦¾à¦¦à§à¦¦ à¦…à¦°à§à¦¡à¦¾à¦°")}
+                {t("Assigned Orders", "বরাদ্দ অর্ডার")}
               </h2>
 
               <div
@@ -1434,13 +1434,13 @@ export default function ModeratorDashboard({
                     maxWidth: "100%",
                   }}
                 >
-                  <option value="all">{t("All statuses", "à¦¸à¦¬ à¦¸à§à¦Ÿà§à¦¯à¦¾à¦Ÿà¦¾à¦¸")}</option>
-                  <option value="pending">{t("Pending", "à¦…à¦ªà§‡à¦•à§à¦·à¦®à¦¾à¦£")}</option>
-                  <option value="confirmed">{t("Confirmed", "à¦¨à¦¿à¦¶à§à¦šà¦¿à¦¤")}</option>
-                  <option value="processing">{t("Processing", "à¦ªà§à¦°à¦¸à§‡à¦¸à¦¿à¦‚")}</option>
-                  <option value="shipped">{t("Shipped", "à¦ªà¦¾à¦ à¦¾à¦¨à§‹ à¦¹à¦¯à¦¼à§‡à¦›à§‡")}</option>
-                  <option value="delivered">{t("Delivered", "à¦¡à§‡à¦²à¦¿à¦­à¦¾à¦°à¦¿ à¦¸à¦®à§à¦ªà¦¨à§à¦¨")}</option>
-                  <option value="cancelled">{t("Cancelled", "à¦¬à¦¾à¦¤à¦¿à¦²")}</option>
+                  <option value="all">{t("All statuses", "সব স্ট্যাটাস")}</option>
+                  <option value="pending">{t("Pending", "অপেক্ষমাণ")}</option>
+                  <option value="confirmed">{t("Confirmed", "নিশ্চিত")}</option>
+                  <option value="processing">{t("Processing", "প্রসেসিং")}</option>
+                  <option value="shipped">{t("Shipped", "পাঠানো হয়েছে")}</option>
+                  <option value="delivered">{t("Delivered", "ডেলিভারি সম্পন্ন")}</option>
+                  <option value="cancelled">{t("Cancelled", "বাতিল")}</option>
                 </select>
 
                 <button
@@ -1450,17 +1450,17 @@ export default function ModeratorDashboard({
                   disabled={loading}
                 >
                   {loading
-                    ? t("Loading...", "à¦²à§‹à¦¡ à¦¹à¦šà§à¦›à§‡...")
-                    : t("Refresh", "à¦°à¦¿à¦«à§à¦°à§‡à¦¶")}
+                    ? t("Loading...", "লোড হচ্ছে...")
+                    : t("Refresh", "রিফ্রেশ")}
                 </button>
               </div>
             </div>
 
             {loading && !ordersLoadedRef.current ? (
-              <p>{t("Loading orders...", "à¦…à¦°à§à¦¡à¦¾à¦° à¦²à§‹à¦¡ à¦¹à¦šà§à¦›à§‡...")}</p>
+              <p>{t("Loading orders...", "অর্ডার লোড হচ্ছে...")}</p>
             ) : visibleOrders.length === 0 ? (
               <p style={{ color: "#6b7280" }}>
-                {t("No orders found.", "à¦•à§‹à¦¨à§‹ à¦…à¦°à§à¦¡à¦¾à¦° à¦ªà¦¾à¦“à¦¯à¦¼à¦¾ à¦¯à¦¾à¦¯à¦¼à¦¨à¦¿à¥¤")}
+                {t("No orders found.", "কোনো অর্ডার পাওয়া যায়নি।")}
               </p>
             ) : (
               <div style={{ overflowX: "auto" }}>
@@ -1474,11 +1474,11 @@ export default function ModeratorDashboard({
                   <thead>
                     <tr style={{ textAlign: "left", background: "#f9fafb" }}>
                       {[
-                        t("Order", "à¦…à¦°à§à¦¡à¦¾à¦°"),
-                        t("Customer", "à¦•à§à¦°à§‡à¦¤à¦¾"),
-                        t("Total", "à¦®à§‹à¦Ÿ"),
-                        t("Status", "à¦¸à§à¦Ÿà§à¦¯à¦¾à¦Ÿà¦¾à¦¸"),
-                        t("Actions", "à¦…à§à¦¯à¦¾à¦•à¦¶à¦¨"),
+                        t("Order", "অর্ডার"),
+                        t("Customer", "ক্রেতা"),
+                        t("Total", "মোট"),
+                        t("Status", "স্ট্যাটাস"),
+                        t("Actions", "অ্যাকশন"),
                       ].map((heading) => (
                         <th
                           key={heading}
@@ -1560,7 +1560,7 @@ export default function ModeratorDashboard({
                                     updateStatus(order, "confirmed")
                                   }
                                 >
-                                  {t("Confirm", "à¦¨à¦¿à¦¶à§à¦šà¦¿à¦¤ à¦•à¦°à§à¦¨")}
+                                  {t("Confirm", "নিশ্চিত করুন")}
                                 </button>
                               )}
 
@@ -1573,7 +1573,7 @@ export default function ModeratorDashboard({
                                     updateStatus(order, "cancelled")
                                   }
                                 >
-                                  {t("Cancel", "à¦¬à¦¾à¦¤à¦¿à¦²")}
+                                  {t("Cancel", "বাতিল")}
                                 </button>
                               )}
                             </div>
@@ -1604,13 +1604,13 @@ export default function ModeratorDashboard({
             >
               <div>
                 <h2 style={{ fontSize: 18, margin: 0 }}>
-                  {t("Courier Orders", "à¦•à§à¦°à¦¿à¦¯à¦¼à¦¾à¦° à¦…à¦°à§à¦¡à¦¾à¦°")}
+                  {t("Courier Orders", "কুরিয়ার অর্ডার")}
                 </h2>
 
                 <p style={{ color: "#6b7280", fontSize: 13 }}>
                   {t(
                     "Update delivery status and complete paid orders.",
-                    "à¦¡à§‡à¦²à¦¿à¦­à¦¾à¦°à¦¿ à¦¸à§à¦Ÿà§à¦¯à¦¾à¦Ÿà¦¾à¦¸ à¦†à¦ªà¦¡à§‡à¦Ÿ à¦•à¦°à§à¦¨ à¦à¦¬à¦‚ à¦ªà§‡à¦®à§‡à¦¨à§à¦Ÿ à¦¸à¦®à§à¦ªà¦¨à§à¦¨ à¦…à¦°à§à¦¡à¦¾à¦° à¦¹à¦¿à¦¸à§à¦Ÿà§‹à¦°à¦¿à¦¤à§‡ à¦¨à¦¿à¦¨à¥¤"
+                    "ডেলিভারি স্ট্যাটাস আপডেট করুন এবং পেমেন্ট সম্পন্ন অর্ডার হিস্টোরিতে নিন।"
                   )}
                 </p>
               </div>
@@ -1637,19 +1637,19 @@ export default function ModeratorDashboard({
                 disabled={loading}
               >
                 {loading
-                  ? t("Loading...", "à¦²à§‹à¦¡ à¦¹à¦šà§à¦›à§‡...")
-                  : t("Refresh", "à¦°à¦¿à¦«à§à¦°à§‡à¦¶")}
+                  ? t("Loading...", "লোড হচ্ছে...")
+                  : t("Refresh", "রিফ্রেশ")}
               </button>
               </div>
             </div>
 
             {loading && !ordersLoadedRef.current ? (
-              <p>{t("Loading orders...", "à¦…à¦°à§à¦¡à¦¾à¦° à¦²à§‹à¦¡ à¦¹à¦šà§à¦›à§‡...")}</p>
+              <p>{t("Loading orders...", "অর্ডার লোড হচ্ছে...")}</p>
             ) : courierOrders.length === 0 ? (
               <p style={{ color: "#6b7280" }}>
                 {t(
                   "No courier orders found.",
-                  "à¦•à§‹à¦¨à§‹ à¦•à§à¦°à¦¿à¦¯à¦¼à¦¾à¦° à¦…à¦°à§à¦¡à¦¾à¦° à¦ªà¦¾à¦“à¦¯à¦¼à¦¾ à¦¯à¦¾à¦¯à¦¼à¦¨à¦¿à¥¤"
+                  "কোনো কুরিয়ার অর্ডার পাওয়া যায়নি।"
                 )}
               </p>
             ) : (
@@ -1722,14 +1722,14 @@ export default function ModeratorDashboard({
                         }}
                       >
                         <div>
-                          <strong>{t("Phone", "à¦«à§‹à¦¨")}</strong>
+                          <strong>{t("Phone", "ফোন")}</strong>
                           <p style={{ margin: "5px 0" }}>
                             {address.phone || "N/A"}
                           </p>
                         </div>
 
                         <div>
-                          <strong>{t("Delivery Address", "à¦¡à§‡à¦²à¦¿à¦­à¦¾à¦°à¦¿ à¦ à¦¿à¦•à¦¾à¦¨à¦¾")}</strong>
+                          <strong>{t("Delivery Address", "ডেলিভারি ঠিকানা")}</strong>
                           <p
                             style={{
                               margin: "5px 0",
@@ -1745,7 +1745,7 @@ export default function ModeratorDashboard({
                         </div>
 
                         <div>
-                          <strong>{t("Payment Method", "à¦ªà§‡à¦®à§‡à¦¨à§à¦Ÿ à¦ªà¦¦à§à¦§à¦¤à¦¿")}</strong>
+                          <strong>{t("Payment Method", "পেমেন্ট পদ্ধতি")}</strong>
                           <p style={{ margin: "5px 0" }}>
                             {order?.paymentMethodLabel ||
                               order?.paymentMethod ||
@@ -1754,7 +1754,7 @@ export default function ModeratorDashboard({
                         </div>
 
                         <div>
-                          <strong>{t("Payment Status", "à¦ªà§‡à¦®à§‡à¦¨à§à¦Ÿ à¦¸à§à¦Ÿà§à¦¯à¦¾à¦Ÿà¦¾à¦¸")}</strong>
+                          <strong>{t("Payment Status", "পেমেন্ট স্ট্যাটাস")}</strong>
                           <p
                             style={{
                               margin: "5px 0",
@@ -1780,7 +1780,7 @@ export default function ModeratorDashboard({
                                 }}
                               >
                                 <strong>
-                                  {t("Rejection Reason:", "Reject à¦•à¦°à¦¾à¦° à¦•à¦¾à¦°à¦£:")}
+                                  {t("Rejection Reason:", "Reject করার কারণ:")}
                                 </strong>{" "}
                                 {order.paymentRejectionReason}
                               </p>
@@ -1796,7 +1796,7 @@ export default function ModeratorDashboard({
                           marginTop: 14,
                         }}
                       >
-                        <strong>{t("Order Items", "à¦…à¦°à§à¦¡à¦¾à¦°à§‡à¦° à¦ªà¦£à§à¦¯")}</strong>
+                        <strong>{t("Order Items", "অর্ডারের পণ্য")}</strong>
 
                         {Array.isArray(order?.items) && order.items.length ? (
                           <ul style={{ marginBottom: 0, paddingLeft: 20 }}>
@@ -1809,14 +1809,14 @@ export default function ModeratorDashboard({
                                   item?.title ||
                                   item?.product?.name ||
                                   "Product"}
-                                {" Ã— "}
+                                {" × "}
                                 {Number(item?.quantity || 1)}
                               </li>
                             ))}
                           </ul>
                         ) : (
                           <p style={{ color: "#6b7280" }}>
-                            {t("No items listed.", "à¦•à§‹à¦¨à§‹ à¦ªà¦£à§à¦¯ à¦¨à§‡à¦‡à¥¤")}
+                            {t("No items listed.", "কোনো পণ্য নেই।")}
                           </p>
                         )}
                       </div>
@@ -1832,19 +1832,19 @@ export default function ModeratorDashboard({
                       >
                         {[
                           [
-                            t("Subtotal", "à¦¸à¦¾à¦¬à¦Ÿà§‹à¦Ÿà¦¾à¦²"),
+                            t("Subtotal", "সাবটোটাল"),
                             order?.subtotal,
                           ],
                           [
-                            t("Delivery Fee", "à¦¡à§‡à¦²à¦¿à¦­à¦¾à¦°à¦¿ à¦šà¦¾à¦°à§à¦œ"),
+                            t("Delivery Fee", "ডেলিভারি চার্জ"),
                             order?.deliveryFee,
                           ],
                           [
-                            t("COD Fee", "COD à¦šà¦¾à¦°à§à¦œ"),
+                            t("COD Fee", "COD চার্জ"),
                             order?.codFee,
                           ],
                           [
-                            t("Order Total", "à¦®à§‹à¦Ÿ à¦…à¦°à§à¦¡à¦¾à¦°"),
+                            t("Order Total", "মোট অর্ডার"),
                             order?.total,
                           ],
                         ].map(([label, value]) => (
@@ -1867,7 +1867,7 @@ export default function ModeratorDashboard({
                       {address.note && (
                         <p style={{ marginTop: 12, overflowWrap: "anywhere" }}>
                           <strong>
-                            {t("Customer Note", "à¦•à§à¦°à§‡à¦¤à¦¾à¦° à¦¨à§‹à¦Ÿ")}:
+                            {t("Customer Note", "ক্রেতার নোট")}:
                           </strong>{" "}
                           {address.note}
                         </p>
@@ -1893,7 +1893,7 @@ export default function ModeratorDashboard({
                               setNotice(
                                 t(
                                   "Courier booking details copied.",
-                                  "à¦•à§à¦°à¦¿à¦¯à¦¼à¦¾à¦° à¦¬à§à¦•à¦¿à¦‚à¦¯à¦¼à§‡à¦° à¦¤à¦¥à§à¦¯ à¦•à¦ªà¦¿ à¦¹à¦¯à¦¼à§‡à¦›à§‡à¥¤"
+                                  "কুরিয়ার বুকিংয়ের তথ্য কপি হয়েছে।"
                                 )
                               );
                               setError("");
@@ -1901,13 +1901,13 @@ export default function ModeratorDashboard({
                               setError(
                                 t(
                                   "Could not copy. Check clipboard permissions.",
-                                  "à¦•à¦ªà¦¿ à¦•à¦°à¦¾ à¦¯à¦¾à¦¯à¦¼à¦¨à¦¿à¥¤ à¦¬à§à¦°à¦¾à¦‰à¦œà¦¾à¦°à§‡à¦° clipboard permission à¦ªà¦°à§€à¦•à§à¦·à¦¾ à¦•à¦°à§à¦¨à¥¤"
+                                  "কপি করা যায়নি। ব্রাউজারের clipboard permission পরীক্ষা করুন।"
                                 )
                               );
                             }
                           }}
                         >
-                          {t("Copy Courier Details", "à¦•à§à¦°à¦¿à¦¯à¦¼à¦¾à¦° à¦¤à¦¥à§à¦¯ à¦•à¦ªà¦¿ à¦•à¦°à§à¦¨")}
+                          {t("Copy Courier Details", "কুরিয়ার তথ্য কপি করুন")}
                         </button>
 
                         {status === "confirmed" && (
@@ -1919,7 +1919,7 @@ export default function ModeratorDashboard({
                               updateStatus(order, "processing")
                             }
                           >
-                            {t("Mark Processing", "à¦ªà§à¦°à¦¸à§‡à¦¸à¦¿à¦‚ à¦¶à§à¦°à§ à¦•à¦°à§à¦¨")}
+                            {t("Mark Processing", "প্রসেসিং শুরু করুন")}
                           </button>
                         )}
 
@@ -1932,7 +1932,7 @@ export default function ModeratorDashboard({
                               updateStatus(order, "shipped")
                             }
                           >
-                            {t("Mark Shipped", "à¦¶à¦¿à¦ªà¦¡ à¦¹à¦¿à¦¸à§‡à¦¬à§‡ à¦šà¦¿à¦¹à§à¦¨à¦¿à¦¤ à¦•à¦°à§à¦¨")}
+                            {t("Mark Shipped", "শিপড হিসেবে চিহ্নিত করুন")}
                           </button>
                         )}
 
@@ -1945,7 +1945,7 @@ export default function ModeratorDashboard({
                               updateStatus(order, "delivered")
                             }
                           >
-                            {t("Mark Delivered", "à¦¡à§‡à¦²à¦¿à¦­à¦¾à¦°à¦¿ à¦¸à¦®à§à¦ªà¦¨à§à¦¨ à¦•à¦°à§à¦¨")}
+                            {t("Mark Delivered", "ডেলিভারি সম্পন্ন করুন")}
                           </button>
                         )}
 
@@ -1958,7 +1958,7 @@ export default function ModeratorDashboard({
                               disabled={saving || Boolean(historyActionId)}
                               onClick={() => markCodAsPaid(order)}
                             >
-                              {t("Mark as Paid", "Paid à¦¹à¦¿à¦¸à§‡à¦¬à§‡ à¦šà¦¿à¦¹à§à¦¨à¦¿à¦¤ à¦•à¦°à§à¦¨")}
+                              {t("Mark as Paid", "Paid হিসেবে চিহ্নিত করুন")}
                             </button>
                           )}
 
@@ -1970,8 +1970,8 @@ export default function ModeratorDashboard({
                             onClick={() => completeOrder(order)}
                           >
                             {historyActionId === String(orderId)
-                              ? t("Saving...", "à¦¸à¦‚à¦°à¦•à§à¦·à¦£ à¦¹à¦šà§à¦›à§‡...")
-                              : t("Done", "à¦¸à¦®à§à¦ªà¦¨à§à¦¨")}
+                              ? t("Saving...", "সংরক্ষণ হচ্ছে...")
+                              : t("Done", "সম্পন্ন")}
                           </button>
                         )}
 
@@ -1987,7 +1987,7 @@ export default function ModeratorDashboard({
                                 updateModeratorPaymentStatus(order, "paid")
                               }
                             >
-                              {t("Verify Payment", "à¦ªà§‡à¦®à§‡à¦¨à§à¦Ÿ Verify à¦•à¦°à§à¦¨")}
+                              {t("Verify Payment", "পেমেন্ট Verify করুন")}
                             </button>
 
                             <button
@@ -1998,7 +1998,7 @@ export default function ModeratorDashboard({
                                 updateModeratorPaymentStatus(order, "failed")
                               }
                             >
-                              {t("Reject Payment", "à¦ªà§‡à¦®à§‡à¦¨à§à¦Ÿ Reject à¦•à¦°à§à¦¨")}
+                              {t("Reject Payment", "পেমেন্ট Reject করুন")}
                             </button>
                           </>
                         )}
@@ -2026,7 +2026,7 @@ export default function ModeratorDashboard({
             <p style={{ color: "#6b7280", fontSize: 12, marginTop: 18 }}>
               {t(
                 "Copy Courier Details prepares text for manual booking. It does not create a courier booking or tracking number.",
-                "à¦•à§à¦°à¦¿à¦¯à¦¼à¦¾à¦° à¦¤à¦¥à§à¦¯ à¦•à¦ªà¦¿ à¦•à¦°à¦²à§‡ à¦®à§à¦¯à¦¾à¦¨à§à¦¯à¦¼à¦¾à¦² à¦¬à§à¦•à¦¿à¦‚à¦¯à¦¼à§‡à¦° à¦Ÿà§‡à¦•à§à¦¸à¦Ÿ à¦¤à§ˆà¦°à¦¿ à¦¹à¦¯à¦¼à¥¤ à¦à¦Ÿà¦¿ à¦¨à¦¿à¦œà§‡ à¦¥à§‡à¦•à§‡ à¦•à§à¦°à¦¿à¦¯à¦¼à¦¾à¦° à¦¬à§à¦•à¦¿à¦‚ à¦¬à¦¾ à¦Ÿà§à¦°à§à¦¯à¦¾à¦•à¦¿à¦‚ à¦¨à¦®à§à¦¬à¦° à¦¤à§ˆà¦°à¦¿ à¦•à¦°à§‡ à¦¨à¦¾à¥¤"
+                "কুরিয়ার তথ্য কপি করলে ম্যানুয়াল বুকিংয়ের টেক্সট তৈরি হয়। এটি নিজে থেকে কুরিয়ার বুকিং বা ট্র্যাকিং নম্বর তৈরি করে না।"
               )}
             </p>
           </section>
@@ -2048,13 +2048,13 @@ export default function ModeratorDashboard({
             >
               <div>
                 <h2 style={{ fontSize: 18, margin: 0 }}>
-                  {t("Order History", "à¦…à¦°à§à¦¡à¦¾à¦° à¦¹à¦¿à¦¸à§à¦Ÿà§‹à¦°à¦¿")}
+                  {t("Order History", "অর্ডার হিস্টোরি")}
                 </h2>
 
                 <p style={{ color: "#6b7280", fontSize: 13 }}>
                   {t(
                     "Completed and paid orders.",
-                    "à¦¸à¦®à§à¦ªà¦¨à§à¦¨ à¦à¦¬à¦‚ à¦ªà§‡à¦®à§‡à¦¨à§à¦Ÿ à¦—à§à¦°à¦¹à¦£ à¦•à¦°à¦¾ à¦…à¦°à§à¦¡à¦¾à¦°à¥¤"
+                    "সম্পন্ন এবং পেমেন্ট গ্রহণ করা অর্ডার।"
                   )}
                 </p>
               </div>
@@ -2066,8 +2066,8 @@ export default function ModeratorDashboard({
                 onClick={loadOrderHistory}
               >
                 {historyLoading
-                  ? t("Loading...", "à¦²à§‹à¦¡ à¦¹à¦šà§à¦›à§‡...")
-                  : t("Refresh History", "à¦¹à¦¿à¦¸à§à¦Ÿà§‹à¦°à¦¿ à¦°à¦¿à¦«à§à¦°à§‡à¦¶")}
+                  ? t("Loading...", "লোড হচ্ছে...")
+                  : t("Refresh History", "হিস্টোরি রিফ্রেশ")}
               </button>
             </div>
 
@@ -2086,7 +2086,7 @@ export default function ModeratorDashboard({
                 }
                 placeholder={t(
                   "Search order, customer, phone, email or transaction",
-                  "à¦…à¦°à§à¦¡à¦¾à¦°, à¦•à§à¦°à§‡à¦¤à¦¾, à¦«à§‹à¦¨, à¦‡à¦®à§‡à¦‡à¦² à¦¬à¦¾ à¦Ÿà§à¦°à¦¾à¦¨à¦œà§à¦¯à¦¾à¦•à¦¶à¦¨ à¦–à§à¦à¦œà§à¦¨"
+                  "অর্ডার, ক্রেতা, ফোন, ইমেইল বা ট্রানজ্যাকশন খুঁজুন"
                 )}
                 style={{
                   ...inputStyle,
@@ -2105,25 +2105,25 @@ export default function ModeratorDashboard({
                   maxWidth: "100%",
                 }}
               >
-                <option value="all">{t("All dates", "à¦¸à¦¬ à¦¤à¦¾à¦°à¦¿à¦–")}</option>
-                <option value="today">{t("Today", "à¦†à¦œ")}</option>
-                <option value="7days">{t("Last 7 days", "à¦—à¦¤ à§­ à¦¦à¦¿à¦¨")}</option>
-                <option value="30days">{t("Last 30 days", "à¦—à¦¤ à§©à§¦ à¦¦à¦¿à¦¨")}</option>
+                <option value="all">{t("All dates", "সব তারিখ")}</option>
+                <option value="today">{t("Today", "আজ")}</option>
+                <option value="7days">{t("Last 7 days", "গত ৭ দিন")}</option>
+                <option value="30days">{t("Last 30 days", "গত ৩০ দিন")}</option>
               </select>
             </div>
 
             <p style={{ color: "#6b7280", fontSize: 13 }}>
               {visibleOrderHistory.length} / {orderHistory.length}{" "}
-              {t("orders", "à¦Ÿà¦¿ à¦…à¦°à§à¦¡à¦¾à¦°")}
+              {t("orders", "টি অর্ডার")}
             </p>
 
             {historyLoading && !historyLoadedRef.current ? (
-              <p>{t("Loading History...", "à¦¹à¦¿à¦¸à§à¦Ÿà§‹à¦°à¦¿ à¦²à§‹à¦¡ à¦¹à¦šà§à¦›à§‡...")}</p>
+              <p>{t("Loading History...", "হিস্টোরি লোড হচ্ছে...")}</p>
             ) : visibleOrderHistory.length === 0 ? (
               <p style={{ color: "#6b7280" }}>
                 {t(
                   "No History entries found.",
-                  "à¦•à§‹à¦¨à§‹ à¦¹à¦¿à¦¸à§à¦Ÿà§‹à¦°à¦¿ à¦ªà¦¾à¦“à¦¯à¦¼à¦¾ à¦¯à¦¾à¦¯à¦¼à¦¨à¦¿à¥¤"
+                  "কোনো হিস্টোরি পাওয়া যায়নি।"
                 )}
               </p>
             ) : (
@@ -2184,19 +2184,19 @@ export default function ModeratorDashboard({
                           </div>
 
                           <p style={{ margin: "6px 0" }}>
-                            {t("Payment:", "à¦ªà§‡à¦®à§‡à¦¨à§à¦Ÿ:")}{" "}
+                            {t("Payment:", "পেমেন্ট:")}{" "}
                             {item.paymentStatus || "N/A"}
                           </p>
 
                           <p style={{ margin: "5px 0" }}>
-                            {t("Method:", "à¦ªà¦¦à§à¦§à¦¤à¦¿:")}{" "}
+                            {t("Method:", "পদ্ধতি:")}{" "}
                             {item.paymentMethodLabel ||
                               item.paymentMethod ||
                               "N/A"}
                           </p>
 
                           <p style={{ margin: "5px 0" }}>
-                            {t("Courier:", "à¦•à§à¦°à¦¿à¦¯à¦¼à¦¾à¦°:")}{" "}
+                            {t("Courier:", "কুরিয়ার:")}{" "}
                             {item.courier?.provider || "N/A"}
                           </p>
 
@@ -2207,7 +2207,7 @@ export default function ModeratorDashboard({
                                 overflowWrap: "anywhere",
                               }}
                             >
-                              {t("Tracking ID:", "à¦Ÿà§à¦°à§à¦¯à¦¾à¦•à¦¿à¦‚ à¦†à¦‡à¦¡à¦¿:")}{" "}
+                              {t("Tracking ID:", "ট্র্যাকিং আইডি:")}{" "}
                               {item.courier.consignmentId}
                             </p>
                           )}
@@ -2221,7 +2221,7 @@ export default function ModeratorDashboard({
                           overflowWrap: "anywhere",
                         }}
                       >
-                        {t("Completed:", "à¦¸à¦®à§à¦ªà¦¨à§à¦¨:")}{" "}
+                        {t("Completed:", "সম্পন্ন:")}{" "}
                         {item.completedAt
                           ? new Date(item.completedAt).toLocaleString(
                               lang === "bn" ? "bn-BD" : "en-US"
@@ -2241,10 +2241,10 @@ export default function ModeratorDashboard({
                         }
                       >
                         {busy
-                          ? t("Deleting...", "à¦®à§à¦›à§‡ à¦«à§‡à¦²à¦¾ à¦¹à¦šà§à¦›à§‡...")
+                          ? t("Deleting...", "মুছে ফেলা হচ্ছে...")
                           : t(
                               "Delete History Entry",
-                              "à¦¹à¦¿à¦¸à§à¦Ÿà§‹à¦°à¦¿ à¦à¦¨à§à¦Ÿà§à¦°à¦¿ à¦®à§à¦›à§à¦¨"
+                              "হিস্টোরি এন্ট্রি মুছুন"
                             )}
                       </button>
                     </article>
@@ -2269,7 +2269,7 @@ export default function ModeratorDashboard({
               }}
             >
               <h2 style={{ fontSize: 18, margin: 0 }}>
-                {t("Customer Messages", "à¦—à§à¦°à¦¾à¦¹à¦•à§‡à¦° à¦¬à¦¾à¦°à§à¦¤à¦¾")}
+                {t("Customer Messages", "গ্রাহকের বার্তা")}
               </h2>
 
               <button
@@ -2279,8 +2279,8 @@ export default function ModeratorDashboard({
                 disabled={loading || deletingAllMessages}
               >
                 {loading
-                  ? t("Loading...", "à¦²à§‹à¦¡ à¦¹à¦šà§à¦›à§‡...")
-                  : t("Refresh", "à¦°à¦¿à¦«à§à¦°à§‡à¦¶")}
+                  ? t("Loading...", "লোড হচ্ছে...")
+                  : t("Refresh", "রিফ্রেশ")}
               </button>
             </div>
 
@@ -2300,7 +2300,7 @@ export default function ModeratorDashboard({
               }}
             >
               <label style={{ fontSize: 13, fontWeight: 700 }}>
-                {t("Filter by date:", "à¦¤à¦¾à¦°à¦¿à¦– à¦…à¦¨à§à¦¯à¦¾à¦¯à¦¼à§€ à¦«à¦¿à¦²à§à¦Ÿà¦¾à¦°:")}
+                {t("Filter by date:", "তারিখ অনুযায়ী ফিল্টার:")}
               </label>
 
               <select
@@ -2314,17 +2314,17 @@ export default function ModeratorDashboard({
                   maxWidth: "100%",
                 }}
               >
-                <option value="all">{t("All dates", "à¦¸à¦¬ à¦¤à¦¾à¦°à¦¿à¦–")}</option>
-                <option value="today">{t("Today", "à¦†à¦œ")}</option>
-                <option value="7days">{t("Last 7 days", "à¦—à¦¤ à§­ à¦¦à¦¿à¦¨")}</option>
-                <option value="30days">{t("Last 30 days", "à¦—à¦¤ à§©à§¦ à¦¦à¦¿à¦¨")}</option>
-                <option value="custom">{t("Custom range", "à¦¨à¦¿à¦œà§‡à¦° à¦¤à¦¾à¦°à¦¿à¦–")}</option>
+                <option value="all">{t("All dates", "সব তারিখ")}</option>
+                <option value="today">{t("Today", "আজ")}</option>
+                <option value="7days">{t("Last 7 days", "গত ৭ দিন")}</option>
+                <option value="30days">{t("Last 30 days", "গত ৩০ দিন")}</option>
+                <option value="custom">{t("Custom range", "নিজের তারিখ")}</option>
               </select>
 
               {messageDateFilter === "custom" && (
                 <>
                   <label style={{ fontSize: 12, color: "#475569" }}>
-                    {t("From", "à¦¶à§à¦°à§")}
+                    {t("From", "শুরু")}
                   </label>
 
                   <input
@@ -2341,7 +2341,7 @@ export default function ModeratorDashboard({
                   />
 
                   <label style={{ fontSize: 12, color: "#475569" }}>
-                    {t("To", "à¦¶à§‡à¦·")}
+                    {t("To", "শেষ")}
                   </label>
 
                   <input
@@ -2365,7 +2365,7 @@ export default function ModeratorDashboard({
                       setMessageEndDate("");
                     }}
                   >
-                    {t("Clear dates", "à¦¤à¦¾à¦°à¦¿à¦– à¦®à§à¦›à§à¦¨")}
+                    {t("Clear dates", "তারিখ মুছুন")}
                   </button>
                 </>
               )}
@@ -2379,7 +2379,7 @@ export default function ModeratorDashboard({
                 }}
               >
                 {filteredMessages.length} / {messages.length}{" "}
-                {t("messages", "à¦Ÿà¦¿ à¦¬à¦¾à¦°à§à¦¤à¦¾")}
+                {t("messages", "টি বার্তা")}
               </div>
 
               <button
@@ -2404,10 +2404,10 @@ export default function ModeratorDashboard({
                 }
               >
                 {deletingAllMessages
-                  ? t("Deleting...", "à¦®à§à¦›à§‡ à¦«à§‡à¦²à¦¾ à¦¹à¦šà§à¦›à§‡...")
+                  ? t("Deleting...", "মুছে ফেলা হচ্ছে...")
                   : t(
                       "Delete All Filtered Messages",
-                      "à¦«à¦¿à¦²à§à¦Ÿà¦¾à¦° à¦•à¦°à¦¾ à¦¸à¦¬ à¦¬à¦¾à¦°à§à¦¤à¦¾ à¦®à§à¦›à§à¦¨"
+                      "ফিল্টার করা সব বার্তা মুছুন"
                     )}
               </button>
             </div>
@@ -2416,12 +2416,12 @@ export default function ModeratorDashboard({
 
             <div style={{ display: "grid", gap: 14, marginTop: 18 }}>
               {loading && !messagesLoadedRef.current ? (
-                <p>{t("Loading messages...", "à¦¬à¦¾à¦°à§à¦¤à¦¾ à¦²à§‹à¦¡ à¦¹à¦šà§à¦›à§‡...")}</p>
+                <p>{t("Loading messages...", "বার্তা লোড হচ্ছে...")}</p>
               ) : filteredMessages.length === 0 ? (
                 <p style={{ color: "#6b7280" }}>
                   {t(
                     "No messages found for this date filter.",
-                    "à¦à¦‡ à¦¤à¦¾à¦°à¦¿à¦–à§‡à¦° à¦«à¦¿à¦²à§à¦Ÿà¦¾à¦°à§‡ à¦•à§‹à¦¨à§‹ à¦¬à¦¾à¦°à§à¦¤à¦¾ à¦ªà¦¾à¦“à¦¯à¦¼à¦¾ à¦¯à¦¾à¦¯à¦¼à¦¨à¦¿à¥¤"
+                    "এই তারিখের ফিল্টারে কোনো বার্তা পাওয়া যায়নি।"
                   )}
                 </p>
               ) : (
@@ -2490,7 +2490,7 @@ export default function ModeratorDashboard({
                                 marginTop: 5,
                               }}
                             >
-                              {t("Submitted:", "à¦œà¦®à¦¾ à¦¦à§‡à¦“à¦¯à¦¼à¦¾ à¦¹à¦¯à¦¼à§‡à¦›à§‡:")}{" "}
+                              {t("Submitted:", "জমা দেওয়া হয়েছে:")}{" "}
                               {new Date(message.createdAt).toLocaleString(
                                 lang === "bn" ? "bn-BD" : "en-US"
                               )}
@@ -2515,8 +2515,8 @@ export default function ModeratorDashboard({
                           onClick={() => deleteFullMessage(message)}
                         >
                           {deletingMessageId === String(messageId)
-                            ? t("Deleting...", "à¦®à§à¦›à§‡ à¦«à§‡à¦²à¦¾ à¦¹à¦šà§à¦›à§‡...")
-                            : t("Delete Message", "à¦¬à¦¾à¦°à§à¦¤à¦¾ à¦®à§à¦›à§à¦¨")}
+                            ? t("Deleting...", "মুছে ফেলা হচ্ছে...")
+                            : t("Delete Message", "বার্তা মুছুন")}
                         </button>
                       </div>
 
@@ -2568,8 +2568,8 @@ export default function ModeratorDashboard({
                             >
                               <strong>
                                 {entry.senderRole === "moderator"
-                                  ? t("Moderator", "à¦®à¦¡à¦¾à¦°à§‡à¦Ÿà¦°")
-                                  : t("Support Team", "à¦¸à¦¾à¦ªà§‹à¦°à§à¦Ÿ à¦Ÿà¦¿à¦®")}
+                                  ? t("Moderator", "মডারেটর")
+                                  : t("Support Team", "সাপোর্ট টিম")}
                               </strong>
 
                               {entry.createdAt && (
@@ -2613,7 +2613,7 @@ export default function ModeratorDashboard({
                         }
                         placeholder={t(
                           "Write your reply...",
-                          "à¦†à¦ªà¦¨à¦¾à¦° à¦‰à¦¤à§à¦¤à¦° à¦²à¦¿à¦–à§à¦¨..."
+                          "আপনার উত্তর লিখুন..."
                         )}
                         style={{
                           ...inputStyle,
@@ -2637,8 +2637,8 @@ export default function ModeratorDashboard({
                         onClick={() => sendReply(message)}
                       >
                         {saving
-                          ? t("Saving...", "à¦¸à¦‚à¦°à¦•à§à¦·à¦£ à¦¹à¦šà§à¦›à§‡...")
-                          : t("Send Reply", "à¦‰à¦¤à§à¦¤à¦° à¦ªà¦¾à¦ à¦¾à¦¨")}
+                          ? t("Saving...", "সংরক্ষণ হচ্ছে...")
+                          : t("Send Reply", "উত্তর পাঠান")}
                       </button>
                     </article>
                   );
@@ -2662,11 +2662,11 @@ export default function ModeratorDashboard({
               }}>
                 <div>
                   <h2 style={{ margin: 0 }}>
-                    {t("My Attendance", "à¦†à¦®à¦¾à¦° à¦‰à¦ªà¦¸à§à¦¥à¦¿à¦¤à¦¿")}
+                    {t("My Attendance", "আমার উপস্থিতি")}
                   </h2>
                   <p style={{ color: "#6b7280", margin: "6px 0 0" }}>
                     {t("Daily shift, check-in and work summary",
-                      "à¦¦à§ˆà¦¨à¦¿à¦• à¦¶à¦¿à¦«à¦Ÿ, à¦šà§‡à¦•-à¦‡à¦¨ à¦“ à¦•à¦¾à¦œà§‡à¦° à¦¹à¦¿à¦¸à¦¾à¦¬")}
+                      "দৈনিক শিফট, চেক-ইন ও কাজের হিসাব")}
                   </p>
                 </div>
                 <button
@@ -2676,8 +2676,8 @@ export default function ModeratorDashboard({
                   onClick={() => loadAttendance(false)}
                 >
                   {attendanceLoading
-                    ? t("Refreshing...", "à¦°à¦¿à¦«à§à¦°à§‡à¦¶ à¦¹à¦šà§à¦›à§‡...")
-                    : t("Refresh", "à¦°à¦¿à¦«à§à¦°à§‡à¦¶")}
+                    ? t("Refreshing...", "রিফ্রেশ হচ্ছে...")
+                    : t("Refresh", "রিফ্রেশ")}
                 </button>
               </div>
 
@@ -2689,26 +2689,26 @@ export default function ModeratorDashboard({
               }}>
                 <div style={{ background: "#f8fafc", borderRadius: 10, padding: 13 }}>
                   <div style={{ color: "#64748b", fontSize: 12 }}>
-                    {t("Shift", "à¦¶à¦¿à¦«à¦Ÿ")}
+                    {t("Shift", "শিফট")}
                   </div>
                   <strong>
                     {attendanceSettings?.shiftStart && attendanceSettings?.shiftEnd
-                      ? `${attendanceSettings.shiftStart} â€“ ${attendanceSettings.shiftEnd}`
-                      : t("Not configured", "à¦¨à¦¿à¦°à§à¦§à¦¾à¦°à¦£ à¦•à¦°à¦¾ à¦¹à§Ÿà¦¨à¦¿")}
+                      ? `${attendanceSettings.shiftStart} – ${attendanceSettings.shiftEnd}`
+                      : t("Not configured", "নির্ধারণ করা হয়নি")}
                   </strong>
                 </div>
                 <div style={{ background: "#f8fafc", borderRadius: 10, padding: 13 }}>
                   <div style={{ color: "#64748b", fontSize: 12 }}>
-                    {t("Timezone", "à¦Ÿà¦¾à¦‡à¦®à¦œà§‹à¦¨")}
+                    {t("Timezone", "টাইমজোন")}
                   </div>
                   <strong>{attendanceSettings?.timezone || "Asia/Dhaka"}</strong>
                 </div>
                 <div style={{ background: "#f8fafc", borderRadius: 10, padding: 13 }}>
                   <div style={{ color: "#64748b", fontSize: 12 }}>
-                    {t("Late grace", "à¦¦à§‡à¦°à¦¿à¦° à¦›à¦¾à§œ")}
+                    {t("Late grace", "দেরির ছাড়")}
                   </div>
                   <strong>
-                    {Number(attendanceSettings?.lateGraceMinutes || 0)} {t("minutes", "à¦®à¦¿à¦¨à¦¿à¦Ÿ")}
+                    {Number(attendanceSettings?.lateGraceMinutes || 0)} {t("minutes", "মিনিট")}
                   </strong>
                 </div>
               </div>
@@ -2723,7 +2723,7 @@ export default function ModeratorDashboard({
                 }}>
                   {t(
                     "The attendance schedule is currently disabled by Admin. Check-in is unavailable until Admin enables and configures it.",
-                    "à¦…à§à¦¯à¦¾à¦¡à¦®à¦¿à¦¨ à¦¬à¦°à§à¦¤à¦®à¦¾à¦¨à§‡ à¦‰à¦ªà¦¸à§à¦¥à¦¿à¦¤à¦¿à¦° à¦¶à¦¿à¦¡à¦¿à¦‰à¦² à¦¬à¦¨à§à¦§ à¦°à§‡à¦–à§‡à¦›à§‡à¦¨à¥¤ à¦¶à¦¿à¦¡à¦¿à¦‰à¦² à¦šà¦¾à¦²à§ à¦“ à¦¨à¦¿à¦°à§à¦§à¦¾à¦°à¦£ à¦¨à¦¾ à¦•à¦°à¦¾ à¦ªà¦°à§à¦¯à¦¨à§à¦¤ Check In à¦•à¦°à¦¾ à¦¯à¦¾à¦¬à§‡ à¦¨à¦¾à¥¤"
+                    "অ্যাডমিন বর্তমানে উপস্থিতির শিডিউল বন্ধ রেখেছেন। শিডিউল চালু ও নির্ধারণ না করা পর্যন্ত Check In করা যাবে না।"
                   )}
                 </p>
               )}
@@ -2731,11 +2731,11 @@ export default function ModeratorDashboard({
 
             <div style={cardStyle}>
               <h3 style={{ marginTop: 0 }}>
-                {t("Today's Attendance", "à¦†à¦œà¦•à§‡à¦° à¦‰à¦ªà¦¸à§à¦¥à¦¿à¦¤à¦¿")}
+                {t("Today's Attendance", "আজকের উপস্থিতি")}
               </h3>
 
               {attendanceLoading && !todayAttendance ? (
-                <p style={{ color: "#6b7280" }}>{t("Loading attendance...", "à¦‰à¦ªà¦¸à§à¦¥à¦¿à¦¤à¦¿à¦° à¦¤à¦¥à§à¦¯ à¦²à§‹à¦¡ à¦¹à¦šà§à¦›à§‡...")}</p>
+                <p style={{ color: "#6b7280" }}>{t("Loading attendance...", "উপস্থিতির তথ্য লোড হচ্ছে...")}</p>
               ) : (
                 <>
                   <div style={{
@@ -2745,46 +2745,46 @@ export default function ModeratorDashboard({
                   }}>
                     <div>
                       <div style={{ color: "#64748b", fontSize: 12 }}>
-                        {t("Status", "à¦…à¦¬à¦¸à§à¦¥à¦¾")}
+                        {t("Status", "অবস্থা")}
                       </div>
                       <strong style={{ textTransform: "capitalize" }}>
                         {todayAttendance?.status?.replaceAll("-", " ") ||
-                          t("Not checked in", "à¦šà§‡à¦•-à¦‡à¦¨ à¦•à¦°à¦¾ à¦¹à§Ÿà¦¨à¦¿")}
+                          t("Not checked in", "চেক-ইন করা হয়নি")}
                       </strong>
                     </div>
                     <div>
                       <div style={{ color: "#64748b", fontSize: 12 }}>
-                        {t("Check In", "à¦šà§‡à¦•-à¦‡à¦¨")}
+                        {t("Check In", "চেক-ইন")}
                       </div>
                       <strong>{attendanceTime(todayAttendance?.checkIn)}</strong>
                     </div>
                     <div>
                       <div style={{ color: "#64748b", fontSize: 12 }}>
-                        {t("Check Out", "à¦šà§‡à¦•-à¦†à¦‰à¦Ÿ")}
+                        {t("Check Out", "চেক-আউট")}
                       </div>
                       <strong>{attendanceTime(todayAttendance?.checkOut)}</strong>
                     </div>
                     <div>
                       <div style={{ color: "#64748b", fontSize: 12 }}>
-                        {t("Late", "à¦¦à§‡à¦°à¦¿")}
+                        {t("Late", "দেরি")}
                       </div>
                       <strong>{attendanceDuration(todayAttendance?.lateMinutes)}</strong>
                     </div>
                     <div>
                       <div style={{ color: "#64748b", fontSize: 12 }}>
-                        {t("Break", "à¦¬à¦¿à¦°à¦¤à¦¿")}
+                        {t("Break", "বিরতি")}
                       </div>
                       <strong>{attendanceDuration(todayAttendance?.breakMinutes)}</strong>
                     </div>
                     <div>
                       <div style={{ color: "#64748b", fontSize: 12 }}>
-                        {t("Working Time", "à¦•à¦¾à¦œà§‡à¦° à¦¸à¦®à§Ÿ")}
+                        {t("Working Time", "কাজের সময়")}
                       </div>
                       <strong>{attendanceDuration(todayAttendance?.workingMinutes)}</strong>
                     </div>
                     <div>
                       <div style={{ color: "#64748b", fontSize: 12 }}>
-                        {t("Overtime", "à¦…à¦¤à¦¿à¦°à¦¿à¦•à§à¦¤ à¦¸à¦®à§Ÿ")}
+                        {t("Overtime", "অতিরিক্ত সময়")}
                       </div>
                       <strong>{attendanceDuration(todayAttendance?.overtimeMinutes)}</strong>
                     </div>
@@ -2792,7 +2792,7 @@ export default function ModeratorDashboard({
 
                   {todayAttendance?.isWeeklyOff && (
                     <p style={{ color: "#92400e", marginBottom: 0 }}>
-                      {t("Today is your weekly off day.", "à¦†à¦œ à¦†à¦ªà¦¨à¦¾à¦° à¦¸à¦¾à¦ªà§à¦¤à¦¾à¦¹à¦¿à¦• à¦›à§à¦Ÿà¦¿à¦° à¦¦à¦¿à¦¨à¥¤")}
+                      {t("Today is your weekly off day.", "আজ আপনার সাপ্তাহিক ছুটির দিন।")}
                     </p>
                   )}
 
@@ -2806,7 +2806,7 @@ export default function ModeratorDashboard({
                       margin: "16px 0 0",
                       fontWeight: 600,
                     }}>
-                      {t("Next work can start in", "à¦ªà¦°à¦¬à¦°à§à¦¤à§€ à¦•à¦¾à¦œ à¦¶à§à¦°à§ à¦•à¦°à¦¾ à¦¯à¦¾à¦¬à§‡")}{" "}
+                      {t("Next work can start in", "পরবর্তী কাজ শুরু করা যাবে")}{" "}
                       {String(Math.floor(transitionRemainingMs / 60000)).padStart(2, "0")}m{" "}
                       {String(Math.floor((transitionRemainingMs % 60000) / 1000)).padStart(2, "0")}s
                     </p>
@@ -2832,8 +2832,8 @@ export default function ModeratorDashboard({
                       onClick={() => runAttendanceAction("check-in", "/attendance/check-in")}
                     >
                       {attendanceActionLoading === "check-in"
-                        ? t("Checking in...", "à¦šà§‡à¦•-à¦‡à¦¨ à¦¹à¦šà§à¦›à§‡...")
-                        : t("Check In", "à¦šà§‡à¦•-à¦‡à¦¨")}
+                        ? t("Checking in...", "চেক-ইন হচ্ছে...")
+                        : t("Check In", "চেক-ইন")}
                     </button>
 
                     {todayAttendance && !todayAttendance.checkOut && (
@@ -2846,8 +2846,8 @@ export default function ModeratorDashboard({
                             onClick={() => runAttendanceAction("break-end", "/attendance/break/end")}
                           >
                             {attendanceActionLoading === "break-end"
-                              ? t("Ending break...", "à¦¬à¦¿à¦°à¦¤à¦¿ à¦¶à§‡à¦· à¦¹à¦šà§à¦›à§‡...")
-                              : t("End Break", "à¦¬à¦¿à¦°à¦¤à¦¿ à¦¶à§‡à¦· à¦•à¦°à§à¦¨")}
+                              ? t("Ending break...", "বিরতি শেষ হচ্ছে...")
+                              : t("End Break", "বিরতি শেষ করুন")}
                           </button>
                         ) : (
                           <button
@@ -2857,8 +2857,8 @@ export default function ModeratorDashboard({
                             onClick={() => runAttendanceAction("break-start", "/attendance/break/start")}
                           >
                             {attendanceActionLoading === "break-start"
-                              ? t("Starting break...", "à¦¬à¦¿à¦°à¦¤à¦¿ à¦¶à§à¦°à§ à¦¹à¦šà§à¦›à§‡...")
-                              : t("Start Break", "à¦¬à¦¿à¦°à¦¤à¦¿ à¦¶à§à¦°à§ à¦•à¦°à§à¦¨")}
+                              ? t("Starting break...", "বিরতি শুরু হচ্ছে...")
+                              : t("Start Break", "বিরতি শুরু করুন")}
                           </button>
                         )}
 
@@ -2872,15 +2872,15 @@ export default function ModeratorDashboard({
                           onClick={() => {
                             if (window.confirm(t(
                               "Are you sure you want to check out?",
-                              "à¦†à¦ªà¦¨à¦¿ à¦•à¦¿ Check Out à¦•à¦°à¦¤à§‡ à¦šà¦¾à¦¨?"
+                              "আপনি কি Check Out করতে চান?"
                             ))) {
                               runAttendanceAction("check-out", "/attendance/check-out");
                             }
                           }}
                         >
                           {attendanceActionLoading === "check-out"
-                            ? t("Checking out...", "à¦šà§‡à¦•-à¦†à¦‰à¦Ÿ à¦¹à¦šà§à¦›à§‡...")
-                            : t("Check Out", "à¦šà§‡à¦•-à¦†à¦‰à¦Ÿ")}
+                            ? t("Checking out...", "চেক-আউট হচ্ছে...")
+                            : t("Check Out", "চেক-আউট")}
                         </button>
                       </>
                     )}
@@ -2891,12 +2891,12 @@ export default function ModeratorDashboard({
 
             <div style={cardStyle}>
               <h3 style={{ marginTop: 0 }}>
-                {t("Attendance History", "à¦‰à¦ªà¦¸à§à¦¥à¦¿à¦¤à¦¿à¦° à¦‡à¦¤à¦¿à¦¹à¦¾à¦¸")}
+                {t("Attendance History", "উপস্থিতির ইতিহাস")}
               </h3>
 
               {attendanceHistory.length === 0 ? (
                 <p style={{ color: "#6b7280" }}>
-                  {t("No attendance records found.", "à¦•à§‹à¦¨à§‹ à¦‰à¦ªà¦¸à§à¦¥à¦¿à¦¤à¦¿à¦° à¦°à§‡à¦•à¦°à§à¦¡ à¦ªà¦¾à¦“à§Ÿà¦¾ à¦¯à¦¾à§Ÿà¦¨à¦¿à¥¤")}
+                  {t("No attendance records found.", "কোনো উপস্থিতির রেকর্ড পাওয়া যায়নি।")}
                 </p>
               ) : (
                 <div style={{ overflowX: "auto" }}>
@@ -2908,7 +2908,7 @@ export default function ModeratorDashboard({
                   }}>
                     <thead>
                       <tr style={{ background: "#f8fafc", textAlign: "left" }}>
-                        {[t("Date", "à¦¤à¦¾à¦°à¦¿à¦–"), t("Status", "à¦…à¦¬à¦¸à§à¦¥à¦¾"), t("Check In", "à¦šà§‡à¦•-à¦‡à¦¨"), t("Check Out", "à¦šà§‡à¦•-à¦†à¦‰à¦Ÿ"), t("Working", "à¦•à¦¾à¦œà§‡à¦° à¦¸à¦®à§Ÿ"), t("Overtime", "à¦…à¦¤à¦¿à¦°à¦¿à¦•à§à¦¤")].map((heading) => (
+                        {[t("Date", "তারিখ"), t("Status", "অবস্থা"), t("Check In", "চেক-ইন"), t("Check Out", "চেক-আউট"), t("Working", "কাজের সময়"), t("Overtime", "অতিরিক্ত")].map((heading) => (
                           <th key={heading} style={{ padding: 11, borderBottom: "1px solid #e5e7eb" }}>
                             {heading}
                           </th>
@@ -2918,9 +2918,9 @@ export default function ModeratorDashboard({
                     <tbody>
                       {attendanceHistory.map((item) => (
                         <tr key={item._id || item.workDate}>
-                          <td style={{ padding: 11, borderBottom: "1px solid #f1f5f9" }}>{item.workDate || "â€”"}</td>
+                          <td style={{ padding: 11, borderBottom: "1px solid #f1f5f9" }}>{item.workDate || "—"}</td>
                           <td style={{ padding: 11, borderBottom: "1px solid #f1f5f9", textTransform: "capitalize" }}>
-                            {item.status?.replaceAll("-", " ") || "â€”"}
+                            {item.status?.replaceAll("-", " ") || "—"}
                           </td>
                           <td style={{ padding: 11, borderBottom: "1px solid #f1f5f9" }}>{attendanceTime(item.checkIn)}</td>
                           <td style={{ padding: 11, borderBottom: "1px solid #f1f5f9" }}>{attendanceTime(item.checkOut)}</td>
@@ -2942,7 +2942,7 @@ export default function ModeratorDashboard({
             <p style={{ color: "#6b7280", lineHeight: 1.7 }}>
               {t(
                 "This section still needs to be connected to its backend endpoint.",
-                "à¦à¦‡ à¦¬à¦¿à¦­à¦¾à¦—à¦Ÿà¦¿ à¦šà¦¾à¦²à§ à¦•à¦°à¦¤à§‡ à¦¸à¦‚à¦¶à§à¦²à¦¿à¦·à§à¦Ÿ à¦¬à§à¦¯à¦¾à¦•à¦à¦¨à§à¦¡ API à¦¯à§à¦•à§à¦¤ à¦•à¦°à¦¤à§‡ à¦¹à¦¬à§‡à¥¤"
+                "এই বিভাগটি চালু করতে সংশ্লিষ্ট ব্যাকএন্ড API যুক্ত করতে হবে।"
               )}
             </p>
           </section>
