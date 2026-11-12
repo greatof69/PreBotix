@@ -111,6 +111,34 @@ function saveAdminListCache(key, value) {
   }
 }
 
+function readAdminSettingsCache(key, fallback) {
+  try {
+    const cached = window.localStorage.getItem(key);
+    const parsed = cached ? JSON.parse(cached) : null;
+    return parsed && typeof parsed === "object" && !Array.isArray(parsed)
+      ? { ...fallback, ...parsed }
+      : fallback;
+  } catch {
+    return fallback;
+  }
+}
+
+function hasAdminSettingsCache(key) {
+  try {
+    const parsed = JSON.parse(window.localStorage.getItem(key) || "null");
+    return !!parsed && typeof parsed === "object" && !Array.isArray(parsed);
+  } catch {
+    return false;
+  }
+}
+
+function saveAdminSettingsCache(key, value) {
+  try {
+    window.localStorage.setItem(key, JSON.stringify(value));
+  } catch (err) {
+    console.warn("Could not save admin settings cache:", err);
+  }
+}
 function isMessageInDateRange(createdAt, filter, startDate, endDate) {
   if (filter === "all") return true;
   if (!createdAt) return false;
@@ -232,7 +260,7 @@ export default function AdminDashboard({
   const [stockEditValue, setStockEditValue] = useState("");
   const [stockSearch, setStockSearch] = useState("");
   const [stockSavingId, setStockSavingId] = useState(null);
-  const [paymentDeliverySettings, setPaymentDeliverySettings] = useState({
+  const [paymentDeliverySettings, setPaymentDeliverySettings] = useState(() => readAdminSettingsCache("prebotix-admin-payment-delivery-v1", {
     paymentMethods: [],
     deliveryZones: [],
     freeDeliveryThreshold: 0,
@@ -241,28 +269,38 @@ export default function AdminDashboard({
     checkoutTitleBn: "পেমেন্ট ও ডেলিভারি",
     checkoutInstructions: "",
     checkoutInstructionsBn: "",
-  });
+  }));
   
   const [loadingPaymentDelivery, setLoadingPaymentDelivery] = useState(false);
-  const [paymentDeliverySettingsLoaded, setPaymentDeliverySettingsLoaded] = useState(false);
-  const [generalSettings, setGeneralSettings] = useState({
+  const [paymentDeliverySettingsLoaded, setPaymentDeliverySettingsLoaded] = useState(() => hasAdminSettingsCache("prebotix-admin-payment-delivery-v1"));
+  const [generalSettings, setGeneralSettings] = useState(() => readAdminSettingsCache("prebotix-admin-general-settings-v1", {
     websiteName: "PreBotix",
     logo: "",
     favicon: "",
     siteDescription: "",
-  });
-  const [announcementSettings, setAnnouncementSettings] = useState({
+  }));
+  const [announcementSettings, setAnnouncementSettings] = useState(() => readAdminSettingsCache("prebotix-admin-announcements-v1", {
   announcement: "",
   announcementBn: "",
   announcement1: "",
   announcement1Bn: "",
-});
+}));
 
 const [savingAnnouncements, setSavingAnnouncements] = useState(false);
   const [loadingGeneralSettings, setLoadingGeneralSettings] = useState(false);
-  const [generalSettingsLoaded, setGeneralSettingsLoaded] = useState(false);
+  const [generalSettingsLoaded, setGeneralSettingsLoaded] = useState(() => hasAdminSettingsCache("prebotix-admin-general-settings-v1") && hasAdminSettingsCache("prebotix-admin-announcements-v1"));
   const [savingGeneralSettings, setSavingGeneralSettings] = useState(false);
   const [uploadingAsset, setUploadingAsset] = useState("");
+  useEffect(() => {
+    if (!generalSettingsLoaded) return;
+    saveAdminSettingsCache("prebotix-admin-general-settings-v1", generalSettings);
+    saveAdminSettingsCache("prebotix-admin-announcements-v1", announcementSettings);
+  }, [generalSettings, announcementSettings, generalSettingsLoaded]);
+
+  useEffect(() => {
+    if (!paymentDeliverySettingsLoaded) return;
+    saveAdminSettingsCache("prebotix-admin-payment-delivery-v1", paymentDeliverySettings);
+  }, [paymentDeliverySettings, paymentDeliverySettingsLoaded]);
 
   const [loadingMessages, setLoadingMessages] = useState(false);
   const [loadingOrders, setLoadingOrders] = useState(false);
