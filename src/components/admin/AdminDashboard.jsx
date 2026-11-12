@@ -1888,6 +1888,12 @@ const pageTitle =
                                     setStockEditValue("");
                                   }
                                 }}
+                                onFocus={(event) => {
+                                  event.currentTarget.style.width = "130px";
+                                }}
+                                onBlur={(event) => {
+                                  event.currentTarget.style.width = "95px";
+                                }}
                                 style={{
                                   width: 95,
                                   boxSizing: "border-box",
@@ -1895,6 +1901,7 @@ const pageTitle =
                                   border: "1px solid #2563eb",
                                   borderRadius: 7,
                                   fontSize: 14,
+                                  transition: "width 180ms ease",
                                 }}
                               />
                             ) : (
