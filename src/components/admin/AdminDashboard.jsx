@@ -311,6 +311,13 @@ const [savingAnnouncements, setSavingAnnouncements] = useState(false);
   const [loadingModeratorWork, setLoadingModeratorWork] = useState(false);
   const [savingModeratorWork, setSavingModeratorWork] = useState(false);
   const [moderatorAttendanceDate, setModeratorAttendanceDate] = useState("");
+  const [moderatorShiftList, setModeratorShiftList] = useState([]);
+  const [selectedModeratorShiftId, setSelectedModeratorShiftId] = useState("");
+  const [selectedModeratorShift, setSelectedModeratorShift] = useState({
+    shiftStart: "",
+    shiftEnd: "",
+  });
+  const [savingModeratorPersonalShift, setSavingModeratorPersonalShift] = useState(false);
   useEffect(() => {
     if (!generalSettingsLoaded) return;
     saveAdminSettingsCache("prebotix-admin-general-settings-v1", generalSettings);
@@ -1182,17 +1189,40 @@ const deleteFilteredMessages = async () => {
     if (!silent) setLoadingModeratorWork(true);
 
     try {
-      const [settingsData, attendanceData] = await Promise.all([
+      const [settingsData, attendanceData, shiftData] = await Promise.all([
         request("/moderator-work-settings"),
         request("/moderator-attendance"),
+        request("/moderator-work-settings/moderators"),
       ]);
+
+      const nextModeratorList = Array.isArray(shiftData?.moderators)
+        ? shiftData.moderators
+        : [];
+
+      setModeratorShiftList(nextModeratorList);
+
+      if (nextModeratorList.length) {
+        const selectedStillExists = nextModeratorList.some(
+          (item) => String(item._id) === String(selectedModeratorShiftId)
+        );
+
+        if (!selectedModeratorShiftId || !selectedStillExists) {
+          const firstModerator = nextModeratorList[0];
+          setSelectedModeratorShiftId(String(firstModerator._id));
+          setSelectedModeratorShift({
+            shiftStart: firstModerator.shiftSettings?.shiftStart || "",
+            shiftEnd: firstModerator.shiftSettings?.shiftEnd || "",
+          });
+        }
+      } else {
+        setSelectedModeratorShiftId("");
+        setSelectedModeratorShift({ shiftStart: "", shiftEnd: "" });
+      }
 
       if (settingsData?.settings) {
         setModeratorWorkSettings({
           scheduleEnabled: Boolean(settingsData.settings.scheduleEnabled),
           timezone: settingsData.settings.timezone || "Asia/Dhaka",
-          shiftStart: settingsData.settings.shiftStart || "",
-          shiftEnd: settingsData.settings.shiftEnd || "",
           weeklyOffDays: Array.isArray(settingsData.settings.weeklyOffDays)
             ? settingsData.settings.weeklyOffDays
             : [],
@@ -1211,7 +1241,7 @@ const deleteFilteredMessages = async () => {
     } finally {
       if (!silent) setLoadingModeratorWork(false);
     }
-  }, [request]);
+  }, [request, selectedModeratorShiftId]);
 
 useEffect(() => {
   let refreshing = false;
@@ -1289,15 +1319,19 @@ useEffect(() => {
     try {
       const data = await request("/moderator-work-settings", {
         method: "PUT",
-        body: JSON.stringify(moderatorWorkSettings),
+        body: JSON.stringify({
+          scheduleEnabled: moderatorWorkSettings.scheduleEnabled,
+          timezone: moderatorWorkSettings.timezone,
+          weeklyOffDays: moderatorWorkSettings.weeklyOffDays,
+          lateGraceMinutes: moderatorWorkSettings.lateGraceMinutes,
+          transitionGapMinutes: moderatorWorkSettings.transitionGapMinutes,
+        }),
       });
 
       if (data?.settings) {
         setModeratorWorkSettings({
           scheduleEnabled: Boolean(data.settings.scheduleEnabled),
           timezone: data.settings.timezone || "Asia/Dhaka",
-          shiftStart: data.settings.shiftStart || "",
-          shiftEnd: data.settings.shiftEnd || "",
           weeklyOffDays: data.settings.weeklyOffDays || [],
           lateGraceMinutes: Number(data.settings.lateGraceMinutes || 0),
           transitionGapMinutes: Number(data.settings.transitionGapMinutes || 0),
@@ -1309,6 +1343,49 @@ useEffect(() => {
       setError(err.message || "Could not save moderator work settings.");
     } finally {
       setSavingModeratorWork(false);
+    }
+  };
+
+  const saveModeratorPersonalShift = async () => {
+    if (!selectedModeratorShiftId) {
+      setError("Please select a moderator first.");
+      return;
+    }
+
+    if (!selectedModeratorShift.shiftStart || !selectedModeratorShift.shiftEnd) {
+      setError("Please enter both shift start and shift end times.");
+      return;
+    }
+
+    setSavingModeratorPersonalShift(true);
+    setError("");
+    setMessage("");
+
+    try {
+      const data = await request(
+        `/moderator-work-settings/${selectedModeratorShiftId}`,
+        {
+          method: "PUT",
+          body: JSON.stringify(selectedModeratorShift),
+        }
+      );
+
+      setModeratorShiftList((current) =>
+        current.map((item) =>
+          String(item._id) === String(selectedModeratorShiftId)
+            ? {
+                ...item,
+                shiftSettings: data?.settings || selectedModeratorShift,
+              }
+            : item
+        )
+      );
+
+      setMessage(data?.message || "Moderator shift saved successfully.");
+    } catch (err) {
+      setError(err.message || "Could not save moderator shift.");
+    } finally {
+      setSavingModeratorPersonalShift(false);
     }
   };
 
@@ -3601,6 +3678,187 @@ const pageTitle =
                 their original schedule.
               </p>
 
+              <div style={{
+                border: "1px solid #dbeafe",
+                background: "#f8fbff",
+                borderRadius: 12,
+                padding: 16,
+                display: "grid",
+                gap: 14,
+                marginBottom: 18,
+              }}>
+                <strong style={{ fontSize: 15 }}>
+                  {t("Individual Moderator Shift", "প্রতিটি মডারেটরের আলাদা শিফট")}
+                </strong>
+
+                <p style={{ margin: 0, color: "#64748b", fontSize: 13, lineHeight: 1.6 }}>
+                  Select a moderator and configure their personal shift. These times are saved separately for each moderator.
+                </p>
+
+                <label>
+                  <span style={{ display: "block", marginBottom: 6, fontSize: 13, fontWeight: 600 }}>
+                    Select Moderator
+                  </span>
+                  <select
+                    style={inputStyle}
+                    value={selectedModeratorShiftId}
+                    disabled={!moderatorShiftList.length || savingModeratorPersonalShift}
+                    onChange={(e) => {
+                      const selected = moderatorShiftList.find(
+                        (item) => String(item._id) === String(e.target.value)
+                      );
+
+                      setSelectedModeratorShiftId(e.target.value);
+                      setSelectedModeratorShift({
+                        shiftStart: selected?.shiftSettings?.shiftStart || "",
+                        shiftEnd: selected?.shiftSettings?.shiftEnd || "",
+                      });
+                    }}
+                  >
+                    {!moderatorShiftList.length && (
+                      <option value="">No moderators found</option>
+                    )}
+                    {moderatorShiftList.map((moderator) => (
+                      <option key={moderator._id} value={moderator._id}>
+                        {moderator.name || "Moderator"} ({moderator.email || "No email"})
+                        {moderator.isBlocked ? " - Blocked" : ""}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+
+                {selectedModeratorShiftId && (
+                  <>
+                    <div style={{
+                      display: "grid",
+                      gridTemplateColumns: "repeat(auto-fit,minmax(180px,1fr))",
+                      gap: 14,
+                    }}>
+                    </div>
+
+                    <div>
+                      <button
+                        type="button"
+                        style={primaryButtonStyle}
+                        disabled={savingModeratorPersonalShift}
+                        onClick={saveModeratorPersonalShift}
+                      >
+                        {savingModeratorPersonalShift
+                          ? "Saving..."
+                          : "Save Moderator Shift"}
+                      </button>
+                    </div>
+                  </>
+                )}
+              </div>
+
+              <div style={{
+                border: "1px solid #dbeafe",
+                background: "#f8fbff",
+                borderRadius: 12,
+                padding: 16,
+                display: "grid",
+                gap: 14,
+                marginBottom: 18,
+              }}>
+                <strong style={{ fontSize: 15 }}>
+                  {t("Individual Moderator Shift", "প্রতিটি মডারেটরের আলাদা শিফট")}
+                </strong>
+
+                <p style={{ margin: 0, color: "#64748b", fontSize: 13, lineHeight: 1.6 }}>
+                  Select a moderator and configure their personal shift. These times are saved separately for each moderator.
+                </p>
+
+                <label>
+                  <span style={{ display: "block", marginBottom: 6, fontSize: 13, fontWeight: 600 }}>
+                    Select Moderator
+                  </span>
+                  <select
+                    style={inputStyle}
+                    value={selectedModeratorShiftId}
+                    disabled={!moderatorShiftList.length || savingModeratorPersonalShift}
+                    onChange={(e) => {
+                      const selected = moderatorShiftList.find(
+                        (item) => String(item._id) === String(e.target.value)
+                      );
+
+                      setSelectedModeratorShiftId(e.target.value);
+                      setSelectedModeratorShift({
+                        shiftStart: selected?.shiftSettings?.shiftStart || "",
+                        shiftEnd: selected?.shiftSettings?.shiftEnd || "",
+                      });
+                    }}
+                  >
+                    {!moderatorShiftList.length && (
+                      <option value="">No moderators found</option>
+                    )}
+                    {moderatorShiftList.map((moderator) => (
+                      <option key={moderator._id} value={moderator._id}>
+                        {moderator.name || "Moderator"} ({moderator.email || "No email"})
+                        {moderator.isBlocked ? " - Blocked" : ""}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+
+                {selectedModeratorShiftId && (
+                  <>
+                    <div style={{
+                      display: "grid",
+                      gridTemplateColumns: "repeat(auto-fit,minmax(180px,1fr))",
+                      gap: 14,
+                    }}>
+                      <label>
+                        <span style={{ display: "block", marginBottom: 6, fontSize: 13, fontWeight: 600 }}>
+                          Shift Start
+                        </span>
+                        <input
+                          type="time"
+                          style={inputStyle}
+                          value={selectedModeratorShift.shiftStart}
+                          onChange={(e) =>
+                            setSelectedModeratorShift((current) => ({
+                              ...current,
+                              shiftStart: e.target.value,
+                            }))
+                          }
+                        />
+                      </label>
+
+                      <label>
+                        <span style={{ display: "block", marginBottom: 6, fontSize: 13, fontWeight: 600 }}>
+                          Shift End
+                        </span>
+                        <input
+                          type="time"
+                          style={inputStyle}
+                          value={selectedModeratorShift.shiftEnd}
+                          onChange={(e) =>
+                            setSelectedModeratorShift((current) => ({
+                              ...current,
+                              shiftEnd: e.target.value,
+                            }))
+                          }
+                        />
+                      </label>
+                    </div>
+
+                    <div>
+                      <button
+                        type="button"
+                        style={primaryButtonStyle}
+                        disabled={savingModeratorPersonalShift}
+                        onClick={saveModeratorPersonalShift}
+                      >
+                        {savingModeratorPersonalShift
+                          ? "Saving..."
+                          : "Save Moderator Shift"}
+                      </button>
+                    </div>
+                  </>
+                )}
+              </div>
+
               <div style={{ display: "grid", gap: 14 }}>
                 <label style={{ display: "flex", alignItems: "center", gap: 10 }}>
                   <input
@@ -3635,40 +3893,6 @@ const pageTitle =
                         }))
                       }
                       placeholder="Asia/Dhaka"
-                    />
-                  </label>
-
-                  <label>
-                    <span style={{ display: "block", marginBottom: 6, fontSize: 13, fontWeight: 600 }}>
-                      Shift Start
-                    </span>
-                    <input
-                      type="time"
-                      style={inputStyle}
-                      value={moderatorWorkSettings.shiftStart}
-                      onChange={(e) =>
-                        setModeratorWorkSettings((current) => ({
-                          ...current,
-                          shiftStart: e.target.value,
-                        }))
-                      }
-                    />
-                  </label>
-
-                  <label>
-                    <span style={{ display: "block", marginBottom: 6, fontSize: 13, fontWeight: 600 }}>
-                      Shift End
-                    </span>
-                    <input
-                      type="time"
-                      style={inputStyle}
-                      value={moderatorWorkSettings.shiftEnd}
-                      onChange={(e) =>
-                        setModeratorWorkSettings((current) => ({
-                          ...current,
-                          shiftEnd: e.target.value,
-                        }))
-                      }
                     />
                   </label>
 
@@ -3751,7 +3975,7 @@ const pageTitle =
                     disabled={savingModeratorWork}
                     onClick={saveModeratorWorkSettings}
                   >
-                    {savingModeratorWork ? "Saving..." : "Save Shift Settings"}
+                    {savingModeratorWork ? "Saving..." : "Save Global Settings"}
                   </button>
                 </div>
               </div>
@@ -4003,3 +4227,6 @@ const pageTitle =
     
   );
 }
+
+
+
