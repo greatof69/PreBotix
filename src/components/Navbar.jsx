@@ -1,4 +1,4 @@
-﻿import logo from "../assets/PreBotix.png";
+import logo from "../assets/PreBotix.png";
 
 import {
   ShoppingCart,
@@ -138,6 +138,16 @@ export default function Navbar({
         >
           {t.navContact || (lang === "bn" ? "যোগাযোগ" : "Contact")}
         </NavLink>
+
+        {storefrontSettings?.moderatorApplicationsEnabled === true &&
+          !isPrivilegedUser && (
+            <NavLink
+              to="/apply-moderator"
+              onClick={() => handleNavigation("/apply-moderator")}
+            >
+              {lang === "bn" ? "মডারেটর আবেদন" : "Apply for Moderator"}
+            </NavLink>
+          )}
       </nav>
 
       <div className="header-actions">

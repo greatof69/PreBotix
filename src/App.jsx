@@ -32,6 +32,7 @@ const AdminDashboard = lazy(() => import("./components/admin/AdminDashboard"));
 const ModeratorDashboard = lazy(() => import("./components/moderator/ModeratorDashboard"));
 const InlineProductEditor = lazy(() => import("./components/InlineProductEditor"));
 const ContactPage = lazy(() => import("./pages/ContactPage"));
+const ModeratorApplicationPage = lazy(() => import("./pages/ModeratorApplicationPage"));
 import BackToTop from "./components/BackToTop";
 const CustomProjectPage = lazy(() => import("./pages/CustomProjectPage"));
 import FloatingContactWidget from "./components/FloatingContactWidget";
@@ -2043,6 +2044,7 @@ const handleProductImageSettled = useCallback((productId) => {
       "/account",
       "/account/orders",
       "/contact",
+      "/apply-moderator",
     ].includes(routePath) || /^\/products\/[^/]+$/.test(routePath);
 
   if (routePath === "/admin" || routePath.startsWith("/admin/")) {
@@ -2186,7 +2188,7 @@ const handleProductImageSettled = useCallback((productId) => {
       />
 
 
-      {routePath !== "/contact" && (
+      {!["/contact", "/apply-moderator"].includes(routePath) && (
         <StoreSearch
           lang={lang}
           t={t}
@@ -2219,7 +2221,9 @@ const handleProductImageSettled = useCallback((productId) => {
 
       <main className={showCatalogPage ? "catalog-route-main" : ""}>
         <Suspense fallback={<div className="pb-route-loading" role="status">Loading page…</div>}>
-        {routePath === "/contact" ? (
+        {routePath === "/apply-moderator" ? (
+          <ModeratorApplicationPage lang={lang} />
+        ) : routePath === "/contact" ? (
           <ContactPage
             onBack={() => {
               navigate("/");

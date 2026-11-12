@@ -291,6 +291,12 @@ const [savingAnnouncements, setSavingAnnouncements] = useState(false);
   const [generalSettingsLoaded, setGeneralSettingsLoaded] = useState(true)
   const [savingGeneralSettings, setSavingGeneralSettings] = useState(false);
   const [uploadingAsset, setUploadingAsset] = useState("");
+
+  const [moderatorApplicationsEnabled, setModeratorApplicationsEnabled] = useState(false);
+  const [savingModeratorApplicationsEnabled, setSavingModeratorApplicationsEnabled] = useState(false);
+  const [moderatorApplications, setModeratorApplications] = useState([]);
+  const [loadingModeratorApplications, setLoadingModeratorApplications] = useState(false);
+  const [moderatorApplicationActionId, setModeratorApplicationActionId] = useState("");
   useEffect(() => {
     if (!generalSettingsLoaded) return;
     saveAdminSettingsCache("prebotix-admin-general-settings-v1", generalSettings);
@@ -852,13 +858,124 @@ const deleteFilteredMessages = async () => {
         announcement1: data?.settings?.announcement1 || "",
         announcement1Bn: data?.settings?.announcement1Bn || "",
       });
-      setGeneralSettingsLoaded(true);
+      setModeratorApplicationsEnabled(Boolean(data?.settings?.moderatorApplicationsEnabled));
     } catch (err) {
       setError(err.message || "Could not load general settings.");
     } finally {
       setLoadingGeneralSettings(false);
     }
   }, [request]);
+
+  const loadModeratorApplications = useCallback(async () => {
+    setLoadingModeratorApplications(true);
+    setError("");
+
+    try {
+      const data = await request("/moderator-applications");
+      setModeratorApplications(
+        Array.isArray(data?.applications) ? data.applications : []
+      );
+    } catch (err) {
+      setError(err.message || "Could not load moderator applications.");
+    } finally {
+      setLoadingModeratorApplications(false);
+    }
+  }, [request]);
+
+  const saveModeratorApplicationsSetting = async (enabled) => {
+    setSavingModeratorApplicationsEnabled(true);
+    setError("");
+    setMessage("");
+
+    try {
+      const data = await request("/storefront-settings", {
+        method: "PUT",
+        body: JSON.stringify({
+          moderatorApplicationsEnabled: enabled,
+        }),
+      });
+
+      setModeratorApplicationsEnabled(
+        Boolean(data?.settings?.moderatorApplicationsEnabled ?? enabled)
+      );
+
+      setMessage(
+        enabled
+          ? "Moderator applications enabled successfully."
+          : "Moderator applications disabled successfully."
+      );
+    } catch (err) {
+      setError(err.message || "Could not update moderator application setting.");
+    } finally {
+      setSavingModeratorApplicationsEnabled(false);
+    }
+  };
+
+  const downloadModeratorApplicationCv = async (application) => {
+    try {
+      setError("");
+
+      const response = await authFetch(
+        `${API}/api/admin/moderator-applications/${application._id}/cv`
+      );
+
+      if (!response.ok) {
+        let data = {};
+        try {
+          data = await response.json();
+        } catch {
+          // Keep the fallback message.
+        }
+        throw new Error(data?.message || "Could not download CV.");
+      }
+
+      const blob = await response.blob();
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+
+      link.href = url;
+      link.download = String(application.cvName || "moderator-application-cv")
+        .replace(/[\\/\r\n"]/g, "_");
+
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+
+      window.setTimeout(() => URL.revokeObjectURL(url), 1000);
+    } catch (err) {
+      setError(err.message || "Could not download CV.");
+    }
+  };
+
+  const reviewModeratorApplication = async (application, action) => {
+    if (!application?._id || !["approve", "reject"].includes(action)) return;
+
+    const confirmed = window.confirm(
+      action === "approve"
+        ? `Approve moderator application from ${application.name}?`
+        : `Reject moderator application from ${application.name}?`
+    );
+
+    if (!confirmed) return;
+
+    setModeratorApplicationActionId(application._id);
+    setError("");
+    setMessage("");
+
+    try {
+      const data = await request(
+        `/moderator-applications/${application._id}/${action}`,
+        { method: "PATCH" }
+      );
+
+      setMessage(data?.message || `Application ${action}d successfully.`);
+      await loadModeratorApplications();
+    } catch (err) {
+      setError(err.message || `Could not ${action} application.`);
+    } finally {
+      setModeratorApplicationActionId("");
+    }
+  };
 
   const saveGeneralSettings = async () => {
     setSavingGeneralSettings(true);
@@ -1056,7 +1173,9 @@ useEffect(() => {
     refreshing = true;
 
     try {
-      if (tab === "generalSettings") {
+      if (tab === "moderatorApplications") {
+        await loadModeratorApplications();
+      } else if (tab === "generalSettings") {
         await loadGeneralSettings();
       } else if (tab === "paymentDelivery") {
         await loadPaymentDeliverySettings();
@@ -1106,7 +1225,7 @@ useEffect(() => {
   loadStockCatalog,
   loadOrderHistory,
   loadPaymentDeliverySettings,
-  loadGeneralSettings,
+  loadModeratorApplications,
 ]);
   const updateOrderStatus = async (order, status) => {
     const orderId = getId(order);
@@ -1476,7 +1595,7 @@ const deleteOrder = async (order) => {
 const pageTitle =
   tab === "users"
     ? t("Account Management", "অ্যাকাউন্ট ম্যানেজমেন্ট")
-    : tab === "generalSettings"
+    : tab === "moderatorApplications"
       ? t("General Settings", "সাধারণ সেটিংস")
       : tab === "stock"
         ? t("Product Stock Catalog", "পণ্যের স্টক ক্যাটালগ")
@@ -3193,6 +3312,160 @@ const pageTitle =
                 "কপি করলে ম্যানুয়াল কুরিয়ার বুকিংয়ের তথ্য তৈরি হবে। এতে Pathao বুকিং বা ট্র্যাকিং নম্বর তৈরি হবে না।"
               )}
             </p>
+          </section>
+        )}
+
+        {tab === "moderatorApplications" && (
+          <section style={cardStyle}>
+            <SectionTitle
+              right={
+                <button
+                  type="button"
+                  style={buttonStyle}
+                  disabled={loadingModeratorApplications}
+                  onClick={loadModeratorApplications}
+                >
+                  {loadingModeratorApplications ? "Loading..." : "Refresh Applications"}
+                </button>
+              }
+            >
+              {t("Moderator Applications", "মডারেটর আবেদনসমূহ")}
+            </SectionTitle>
+
+            <p style={{ color: "#6b7280", fontSize: 13, marginTop: 0 }}>
+              {t(
+                "Review applications and securely download applicant CVs. Only approved applicants receive moderator access.",
+                "আবেদন যাচাই করুন এবং নিরাপদে CV ডাউনলোড করুন। অনুমোদিত আবেদনকারীরাই মডারেটর অ্যাক্সেস পাবে।"
+              )}
+            </p>
+
+            {loadingModeratorApplications && moderatorApplications.length === 0 ? (
+              <EmptyState>Loading moderator applications...</EmptyState>
+            ) : moderatorApplications.length === 0 ? (
+              <EmptyState>No moderator applications found.</EmptyState>
+            ) : (
+              <div style={{ display: "grid", gap: 14 }}>
+                {moderatorApplications.map((application) => {
+                  const status = application.status || "pending";
+                  const busy = moderatorApplicationActionId === application._id;
+
+                  return (
+                    <article
+                      key={application._id}
+                      style={{
+                        border: "1px solid #e5e7eb",
+                        borderRadius: 12,
+                        padding: 16,
+                        display: "grid",
+                        gap: 12,
+                      }}
+                    >
+                      <div
+                        style={{
+                          display: "flex",
+                          justifyContent: "space-between",
+                          alignItems: "center",
+                          gap: 10,
+                          flexWrap: "wrap",
+                        }}
+                      >
+                        <strong style={{ fontSize: 16 }}>
+                          {application.name}
+                        </strong>
+
+                        <span
+                          style={{
+                            padding: "5px 10px",
+                            borderRadius: 20,
+                            fontSize: 12,
+                            fontWeight: 700,
+                            textTransform: "capitalize",
+                            background:
+                              status === "approved"
+                                ? "#dcfce7"
+                                : status === "rejected"
+                                  ? "#fee2e2"
+                                  : "#fef3c7",
+                            color:
+                              status === "approved"
+                                ? "#166534"
+                                : status === "rejected"
+                                  ? "#991b1b"
+                                  : "#92400e",
+                          }}
+                        >
+                          {status}
+                        </span>
+                      </div>
+
+                      <div
+                        style={{
+                          display: "grid",
+                          gridTemplateColumns: "repeat(auto-fit,minmax(220px,1fr))",
+                          gap: 10,
+                          fontSize: 13,
+                        }}
+                      >
+                        <div><strong>Email:</strong> {application.email}</div>
+                        <div><strong>Phone:</strong> {application.phone}</div>
+                        <div><strong>Education:</strong> {application.education}</div>
+                        <div><strong>Address:</strong> {application.address}</div>
+                        <div>
+                          <strong>Submitted:</strong>{" "}
+                          {application.createdAt
+                            ? new Date(application.createdAt).toLocaleString()
+                            : "N/A"}
+                        </div>
+                      </div>
+
+                      <div>
+                        <strong style={{ fontSize: 13 }}>Skills & Experience</strong>
+                        <p style={{ whiteSpace: "pre-wrap", margin: "5px 0 10px", fontSize: 13 }}>
+                          {application.experience}
+                        </p>
+
+                        <strong style={{ fontSize: 13 }}>Why join PreBotix?</strong>
+                        <p style={{ whiteSpace: "pre-wrap", margin: "5px 0", fontSize: 13 }}>
+                          {application.reason}
+                        </p>
+                      </div>
+
+                      <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                        <button
+                          type="button"
+                          style={buttonStyle}
+                          onClick={() => downloadModeratorApplicationCv(application)}
+                        >
+                          Download CV ({application.cvName || "CV"})
+                        </button>
+
+                        {status === "pending" && (
+                          <>
+                            <button
+                              type="button"
+                              style={successButtonStyle}
+                              disabled={busy}
+                              onClick={() => reviewModeratorApplication(application, "approve")}
+                            >
+                              {busy ? "Please wait..." : "Approve"}
+                            </button>
+
+                            <button
+                              type="button"
+                              style={dangerButtonStyle}
+                              disabled={busy}
+                              onClick={() => reviewModeratorApplication(application, "reject")}
+                            >
+                              {busy ? "Please wait..." : "Reject"}
+                            </button>
+                          </>
+                        )}
+                      </div>
+                    </article>
+                  );
+                })}
+              </div>
+            )}
           </section>
         )}
 
