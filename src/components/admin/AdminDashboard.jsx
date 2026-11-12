@@ -1889,7 +1889,8 @@ const pageTitle =
                                   }
                                 }}                                onBlur={() => {
                                   if (stockSavingId !== String(product.id)) {
-                                    saveStockQuantity(product);
+                                    setStockEditId(null);
+                                    setStockEditValue("");
                                   }
                                 }}
                                 style={{
