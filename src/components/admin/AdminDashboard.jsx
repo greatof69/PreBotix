@@ -1560,6 +1560,12 @@ const deleteOrder = async (order) => {
       icon: "⚙️",
     },
     {
+      id: "moderatorApplications",
+      label: "Moderator Applications",
+      labelBn: "মডারেটর আবেদন",
+      icon: "🛡️",
+    },
+    {
       id: "stock",
       label: "Product Stock",
       labelBn: "পণ্যের স্টক",
@@ -1596,7 +1602,7 @@ const pageTitle =
   tab === "users"
     ? t("Account Management", "অ্যাকাউন্ট ম্যানেজমেন্ট")
     : tab === "moderatorApplications"
-      ? t("General Settings", "সাধারণ সেটিংস")
+      ? t("Moderator Applications", "মডারেটর আবেদন")
       : tab === "stock"
         ? t("Product Stock Catalog", "পণ্যের স্টক ক্যাটালগ")
         : tab === "messages"
