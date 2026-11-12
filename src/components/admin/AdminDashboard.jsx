@@ -195,6 +195,7 @@ export default function AdminDashboard({
   const [loadingStock, setLoadingStock] = useState(false);
   const [stockEditId, setStockEditId] = useState(null);
   const [stockEditValue, setStockEditValue] = useState("");
+  const [stockSearch, setStockSearch] = useState("");
   const [stockSavingId, setStockSavingId] = useState(null);
   const [paymentDeliverySettings, setPaymentDeliverySettings] = useState({
     paymentMethods: [],
@@ -1818,6 +1819,26 @@ const pageTitle =
               </div>
             </div>
 
+            <div style={{ marginBottom: 16 }}>
+              <input
+                type="search"
+                value={stockSearch}
+                onChange={(event) => setStockSearch(event.target.value)}
+                placeholder={t("Search product by name, ID or category...", "নাম, ID অথবা ক্যাটাগরি দিয়ে পণ্য খুঁজুন...")}
+                aria-label={t("Search products", "পণ্য খুঁজুন")}
+                style={{
+                  width: "100%",
+                  maxWidth: 460,
+                  boxSizing: "border-box",
+                  padding: "12px 14px",
+                  border: "1px solid #cbd5e1",
+                  borderRadius: 9,
+                  fontSize: 14,
+                  outline: "none",
+                  background: "#fff",
+                }}
+              />
+            </div>
             {loadingStock && stockProducts.length === 0 ? (
               <EmptyState>{t("Loading product catalog...", "পণ্যের তালিকা লোড হচ্ছে...")}</EmptyState>
             ) : (
@@ -1831,7 +1852,16 @@ const pageTitle =
                     </tr>
                   </thead>
                   <tbody>
-                    {stockProducts.map((product) => {
+                    {stockProducts.filter((product) => {
+                      const query = stockSearch.trim().toLowerCase();
+                      return !query || [
+                        product.id,
+                        product.title,
+                        product.category,
+                      ].some((value) =>
+                        String(value ?? "").toLowerCase().includes(query)
+                      );
+                    }).map((product) => {
                       const available = Number(product.stock) > 0;
                       return (
                         <tr key={product._id || product.id}>
@@ -1840,44 +1870,33 @@ const pageTitle =
                           <td style={{ padding: 11, borderBottom: "1px solid #f1f5f9" }}>{product.category}</td>
                           <td style={{ padding: 11, borderBottom: "1px solid #f1f5f9", fontWeight: 750 }}>
                             {stockEditId === String(product.id) ? (
-                              <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                                <input
-                                  type="number"
-                                  min="0"
-                                  step="1"
-                                  autoFocus
-                                  value={stockEditValue}
-                                  disabled={stockSavingId === String(product.id)}
-                                  onChange={(event) => setStockEditValue(event.target.value)}
-                                  onKeyDown={(event) => {
-                                    if (event.key === "Enter") saveStockQuantity(product);
-                                    if (event.key === "Escape") {
-                                      setStockEditId(null);
-                                      setStockEditValue("");
-                                    }
-                                  }}
-                                  style={{ width: 78, padding: "7px 8px", border: "1px solid #cbd5e1", borderRadius: 7 }}
-                                />
-                                <button
-                                  type="button"
-                                  style={primaryButtonStyle}
-                                  disabled={stockSavingId === String(product.id)}
-                                  onClick={() => saveStockQuantity(product)}
-                                >
-                                  {stockSavingId === String(product.id) ? "..." : t("Save", "সেভ")}
-                                </button>
-                                <button
-                                  type="button"
-                                  disabled={stockSavingId === String(product.id)}
-                                  onClick={() => {
+                              <input
+                                type="number"
+                                min="0"
+                                step="1"
+                                autoFocus
+                                value={stockEditValue}
+                                disabled={stockSavingId === String(product.id)}
+                                onChange={(event) => setStockEditValue(event.target.value)}
+                                onKeyDown={(event) => {
+                                  if (event.key === "Enter") {
+                                    event.preventDefault();
+                                    saveStockQuantity(product);
+                                  }
+                                  if (event.key === "Escape" && stockSavingId !== String(product.id)) {
                                     setStockEditId(null);
                                     setStockEditValue("");
-                                  }}
-                                  style={{ border: "1px solid #cbd5e1", background: "transparent", borderRadius: 7, padding: "7px 9px", cursor: "pointer" }}
-                                >
-                                  {t("Cancel", "বাতিল")}
-                                </button>
-                              </div>
+                                  }
+                                }}
+                                style={{
+                                  width: 95,
+                                  boxSizing: "border-box",
+                                  padding: "8px 10px",
+                                  border: "1px solid #2563eb",
+                                  borderRadius: 7,
+                                  fontSize: 14,
+                                }}
+                              />
                             ) : (
                               <button
                                 type="button"
@@ -1887,9 +1906,16 @@ const pageTitle =
                                   setStockEditId(String(product.id));
                                   setStockEditValue(String(Number(product.stock || 0)));
                                 }}
-                                style={{ border: "1px solid #cbd5e1", background: "transparent", borderRadius: 7, padding: "6px 12px", fontWeight: 750, cursor: "pointer" }}
+                                style={{
+                                  border: "1px solid #cbd5e1",
+                                  background: "transparent",
+                                  borderRadius: 7,
+                                  padding: "6px 12px",
+                                  fontWeight: 750,
+                                  cursor: "pointer",
+                                }}
                               >
-                                {Number(product.stock || 0)} ✎
+                                {Number(product.stock || 0)}
                               </button>
                             )}
                           </td>
@@ -1923,7 +1949,10 @@ const pageTitle =
                         </tr>
                       );
                     })}
-                    {!stockProducts.length && (
+                    {!stockProducts.some((product) => {
+                      const query = stockSearch.trim().toLowerCase();
+                      return !query || [product.id, product.title, product.category].some((value) => String(value ?? "").toLowerCase().includes(query));
+                    }) && (
                       <tr><td colSpan={6} style={{ padding: 18, textAlign: "center", color: "#64748b" }}>{t("No products found.", "কোনো পণ্য পাওয়া যায়নি।")}</td></tr>
                     )}
                   </tbody>
