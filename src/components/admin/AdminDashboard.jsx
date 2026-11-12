@@ -190,7 +190,16 @@ export default function AdminDashboard({
   const [deletingAllHistory, setDeletingAllHistory] = useState(false);
   const [users, setUsers] = useState([]);
   const [messages, setMessages] = useState([]);
-  const [stockProducts, setStockProducts] = useState([]);
+  const [stockProducts, setStockProducts] = useState(() => {
+    try {
+      const cached = window.localStorage.getItem("prebotix-admin-stock-catalog-v1");
+      const parsed = cached ? JSON.parse(cached) : null;
+      return Array.isArray(parsed) ? parsed : [];
+    } catch {
+      return [];
+    }
+  });
+  const [stockCatalogLoaded, setStockCatalogLoaded] = useState(false);
   const [stockNotifications, setStockNotifications] = useState([]);
   const [loadingStock, setLoadingStock] = useState(false);
   const [stockEditId, setStockEditId] = useState(null);
@@ -464,6 +473,19 @@ const deleteAllHistory = async () => {
     }
   }, [request]);
 
+
+  useEffect(() => {
+    if (!stockCatalogLoaded) return;
+
+    try {
+      window.localStorage.setItem(
+        "prebotix-admin-stock-catalog-v1",
+        JSON.stringify(stockProducts)
+      );
+    } catch (err) {
+      console.warn("Could not cache stock catalog:", err);
+    }
+  }, [stockProducts, stockCatalogLoaded]);
   const loadStockNotifications = useCallback(async ({ silent = false } = {}) => {
     try {
       const data = await request("/stock-notifications");
@@ -474,7 +496,15 @@ const deleteAllHistory = async () => {
   }, [request]);
 
   const loadStockCatalog = useCallback(async ({ silent = false } = {}) => {
-    if (!silent) setLoadingStock(true);
+    let hasCachedCatalog = false;
+    try {
+      const cached = window.localStorage.getItem("prebotix-admin-stock-catalog-v1");
+      hasCachedCatalog = cached !== null && Array.isArray(JSON.parse(cached));
+    } catch {
+      hasCachedCatalog = false;
+    }
+
+    if (!silent && !hasCachedCatalog) setLoadingStock(true);
     if (!silent) setError("");
 
     try {
@@ -483,6 +513,7 @@ const deleteAllHistory = async () => {
         request("/stock-notifications"),
       ]);
       setStockProducts(Array.isArray(productData.products) ? productData.products : []);
+      setStockCatalogLoaded(true);
       setStockNotifications(Array.isArray(notificationData.notifications) ? notificationData.notifications : []);
     } catch (err) {
       if (!silent) setError(err.message || "Could not load product stock catalog.");
