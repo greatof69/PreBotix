@@ -102,6 +102,27 @@ function saveModeratorListCache(key, value) {
   } catch {}
 }
 
+const MODERATOR_ATTENDANCE_CACHE_KEY = "prebotix-moderator-attendance-v1";
+
+function readModeratorAttendanceCache() {
+  try {
+    const raw = window.localStorage.getItem(MODERATOR_ATTENDANCE_CACHE_KEY);
+    const value = raw ? JSON.parse(raw) : null;
+    return value && typeof value === "object" ? value : null;
+  } catch {
+    return null;
+  }
+}
+
+function saveModeratorAttendanceCache(value) {
+  try {
+    window.localStorage.setItem(
+      MODERATOR_ATTENDANCE_CACHE_KEY,
+      JSON.stringify({ ...value, cachedAt: Date.now() })
+    );
+  } catch {}
+}
+
 function statusOf(order) {
   return String(order?.status || "pending").toLowerCase();
 }
@@ -225,11 +246,12 @@ export default function ModeratorDashboard({
   const [orders, setOrders] = useState(() => readModeratorListCache("prebotix-moderator-orders-v1"));
   const [orderHistory, setOrderHistory] = useState(() => readModeratorListCache("prebotix-moderator-history-v1"));
   const [messages, setMessages] = useState(() => readModeratorListCache("prebotix-moderator-messages-v1"));
-  const [todayAttendance, setTodayAttendance] = useState(null);
-  const [attendanceHistory, setAttendanceHistory] = useState([]);
-  const [attendanceSettings, setAttendanceSettings] = useState(null);
-  const [transitionAvailableAt, setTransitionAvailableAt] = useState(null);
+  const [todayAttendance, setTodayAttendance] = useState(() => readModeratorAttendanceCache()?.todayAttendance ?? null);
+  const [attendanceHistory, setAttendanceHistory] = useState(() => readModeratorAttendanceCache()?.attendanceHistory ?? []);
+  const [attendanceSettings, setAttendanceSettings] = useState(() => readModeratorAttendanceCache()?.attendanceSettings ?? null);
+  const [transitionAvailableAt, setTransitionAvailableAt] = useState(() => readModeratorAttendanceCache()?.transitionAvailableAt ?? null);
   const [transitionClock, setTransitionClock] = useState(Date.now());
+  const attendanceLoadedRef = useRef(!!readModeratorAttendanceCache());
   const [attendanceLoading, setAttendanceLoading] = useState(false);
   const [attendanceActionLoading, setAttendanceActionLoading] = useState("");
 
@@ -988,7 +1010,8 @@ export default function ModeratorDashboard({
   // -------------------- Attendance --------------------
 
   const loadAttendance = useCallback(async (silent = false) => {
-    if (!silent) setAttendanceLoading(true);
+    // Use the cached attendance immediately; show a loader only on the very first load.
+    if (!silent && !attendanceLoadedRef.current) setAttendanceLoading(true);
 
     try {
       const [todayData, historyData] = await Promise.all([
@@ -1000,17 +1023,23 @@ export default function ModeratorDashboard({
       setAttendanceSettings(todayData?.settings || null);
       setTransitionAvailableAt(todayData?.transitionAvailableAt || null);
       setTransitionClock(Date.now());
-      setAttendanceHistory(
-        Array.isArray(historyData?.attendance)
-          ? historyData.attendance
-          : []
-      );
+      const nextAttendanceHistory = Array.isArray(historyData?.attendance)
+        ? historyData.attendance
+        : [];
+      setAttendanceHistory(nextAttendanceHistory);
+      saveModeratorAttendanceCache({
+        todayAttendance: todayData?.attendance || null,
+        attendanceHistory: nextAttendanceHistory,
+        attendanceSettings: todayData?.settings || null,
+        transitionAvailableAt: todayData?.transitionAvailableAt || null,
+      });
+      attendanceLoadedRef.current = true;
     } catch (err) {
       if (!silent) {
         setError(err.message || "Could not load attendance.");
       }
     } finally {
-      if (!silent) setAttendanceLoading(false);
+      setAttendanceLoading(false);
     }
   }, [request]);
 
