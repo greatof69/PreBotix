@@ -103,6 +103,35 @@ function saveModeratorListCache(key, value) {
 }
 
 const MODERATOR_ATTENDANCE_CACHE_KEY = "prebotix-moderator-attendance-v1";
+const MODERATOR_ACTIVE_TAB_KEY = "prebotix-moderator-active-tab-v1";
+const MODERATOR_VALID_TABS = [
+  "dashboard",
+  "orders",
+  "courier",
+  "history",
+  "messages",
+  "sales",
+  "attendance",
+  "earnings",
+  "profile",
+];
+
+function readModeratorActiveTab() {
+  try {
+    const savedTab = window.localStorage.getItem(MODERATOR_ACTIVE_TAB_KEY);
+    return MODERATOR_VALID_TABS.includes(savedTab) ? savedTab : "dashboard";
+  } catch {
+    return "dashboard";
+  }
+}
+
+function saveModeratorActiveTab(tab) {
+  try {
+    if (MODERATOR_VALID_TABS.includes(tab)) {
+      window.localStorage.setItem(MODERATOR_ACTIVE_TAB_KEY, tab);
+    }
+  } catch {}
+}
 
 function readModeratorAttendanceCache() {
   try {
@@ -241,7 +270,12 @@ export default function ModeratorDashboard({
 }) {
   const navigate = useNavigate();
 
-  const [tab, setTab] = useState("dashboard");
+  const [tab, setTab] = useState(readModeratorActiveTab);
+
+  // Restore and persist the moderator's last opened tab across page refreshes.
+  useEffect(() => {
+    saveModeratorActiveTab(tab);
+  }, [tab]);
 
   const [orders, setOrders] = useState(() => readModeratorListCache("prebotix-moderator-orders-v1"));
   const [orderHistory, setOrderHistory] = useState(() => readModeratorListCache("prebotix-moderator-history-v1"));
@@ -324,6 +358,9 @@ export default function ModeratorDashboard({
   // -------------------- Logout --------------------
 
   const handleLogout = () => {
+    try {
+      window.localStorage.removeItem(MODERATOR_ACTIVE_TAB_KEY);
+    } catch {}
     clearAuthSession();
     navigate("/", { replace: true });
     window.location.reload();
