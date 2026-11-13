@@ -498,6 +498,8 @@ const [savingAnnouncements, setSavingAnnouncements] = useState(false);
 
   const deleteCourierOrder = useCallback(async (orderId) => {
     if (!orderId) return;
+
+
     setError("");
     setMessage("");
 
@@ -513,35 +515,26 @@ const [savingAnnouncements, setSavingAnnouncements] = useState(false);
     }
   }, [request, loadOrders, lang]);
 
-  const deleteAllCourierOrders = useCallback(async () => {
-    const typed = window.prompt(
+ const deleteAllCourierOrders = useCallback(async () => {
+  setError("");
+  setMessage("");
+
+  try {
+    await request("/courier-orders", {
+      method: "DELETE",
+    });
+
+    setMessage(
       t(
-        "You are about to permanently delete ALL courier orders. Type DELETE to confirm.",
-        "আপনি সব কুরিয়ার অর্ডার স্থায়ীভাবে মুছতে যাচ্ছেন। নিশ্চিত করতে DELETE লিখুন।"
+        "All courier orders deleted successfully.",
+        "সব কুরিয়ার অর্ডার মুছে ফেলা হয়েছে।"
       )
     );
-    if (String(typed || "").trim() !== "DELETE") return;
-
-    setError("");
-    setMessage("");
-
-    try {
-      await request("/courier-orders", {
-        method: "DELETE",
-      });
-
-      setMessage(
-        t(
-          "All courier orders deleted successfully.",
-          "সব কুরিয়ার অর্ডার মুছে ফেলা হয়েছে।"
-        )
-      );
-      await loadOrders();
-    } catch (err) {
-      setError(err.message || "Could not delete courier orders.");
-    }
-  }, [request, loadOrders, lang]);
-
+    await loadOrders();
+  } catch (err) {
+    setError(err.message || "Could not delete courier orders.");
+  }
+}, [request, loadOrders, lang]);
   const loadOrderHistory = useCallback(async ({ silent = false } = {}) => {
   if (!silent) setHistoryLoading(true);
 
