@@ -1124,42 +1124,59 @@ export default function ModeratorDashboard({
     return `${hours}h ${minutes}m`;
   };
 
+
   const getWeeklyOffDaysText = (days) => {
-  if (!Array.isArray(days)) {
-    if (typeof days === "string") {
-      days = days.split(",").map((day) => day.trim()).filter(Boolean);
-    } else {
-      return "—";
+    if (!Array.isArray(days)) {
+      if (typeof days === "string") {
+        days = days.split(",").map((day) => day.trim()).filter(Boolean);
+      } else {
+        return "—";
+      }
     }
-  }
 
-  const dayNames = {
-    sunday: "Sunday",
-    monday: "Monday",
-    tuesday: "Tuesday",
-    wednesday: "Wednesday",
-    thursday: "Thursday",
-    friday: "Friday",
-    saturday: "Saturday",
+    const dayNames = [
+      "Sunday",
+      "Monday",
+      "Tuesday",
+      "Wednesday",
+      "Thursday",
+      "Friday",
+      "Saturday",
+    ];
+
+    const dayNamesBn = [
+      "রবিবার",
+      "সোমবার",
+      "মঙ্গলবার",
+      "বুধবার",
+      "বৃহস্পতিবার",
+      "শুক্রবার",
+      "শনিবার",
+    ];
+
+    if (!days.length) return "—";
+
+    return days
+      .map((day) => {
+        // Admin saves weekday indexes: 0 = Sunday, 6 = Saturday
+        if (Number.isInteger(day) && day >= 0 && day <= 6) {
+          return lang === "bn" ? dayNamesBn[day] : dayNames[day];
+        }
+
+        // Also support weekday names if returned as strings
+        const index = dayNames.findIndex(
+          (name) => name.toLowerCase() === String(day).trim().toLowerCase()
+        );
+
+        if (index !== -1) {
+          return lang === "bn" ? dayNamesBn[index] : dayNames[index];
+        }
+
+        return String(day);
+      })
+      .join(", ");
   };
 
-  const dayNamesBn = {
-    sunday: "রবিবার",
-    monday: "সোমবার",
-    tuesday: "মঙ্গলবার",
-    wednesday: "বুধবার",
-    thursday: "বৃহস্পতিবার",
-    friday: "শুক্রবার",
-    saturday: "শনিবার",
-  };
-
-  return days.length
-    ? days.map((day) => {
-        const key = String(day).trim().toLowerCase();
-        return (lang === "bn" ? dayNamesBn[key] : dayNames[key]) || day;
-      }).join(", ")
-    : "—";
-};
 
   useEffect(() => {
     let refreshing = false;
