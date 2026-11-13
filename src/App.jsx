@@ -1,4 +1,4 @@
-import React, {
+﻿import React, {
   useCallback,
   useEffect,
   useMemo,
@@ -129,27 +129,46 @@ export default function App() {
   const [productEditorKey, setProductEditorKey] = useState(0);
   const [productDraftToRestore, setProductDraftToRestore] = useState(null);
 
-  const openProductEditor = (product) => {
-    console.log("[PreBotix] Edit clicked:", {
-      id: product?.id,
-      title: product?.title,
-      bn: product?.bn,
-      price: product?.price,
-      product,
-    });
-
+  const openProductEditor = async (product) => {
     setProductEditorKey((key) => key + 1);
 
-    setProductEditor(
-      product
-        ? {
-          ...product,
-          priceOptions: Array.isArray(product.priceOptions)
-            ? product.priceOptions.map((option) => ({ ...option }))
-            : [],
-        }
-        : null
-    );
+    if (!product) {
+      setProductEditor(null);
+      return;
+    }
+
+    try {
+      const response = await authFetch(`${API_BASE_URL}/api/admin/products`);
+      const data = await response.json().catch(() => ({}));
+
+      if (!response.ok || !Array.isArray(data.products)) {
+        throw new Error(data.message || "Could not load full product details.");
+      }
+
+      const fullProduct = data.products.find(
+        (item) => Number(item.id) === Number(product.id)
+      );
+
+      if (!fullProduct) {
+        throw new Error("Product not found in Admin product list.");
+      }
+
+      console.log("[PreBotix] Full product loaded:", {
+        id: fullProduct.id,
+        costPrice: fullProduct.costPrice,
+        costPriceMax: fullProduct.costPriceMax,
+      });
+
+      setProductEditor({
+        ...fullProduct,
+        priceOptions: Array.isArray(fullProduct.priceOptions)
+          ? fullProduct.priceOptions.map((option) => ({ ...option }))
+          : [],
+      });
+    } catch (error) {
+      console.error("[PreBotix] Product editor load failed:", error);
+      showNotice(error.message || "Could not load product details.", 3500);
+    }
   };
 
   const handleCloseProductEditor = useCallback(() => {
@@ -946,7 +965,7 @@ const handleProductImageSettled = useCallback((productId) => {
     if (isAdminUser || isModeratorUser) {
       showNotice(
         lang === "bn"
-          ? "এই অ্যাকাউন্টে উইশলিস্ট ব্যবহার করা যাবে না।"
+          ? "à¦à¦‡ à¦…à§à¦¯à¦¾à¦•à¦¾à¦‰à¦¨à§à¦Ÿà§‡ à¦‰à¦‡à¦¶à¦²à¦¿à¦¸à§à¦Ÿ à¦¬à§à¦¯à¦¬à¦¹à¦¾à¦° à¦•à¦°à¦¾ à¦¯à¦¾à¦¬à§‡ à¦¨à¦¾à¥¤"
           : "Wishlist is not available for this account."
       );
       return;
@@ -956,7 +975,7 @@ const handleProductImageSettled = useCallback((productId) => {
 
     if (!accountUser || !token) {
       showNotice(
-        lang === "bn" ? "আগে লগইন করুন!" : "Please login first!"
+        lang === "bn" ? "à¦†à¦—à§‡ à¦²à¦—à¦‡à¦¨ à¦•à¦°à§à¦¨!" : "Please login first!"
       );
       setAccountMode("login");
       setAccountOpen(true);
@@ -978,7 +997,7 @@ const handleProductImageSettled = useCallback((productId) => {
     if (isAdminUser || isModeratorUser) {
       showNotice(
         lang === "bn"
-          ? "এই অ্যাকাউন্টে উইশলিস্ট ব্যবহার করা যাবে না।"
+          ? "à¦à¦‡ à¦…à§à¦¯à¦¾à¦•à¦¾à¦‰à¦¨à§à¦Ÿà§‡ à¦‰à¦‡à¦¶à¦²à¦¿à¦¸à§à¦Ÿ à¦¬à§à¦¯à¦¬à¦¹à¦¾à¦° à¦•à¦°à¦¾ à¦¯à¦¾à¦¬à§‡ à¦¨à¦¾à¥¤"
           : "Wishlist is not available for this account."
       );
       return;
@@ -1007,7 +1026,7 @@ const handleProductImageSettled = useCallback((productId) => {
     if (isAdminUser || isModeratorUser) {
       showNotice(
         lang === "bn"
-          ? "এই অ্যাকাউন্টে কার্ট ব্যবহার করা যাবে না।"
+          ? "à¦à¦‡ à¦…à§à¦¯à¦¾à¦•à¦¾à¦‰à¦¨à§à¦Ÿà§‡ à¦•à¦¾à¦°à§à¦Ÿ à¦¬à§à¦¯à¦¬à¦¹à¦¾à¦° à¦•à¦°à¦¾ à¦¯à¦¾à¦¬à§‡ à¦¨à¦¾à¥¤"
           : "Cart is not available for this account."
       );
       return;
@@ -1033,7 +1052,7 @@ const handleProductImageSettled = useCallback((productId) => {
     if (optionsEnabled && !latestOption) {
       showNotice(
         lang === "bn"
-          ? "কার্টে যোগ করার আগে একটি সঠিক Price Option নির্বাচন করুন।"
+          ? "à¦•à¦¾à¦°à§à¦Ÿà§‡ à¦¯à§‹à¦— à¦•à¦°à¦¾à¦° à¦†à¦—à§‡ à¦à¦•à¦Ÿà¦¿ à¦¸à¦ à¦¿à¦• Price Option à¦¨à¦¿à¦°à§à¦¬à¦¾à¦šà¦¨ à¦•à¦°à§à¦¨à¥¤"
           : "Please select a valid price option."
       );
       return;
@@ -1047,7 +1066,7 @@ const handleProductImageSettled = useCallback((productId) => {
     if (!Number.isFinite(selectedPrice) || selectedPrice < 0) {
       showNotice(
         lang === "bn"
-          ? "পণ্যের দাম সঠিক নয়।"
+          ? "à¦ªà¦£à§à¦¯à§‡à¦° à¦¦à¦¾à¦® à¦¸à¦ à¦¿à¦• à¦¨à¦¯à¦¼à¥¤"
           : "The product price is invalid."
       );
       return;
@@ -1130,11 +1149,11 @@ const handleProductImageSettled = useCallback((productId) => {
 
     showNotice(
       addQty < requestedQty
-        ? `${name} — ${lang === "bn"
-          ? `মাত্র ${addQty}টি যোগ করা হয়েছে; সর্বোচ্চ স্টকের সীমায় পৌঁছেছে।`
+        ? `${name} â€” ${lang === "bn"
+          ? `à¦®à¦¾à¦¤à§à¦° ${addQty}à¦Ÿà¦¿ à¦¯à§‹à¦— à¦•à¦°à¦¾ à¦¹à¦¯à¦¼à§‡à¦›à§‡; à¦¸à¦°à§à¦¬à§‹à¦šà§à¦š à¦¸à§à¦Ÿà¦•à§‡à¦° à¦¸à§€à¦®à¦¾à¦¯à¦¼ à¦ªà§Œà¦à¦›à§‡à¦›à§‡à¥¤`
           : `only ${addQty} added; maximum stock reached.`
         }`
-        : `${name} — ${t.added}`
+        : `${name} â€” ${t.added}`
     );
   };
 
@@ -1305,7 +1324,7 @@ const handleProductImageSettled = useCallback((productId) => {
     if (!accessToken) {
       throw new Error(
         lang === "bn"
-          ? "অর্ডার করতে প্রথমে লগইন করুন।"
+          ? "à¦…à¦°à§à¦¡à¦¾à¦° à¦•à¦°à¦¤à§‡ à¦ªà§à¦°à¦¥à¦®à§‡ à¦²à¦—à¦‡à¦¨ à¦•à¦°à§à¦¨à¥¤"
           : "Please log in before placing your order."
       );
     }
@@ -1339,7 +1358,7 @@ const handleProductImageSettled = useCallback((productId) => {
       throw new Error(
         result.message ||
           (lang === "bn"
-            ? `অর্ডার করা যায়নি। Error: ${response.status}`
+            ? `à¦…à¦°à§à¦¡à¦¾à¦° à¦•à¦°à¦¾ à¦¯à¦¾à¦¯à¦¼à¦¨à¦¿à¥¤ Error: ${response.status}`
             : `Could not place order. Error: ${response.status}`)
       );
     }
@@ -1349,7 +1368,7 @@ const handleProductImageSettled = useCallback((productId) => {
     if (!savedOrder?.orderNumber || !Array.isArray(savedOrder.items)) {
       throw new Error(
         lang === "bn"
-          ? "সার্ভার থেকে অর্ডারটি সঠিকভাবে নিশ্চিত করা যায়নি।"
+          ? "à¦¸à¦¾à¦°à§à¦­à¦¾à¦° à¦¥à§‡à¦•à§‡ à¦…à¦°à§à¦¡à¦¾à¦°à¦Ÿà¦¿ à¦¸à¦ à¦¿à¦•à¦­à¦¾à¦¬à§‡ à¦¨à¦¿à¦¶à§à¦šà¦¿à¦¤ à¦•à¦°à¦¾ à¦¯à¦¾à¦¯à¦¼à¦¨à¦¿à¥¤"
           : "The server did not return a valid order confirmation."
       );
     }
@@ -1758,7 +1777,7 @@ const handleProductImageSettled = useCallback((productId) => {
     ) {
       setAccountMessage(
         lang === "bn"
-          ? "সব প্রয়োজনীয় তথ্য পূরণ করুন।"
+          ? "à¦¸à¦¬ à¦ªà§à¦°à¦¯à¦¼à§‹à¦œà¦¨à§€à¦¯à¦¼ à¦¤à¦¥à§à¦¯ à¦ªà§‚à¦°à¦£ à¦•à¦°à§à¦¨à¥¤"
           : "Please fill in all required fields."
       );
       return;
@@ -1783,7 +1802,7 @@ const handleProductImageSettled = useCallback((productId) => {
         setAccountMessage(
           data.message ||
             (lang === "bn"
-              ? "ইমেইলে পাঠানো OTP দিয়ে যাচাই করুন।"
+              ? "à¦‡à¦®à§‡à¦‡à¦²à§‡ à¦ªà¦¾à¦ à¦¾à¦¨à§‹ OTP à¦¦à¦¿à¦¯à¦¼à§‡ à¦¯à¦¾à¦šà¦¾à¦‡ à¦•à¦°à§à¦¨à¥¤"
               : "Check your email for the verification code.")
         );
       } else if (accountMode === "login") {
@@ -1801,7 +1820,7 @@ const handleProductImageSettled = useCallback((productId) => {
         setAccountMessage(
           data.message ||
             (lang === "bn"
-              ? "ইমেইলে পাঠানো OTP দিয়ে লগইন সম্পন্ন করুন।"
+              ? "à¦‡à¦®à§‡à¦‡à¦²à§‡ à¦ªà¦¾à¦ à¦¾à¦¨à§‹ OTP à¦¦à¦¿à¦¯à¦¼à§‡ à¦²à¦—à¦‡à¦¨ à¦¸à¦®à§à¦ªà¦¨à§à¦¨ à¦•à¦°à§à¦¨à¥¤"
               : "Check your email for the login code.")
         );
       }
@@ -1835,7 +1854,7 @@ const handleProductImageSettled = useCallback((productId) => {
         setAccountMessage(
           data.message ||
             (lang === "bn"
-              ? "ইমেইল যাচাই সম্পন্ন হয়েছে। এখন লগইন করুন।"
+              ? "à¦‡à¦®à§‡à¦‡à¦² à¦¯à¦¾à¦šà¦¾à¦‡ à¦¸à¦®à§à¦ªà¦¨à§à¦¨ à¦¹à¦¯à¦¼à§‡à¦›à§‡à¥¤ à¦à¦–à¦¨ à¦²à¦—à¦‡à¦¨ à¦•à¦°à§à¦¨à¥¤"
               : "Email verified. You can now log in.")
         );
       } else if (accountMode === "verify-login") {
@@ -1877,7 +1896,7 @@ const handleProductImageSettled = useCallback((productId) => {
 
         showNotice(
           data.message ||
-            (lang === "bn" ? "লগইন সফল হয়েছে।" : "Login successful.")
+            (lang === "bn" ? "à¦²à¦—à¦‡à¦¨ à¦¸à¦«à¦² à¦¹à¦¯à¦¼à§‡à¦›à§‡à¥¤" : "Login successful.")
         );
       }
     } catch (error) {
@@ -1907,7 +1926,7 @@ const handleProductImageSettled = useCallback((productId) => {
       setAccountMessage(
         data.message ||
           (lang === "bn"
-            ? "যোগ্য অ্যাকাউন্ট থাকলে ইমেইলে OTP পাঠানো হবে।"
+            ? "à¦¯à§‹à¦—à§à¦¯ à¦…à§à¦¯à¦¾à¦•à¦¾à¦‰à¦¨à§à¦Ÿ à¦¥à¦¾à¦•à¦²à§‡ à¦‡à¦®à§‡à¦‡à¦²à§‡ OTP à¦ªà¦¾à¦ à¦¾à¦¨à§‹ à¦¹à¦¬à§‡à¥¤"
             : "If an eligible account exists, a reset code will be sent.")
       );
     } catch (error) {
@@ -1942,7 +1961,7 @@ const handleProductImageSettled = useCallback((productId) => {
       setAccountMessage(
         data.message ||
           (lang === "bn"
-            ? "যোগ্য অ্যাকাউন্ট থাকলে নতুন OTP পাঠানো হবে।"
+            ? "à¦¯à§‹à¦—à§à¦¯ à¦…à§à¦¯à¦¾à¦•à¦¾à¦‰à¦¨à§à¦Ÿ à¦¥à¦¾à¦•à¦²à§‡ à¦¨à¦¤à§à¦¨ OTP à¦ªà¦¾à¦ à¦¾à¦¨à§‹ à¦¹à¦¬à§‡à¥¤"
             : "If eligible, a new OTP will be sent.")
       );
 
@@ -1964,7 +1983,7 @@ const handleProductImageSettled = useCallback((productId) => {
     if (accountNewPassword.length < 8 || accountNewPassword.length > 72) {
       setAccountMessage(
         lang === "bn"
-          ? "পাসওয়ার্ড ৮ থেকে ৭২ অক্ষরের মধ্যে হতে হবে।"
+          ? "à¦ªà¦¾à¦¸à¦“à¦¯à¦¼à¦¾à¦°à§à¦¡ à§® à¦¥à§‡à¦•à§‡ à§­à§¨ à¦…à¦•à§à¦·à¦°à§‡à¦° à¦®à¦§à§à¦¯à§‡ à¦¹à¦¤à§‡ à¦¹à¦¬à§‡à¥¤"
           : "Password must be between 8 and 72 characters."
       );
       return;
@@ -1987,7 +2006,7 @@ const handleProductImageSettled = useCallback((productId) => {
       setAccountMessage(
         data.message ||
           (lang === "bn"
-            ? "পাসওয়ার্ড পরিবর্তন হয়েছে। এখন লগইন করুন।"
+            ? "à¦ªà¦¾à¦¸à¦“à¦¯à¦¼à¦¾à¦°à§à¦¡ à¦ªà¦°à¦¿à¦¬à¦°à§à¦¤à¦¨ à¦¹à¦¯à¦¼à§‡à¦›à§‡à¥¤ à¦à¦–à¦¨ à¦²à¦—à¦‡à¦¨ à¦•à¦°à§à¦¨à¥¤"
             : "Password reset successful. Please log in.")
       );
     } catch (error) {
@@ -2051,7 +2070,7 @@ const handleProductImageSettled = useCallback((productId) => {
     if (routePath !== "/admin") return <NotFoundPage />;
 
     return (
-      <Suspense fallback={<div className="pb-route-loading" role="status">Loading dashboard…</div>}>
+      <Suspense fallback={<div className="pb-route-loading" role="status">Loading dashboardâ€¦</div>}>
         <>
           <RoleGuard allowedRoles={["admin"]}>
             <AdminDashboard
@@ -2083,7 +2102,7 @@ const handleProductImageSettled = useCallback((productId) => {
     if (routePath !== "/moderator") return <NotFoundPage />;
 
     return (
-      <Suspense fallback={<div className="pb-route-loading" role="status">Loading dashboard…</div>}>
+      <Suspense fallback={<div className="pb-route-loading" role="status">Loading dashboardâ€¦</div>}>
         <>
           <RoleGuard allowedRoles={["moderator"]}>
             <ModeratorDashboard
@@ -2120,23 +2139,23 @@ const handleProductImageSettled = useCallback((productId) => {
       {productsError && (
         <div role="alert" className="toast-notice">
           {lang === "bn"
-            ? "প্রোডাক্ট লোড করা যায়নি। Backend চালু আছে কি না দেখুন।"
+            ? "à¦ªà§à¦°à§‹à¦¡à¦¾à¦•à§à¦Ÿ à¦²à§‹à¦¡ à¦•à¦°à¦¾ à¦¯à¦¾à¦¯à¦¼à¦¨à¦¿à¥¤ Backend à¦šà¦¾à¦²à§ à¦†à¦›à§‡ à¦•à¦¿ à¦¨à¦¾ à¦¦à§‡à¦–à§à¦¨à¥¤"
             : "Could not load products. Check whether the backend is running."}{" "}
           <button type="button" onClick={() => window.location.reload()}>
-            {lang === "bn" ? "আবার চেষ্টা করুন" : "Retry"}
+            {lang === "bn" ? "à¦†à¦¬à¦¾à¦° à¦šà§‡à¦·à§à¦Ÿà¦¾ à¦•à¦°à§à¦¨" : "Retry"}
           </button>
         </div>
       )}
 
       {!productsLoaded && !productsError && (
         <div className="toast-notice" role="status">
-          {lang === "bn" ? "প্রোডাক্ট লোড হচ্ছে..." : "Loading products..."}
+          {lang === "bn" ? "à¦ªà§à¦°à§‹à¦¡à¦¾à¦•à§à¦Ÿ à¦²à§‹à¦¡ à¦¹à¦šà§à¦›à§‡..." : "Loading products..."}
         </div>
       )}
 
       {productsLoaded && productsRefreshing && (
         <div className="toast-notice" role="status">
-          {lang === "bn" ? "প্রোডাক্ট লোড হচ্ছে..." : "Loading products..."}
+          {lang === "bn" ? "à¦ªà§à¦°à§‹à¦¡à¦¾à¦•à§à¦Ÿ à¦²à§‹à¦¡ à¦¹à¦šà§à¦›à§‡..." : "Loading products..."}
         </div>
       )}
 
@@ -2220,7 +2239,7 @@ const handleProductImageSettled = useCallback((productId) => {
 
 
       <main className={showCatalogPage ? "catalog-route-main" : ""}>
-        <Suspense fallback={<div className="pb-route-loading" role="status">Loading page…</div>}>
+        <Suspense fallback={<div className="pb-route-loading" role="status">Loading pageâ€¦</div>}>
         {routePath === "/apply-moderator" ? (
           <ModeratorApplicationPage lang={lang} />
         ) : routePath === "/contact" ? (
@@ -2482,4 +2501,5 @@ const handleProductImageSettled = useCallback((productId) => {
     </div>
   );
 }
+
 
