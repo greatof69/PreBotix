@@ -499,14 +499,6 @@ const [savingAnnouncements, setSavingAnnouncements] = useState(false);
   const deleteCourierOrder = useCallback(async (orderId) => {
     if (!orderId) return;
 
-    const confirmed = window.confirm(
-      t(
-        "Delete this courier order? This cannot be undone.",
-        "এই কুরিয়ার অর্ডারটি মুছবেন? এটি ফিরিয়ে আনা যাবে না।"
-      )
-    );
-    if (!confirmed) return;
-
     setError("");
     setMessage("");
 
