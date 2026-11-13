@@ -93,6 +93,47 @@ function getUserList(data) {
   return data?.users || data?.items || data?.data || [];
 }
 
+function readAdminTabCache() {
+  const allowedTabs = [
+    "orders",
+    "users",
+    "moderatorApplications",
+    "moderatorWork",
+    "stock",
+    "messages",
+    "paymentDelivery",
+    "courier",
+    "history",
+    "generalSettings",
+  ];
+
+  try {
+    const savedTab = window.localStorage.getItem("prebotix-admin-active-tab-v1");
+    return allowedTabs.includes(savedTab) ? savedTab : "orders";
+  } catch {
+    return "orders";
+  }
+}
+
+function readSavedModeratorShiftId() {
+  try {
+    return window.localStorage.getItem("prebotix-admin-moderator-selected-shift-v1") || "";
+  } catch {
+    return "";
+  }
+}
+
+function getModeratorShiftForm(shift) {
+  return {
+    shiftStart: shift?.shiftSettings?.shiftStart || "",
+    shiftEnd: shift?.shiftSettings?.shiftEnd || "",
+    weeklyOffDays: Array.isArray(shift?.shiftSettings?.weeklyOffDays)
+      ? shift.shiftSettings.weeklyOffDays
+      : [],
+    lateGraceMinutes: Number(shift?.shiftSettings?.lateGraceMinutes || 0),
+  };
+}
+
 function readAdminListCache(key) {
   try {
     const cached = window.localStorage.getItem(key);
@@ -225,7 +266,7 @@ export default function AdminDashboard({
 }) {
   const navigate = useNavigate();
 
-  const [tab, setTab] = useState("orders");
+  const [tab, setTab] = useState(readAdminTabCache);
 
   const [orders, setOrders] = useState(() =>
     readAdminListCache("prebotix-admin-orders-v1")
@@ -298,26 +339,75 @@ const [savingAnnouncements, setSavingAnnouncements] = useState(false);
   const [loadingModeratorApplications, setLoadingModeratorApplications] = useState(false);
   const [moderatorApplicationActionId, setModeratorApplicationActionId] = useState("");
 
-  const [moderatorWorkSettings, setModeratorWorkSettings] = useState({
-    scheduleEnabled: false,
-    timezone: "Asia/Dhaka",
-    transitionGapMinutes: 0,
-  });
-  const [moderatorAttendance, setModeratorAttendance] = useState([]);
+  const [moderatorWorkSettings, setModeratorWorkSettings] = useState(() =>
+    readAdminSettingsCache("prebotix-admin-moderator-work-settings-v1", {
+      scheduleEnabled: false,
+      timezone: "Asia/Dhaka",
+      transitionGapMinutes: 0,
+    })
+  );
+  const [moderatorAttendance, setModeratorAttendance] = useState(() =>
+    readAdminListCache("prebotix-admin-moderator-attendance-v1")
+  );
   const [deletingAttendanceId, setDeletingAttendanceId] = useState("");
   const [deletingAllAttendance, setDeletingAllAttendance] = useState(false);
   const [loadingModeratorWork, setLoadingModeratorWork] = useState(false);
   const [savingModeratorWork, setSavingModeratorWork] = useState(false);
   const [moderatorAttendanceDate, setModeratorAttendanceDate] = useState("");
-  const [moderatorShiftList, setModeratorShiftList] = useState([]);
-  const [selectedModeratorShiftId, setSelectedModeratorShiftId] = useState("");
-  const [selectedModeratorShift, setSelectedModeratorShift] = useState({
-    shiftStart: "",
-    shiftEnd: "",
-    weeklyOffDays: [],
-    lateGraceMinutes: 0,
+  const [moderatorShiftList, setModeratorShiftList] = useState(() =>
+    readAdminListCache("prebotix-admin-moderator-shifts-v1")
+  );
+  const [selectedModeratorShiftId, setSelectedModeratorShiftId] = useState(() => {
+    const cachedShifts = readAdminListCache("prebotix-admin-moderator-shifts-v1");
+    const savedId = readSavedModeratorShiftId();
+    if (savedId && cachedShifts.some((item) => String(item._id) === String(savedId))) {
+      return String(savedId);
+    }
+    return cachedShifts[0]?._id ? String(cachedShifts[0]._id) : "";
+  });
+  const [selectedModeratorShift, setSelectedModeratorShift] = useState(() => {
+    const cachedShifts = readAdminListCache("prebotix-admin-moderator-shifts-v1");
+    const savedId = readSavedModeratorShiftId();
+    const selected = cachedShifts.find((item) => String(item._id) === String(savedId))
+      || cachedShifts[0];
+    return getModeratorShiftForm(selected);
   });
   const [savingModeratorPersonalShift, setSavingModeratorPersonalShift] = useState(false);
+  useEffect(() => {
+    try {
+      window.localStorage.setItem("prebotix-admin-active-tab-v1", tab);
+    } catch (err) {
+      console.warn("Could not save active admin tab:", err);
+    }
+  }, [tab]);
+
+  useEffect(() => {
+    saveAdminSettingsCache("prebotix-admin-moderator-work-settings-v1", moderatorWorkSettings);
+  }, [moderatorWorkSettings]);
+
+  useEffect(() => {
+    saveAdminListCache("prebotix-admin-moderator-attendance-v1", moderatorAttendance);
+  }, [moderatorAttendance]);
+
+  useEffect(() => {
+    saveAdminListCache("prebotix-admin-moderator-shifts-v1", moderatorShiftList);
+  }, [moderatorShiftList]);
+
+  useEffect(() => {
+    try {
+      if (selectedModeratorShiftId) {
+        window.localStorage.setItem(
+          "prebotix-admin-moderator-selected-shift-v1",
+          selectedModeratorShiftId
+        );
+      } else {
+        window.localStorage.removeItem("prebotix-admin-moderator-selected-shift-v1");
+      }
+    } catch (err) {
+      console.warn("Could not save selected moderator:", err);
+    }
+  }, [selectedModeratorShiftId]);
+
   useEffect(() => {
     if (!generalSettingsLoaded) return;
     saveAdminSettingsCache("prebotix-admin-general-settings-v1", generalSettings);
@@ -1200,6 +1290,7 @@ const deleteFilteredMessages = async () => {
         : [];
 
       setModeratorShiftList(nextModeratorList);
+      saveAdminListCache("prebotix-admin-moderator-shifts-v1", nextModeratorList);
 
       if (nextModeratorList.length) {
         const selectedStillExists = nextModeratorList.some(
@@ -1209,12 +1300,7 @@ const deleteFilteredMessages = async () => {
         if (!selectedModeratorShiftId || !selectedStillExists) {
           const firstModerator = nextModeratorList[0];
           setSelectedModeratorShiftId(String(firstModerator._id));
-          setSelectedModeratorShift({
-            shiftStart: firstModerator.shiftSettings?.shiftStart || "",
-            shiftEnd: firstModerator.shiftSettings?.shiftEnd || "",
-            weeklyOffDays: Array.isArray(firstModerator.shiftSettings?.weeklyOffDays) ? firstModerator.shiftSettings.weeklyOffDays : [],
-            lateGraceMinutes: Number(firstModerator.shiftSettings?.lateGraceMinutes || 0),
-          });
+          setSelectedModeratorShift(getModeratorShiftForm(firstModerator));
         }
       } else {
         setSelectedModeratorShiftId("");
@@ -1229,11 +1315,11 @@ const deleteFilteredMessages = async () => {
         });
       }
 
-      setModeratorAttendance(
-        Array.isArray(attendanceData?.attendance)
-          ? attendanceData.attendance
-          : []
-      );
+      const nextAttendance = Array.isArray(attendanceData?.attendance)
+        ? attendanceData.attendance
+        : [];
+      setModeratorAttendance(nextAttendance);
+      saveAdminListCache("prebotix-admin-moderator-attendance-v1", nextAttendance);
     } catch (err) {
       setError(err.message || "Could not load moderator work data.");
     } finally {
@@ -4008,9 +4094,7 @@ const pageTitle =
                 {t("Moderator Attendance Records", "মডারেটর উপস্থিতির রেকর্ড")}
               </SectionTitle>
 
-              {loadingModeratorWork && moderatorAttendance.length === 0 ? (
-                <EmptyState>Loading attendance records...</EmptyState>
-              ) : (() => {
+              {(() => {
                 const records = moderatorAttendance.filter((record) =>
                   !moderatorAttendanceDate || record.workDate === moderatorAttendanceDate
                 );
@@ -4244,12 +4328,4 @@ const pageTitle =
     
   );
 }
-
-
-
-
-
-
-
-
 
