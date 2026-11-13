@@ -498,7 +498,6 @@ const [savingAnnouncements, setSavingAnnouncements] = useState(false);
 
   const deleteCourierOrder = useCallback(async (orderId) => {
     if (!orderId) return;
-
     setError("");
     setMessage("");
 
