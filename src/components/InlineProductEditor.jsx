@@ -360,6 +360,9 @@ export default function InlineProductEditor({
   formBn: form.bn,
   formPrice: form.price,
   formCategory: form.category,
+  formCostPrice: form.costPrice,
+  formCostPriceMax: form.costPriceMax,
+  formCostPriceMaxEnabled: form.costPriceMaxEnabled,
 });
 
   const [file, setFile] = useState(
