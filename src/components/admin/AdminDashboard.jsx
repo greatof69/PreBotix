@@ -721,11 +721,6 @@ const deleteAllHistory = async () => {
 
   if (!id || deletingStockNotificationId || deletingAllStockNotifications) return;
 
-  if (!window.confirm(t(
-    "Delete this Notify Me request?",
-    "এই Notify Me অনুরোধটি মুছে ফেলবেন?"
-  ))) return;
-
   setDeletingStockNotificationId(id);
   setError("");
 
@@ -749,11 +744,6 @@ const deleteAllHistory = async () => {
   const deleteAllStockNotifications = async () => {
     if (deletingAllStockNotifications || deletingStockNotificationId) return;
     if (!stockNotifications.length) return;
-
-    if (!window.confirm(t(
-      "Delete ALL Notify Me requests?",
-      "সব Notify Me অনুরোধ মুছে ফেলবেন?"
-    ))) return;
 
     setDeletingAllStockNotifications(true);
     setError("");
