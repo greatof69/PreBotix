@@ -14,7 +14,6 @@ import {
 } from "../utils/productHelpers";
 
 import { formatPrice } from "../utils/formatPrice";
-import NotifyMeButton from "./NotifyMeButton";
 
 export default function ProductCard({
   product,
@@ -499,12 +498,16 @@ export default function ProductCard({
             !isAdmin &&
             String(user?.role || "").toLowerCase() !== "admin" &&
             user?.isAdmin !== true && (
-            <NotifyMeButton
-              product={product}
-              lang={lang}
-              user={user}
-              compact
-            />
+            <button
+              type="button"
+              className="pb-notify-trigger"
+              onClick={(event) => {
+                event.stopPropagation();
+                onDetails?.(product);
+              }}
+            >
+              {isBangla ? "Notify" : "Notify"}
+            </button>
           )}
 
           {hasActiveDiscount && hasValidDiscountPrice && (
