@@ -1123,6 +1123,44 @@ export default function ModeratorDashboard({
 
     return `${hours}h ${minutes}m`;
   };
+
+  const getWeeklyOffDaysText = (days) => {
+  if (!Array.isArray(days)) {
+    if (typeof days === "string") {
+      days = days.split(",").map((day) => day.trim()).filter(Boolean);
+    } else {
+      return "—";
+    }
+  }
+
+  const dayNames = {
+    sunday: "Sunday",
+    monday: "Monday",
+    tuesday: "Tuesday",
+    wednesday: "Wednesday",
+    thursday: "Thursday",
+    friday: "Friday",
+    saturday: "Saturday",
+  };
+
+  const dayNamesBn = {
+    sunday: "রবিবার",
+    monday: "সোমবার",
+    tuesday: "মঙ্গলবার",
+    wednesday: "বুধবার",
+    thursday: "বৃহস্পতিবার",
+    friday: "শুক্রবার",
+    saturday: "শনিবার",
+  };
+
+  return days.length
+    ? days.map((day) => {
+        const key = String(day).trim().toLowerCase();
+        return (lang === "bn" ? dayNamesBn[key] : dayNames[key]) || day;
+      }).join(", ")
+    : "—";
+};
+
   useEffect(() => {
     let refreshing = false;
 
@@ -2748,8 +2786,37 @@ export default function ModeratorDashboard({
                     if (endMinutes <= startMinutes) endMinutes += 24 * 60;
                     return endMinutes - startMinutes;
                   })())}
-                </div>
+                </div>            
               )}
+
+              <div
+                style={{
+                  marginTop: 14,
+                  paddingTop: 12,
+                  borderTop: "1px solid #e5e7eb",
+                }}
+              >
+                <div
+                  style={{
+                    color: "#64748b",
+                    fontSize: 12,
+                    fontWeight: 700,
+                  }}
+                >
+                  {t("WEEKLY OFF DAYS", "সাপ্তাহিক ছুটির দিন")}
+                </div>
+
+                <div
+                  style={{
+                    fontSize: 16,
+                    fontWeight: 700,
+                    marginTop: 7,
+                    color: "#dc2626",
+                  }}
+                >
+                  {getWeeklyOffDaysText(attendanceSettings?.weeklyOffDays)}
+                </div>
+              </div>
             </div>
 
             <div style={{
