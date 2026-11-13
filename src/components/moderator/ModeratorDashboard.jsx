@@ -1,4 +1,4 @@
-import { createPortal } from "react-dom";
+﻿import { createPortal } from "react-dom";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import DashboardLayout from "../shared/DashboardLayout";
@@ -2651,288 +2651,119 @@ export default function ModeratorDashboard({
         {/* ==================== Other Sections ==================== */}
 
         {tab === "attendance" && (
-          <section style={{ display: "grid", gap: 16 }}>
-            <div style={cardStyle}>
+          <section style={cardStyle}>
+            <h2 style={{ margin: 0 }}>
+              {t("Work Attendance", "কাজের উপস্থিতি")}
+            </h2>
+
+            <div style={{
+              marginTop: 16,
+              padding: 16,
+              borderRadius: 10,
+              background: "#f8fafc",
+              border: "1px solid #e5e7eb",
+            }}>
+              <div style={{ color: "#64748b", fontSize: 12, fontWeight: 700 }}>
+                {t("REQUIRED WORK TIME", "প্রয়োজনীয় কাজের সময়")}
+              </div>
+              <div style={{ fontSize: 20, fontWeight: 800, marginTop: 7 }}>
+                {attendanceSettings?.shiftStart && attendanceSettings?.shiftEnd
+                  ? `${attendanceSettings.shiftStart} – ${attendanceSettings.shiftEnd}`
+                  : t("Not configured by Admin", "Admin এখনো সময় নির্ধারণ করেননি")}
+              </div>
+              {attendanceSettings?.shiftStart && attendanceSettings?.shiftEnd && (
+                <div style={{ color: "#64748b", fontSize: 13, marginTop: 5 }}>
+                  {t("Required duration", "মোট কাজের সময়")}:{" "}
+                  {attendanceDuration((() => {
+                    const [startHour, startMinute] = attendanceSettings.shiftStart.split(":").map(Number);
+                    const [endHour, endMinute] = attendanceSettings.shiftEnd.split(":").map(Number);
+                    const startMinutes = startHour * 60 + startMinute;
+                    let endMinutes = endHour * 60 + endMinute;
+                    if (endMinutes <= startMinutes) endMinutes += 24 * 60;
+                    return endMinutes - startMinutes;
+                  })())}
+                </div>
+              )}
+            </div>
+
+            <div style={{
+              marginTop: 12,
+              padding: 13,
+              borderRadius: 10,
+              background: "#eff6ff",
+              color: "#1e40af",
+              fontSize: 13,
+              lineHeight: 1.65,
+            }}>
+              <strong>{t("Work Rules", "কাজের নিয়ম")}</strong>
+              <div>
+                {t(
+                  "Press Present when you start work and End when you finish. Arriving after your shift start and late-grace period will be recorded as late. Admin can view your exact Present and End times and whether you were late or early.",
+                  "কাজ শুরু করলে Present এবং কাজ শেষ করলে End চাপুন। শিফট শুরুর সময় ও Late Grace Period পার হওয়ার পর উপস্থিত হলে Late হিসেবে গণ্য হবে। Admin আপনার Present ও End-এর সঠিক সময় এবং Late বা Early হয়েছে কি না দেখতে পারবেন।"
+                )}
+              </div>
+            </div>
+
+            {!attendanceSettings?.scheduleEnabled && (
+              <p style={{
+                color: "#9a3412",
+                background: "#fff7ed",
+                borderRadius: 8,
+                padding: 10,
+                margin: "12px 0 0",
+                fontSize: 13,
+              }}>
+                {t(
+                  "Attendance is not available until Admin enables and configures your schedule.",
+                  "Admin শিডিউল চালু ও নির্ধারণ না করা পর্যন্ত উপস্থিতি দেওয়া যাবে না।"
+                )}
+              </p>
+            )}
+
+            {attendanceLoading && !attendanceSettings ? (
+              <p style={{ color: "#64748b", marginBottom: 0 }}>
+                {t("Loading work time...", "কাজের সময় লোড হচ্ছে...")}
+              </p>
+            ) : (
               <div style={{
                 display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-                gap: 12,
+                gap: 10,
                 flexWrap: "wrap",
+                marginTop: 16,
               }}>
-                <div>
-                  <h2 style={{ margin: 0 }}>
-                    {t("My Attendance", "আমার উপস্থিতি")}
-                  </h2>
-                  <p style={{ color: "#6b7280", margin: "6px 0 0" }}>
-                    {t("Daily shift, check-in and work summary",
-                      "দৈনিক শিফট, চেক-ইন ও কাজের হিসাব")}
-                  </p>
-                </div>
-                <button
-                  type="button"
-                  style={buttonStyle}
-                  disabled={attendanceLoading}
-                  onClick={() => loadAttendance(false)}
-                >
-                  {attendanceLoading
-                    ? t("Refreshing...", "রিফ্রেশ হচ্ছে...")
-                    : t("Refresh", "রিফ্রেশ")}
-                </button>
+                {!todayAttendance && (
+                  <button
+                    type="button"
+                    style={successButton}
+                    disabled={
+                      !!attendanceActionLoading ||
+                      !attendanceSettings?.scheduleEnabled ||
+                      !attendanceSettings?.shiftStart ||
+                      !attendanceSettings?.shiftEnd ||
+                      transitionRemainingMs > 0
+                    }
+                    onClick={() => runAttendanceAction("check-in", "/attendance/check-in")}
+                  >
+                    {attendanceActionLoading === "check-in"
+                      ? t("Please wait...", "অপেক্ষা করুন...")
+                      : t("Present", "Present")}
+                  </button>
+                )}
+
+                {todayAttendance && !todayAttendance.checkOut && (
+                  <button
+                    type="button"
+                    style={dangerButton}
+                    disabled={!!attendanceActionLoading}
+                    onClick={() => runAttendanceAction("check-out", "/attendance/check-out")}
+                  >
+                    {attendanceActionLoading === "check-out"
+                      ? t("Please wait...", "অপেক্ষা করুন...")
+                      : t("End", "End")}
+                  </button>
+                )}
               </div>
-
-              <div style={{
-                display: "grid",
-                gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))",
-                gap: 12,
-                marginTop: 18,
-              }}>
-                <div style={{ background: "#f8fafc", borderRadius: 10, padding: 13 }}>
-                  <div style={{ color: "#64748b", fontSize: 12 }}>
-                    {t("Shift", "শিফট")}
-                  </div>
-                  <strong>
-                    {attendanceSettings?.shiftStart && attendanceSettings?.shiftEnd
-                      ? `${attendanceSettings.shiftStart} – ${attendanceSettings.shiftEnd}`
-                      : t("Not configured", "নির্ধারণ করা হয়নি")}
-                  </strong>
-                </div>
-                <div style={{ background: "#f8fafc", borderRadius: 10, padding: 13 }}>
-                  <div style={{ color: "#64748b", fontSize: 12 }}>
-                    {t("Timezone", "টাইমজোন")}
-                  </div>
-                  <strong>{attendanceSettings?.timezone || "Asia/Dhaka"}</strong>
-                </div>
-                <div style={{ background: "#f8fafc", borderRadius: 10, padding: 13 }}>
-                  <div style={{ color: "#64748b", fontSize: 12 }}>
-                    {t("Late grace", "দেরির ছাড়")}
-                  </div>
-                  <strong>
-                    {Number(attendanceSettings?.lateGraceMinutes || 0)} {t("minutes", "মিনিট")}
-                  </strong>
-                </div>
-              </div>
-
-              {!attendanceSettings?.scheduleEnabled && (
-                <p style={{
-                  background: "#fff7ed",
-                  color: "#9a3412",
-                  borderRadius: 8,
-                  padding: 12,
-                  margin: "14px 0 0",
-                }}>
-                  {t(
-                    "The attendance schedule is currently disabled by Admin. Check-in is unavailable until Admin enables and configures it.",
-                    "অ্যাডমিন বর্তমানে উপস্থিতির শিডিউল বন্ধ রেখেছেন। শিডিউল চালু ও নির্ধারণ না করা পর্যন্ত Check In করা যাবে না।"
-                  )}
-                </p>
-              )}
-            </div>
-
-            <div style={cardStyle}>
-              <h3 style={{ marginTop: 0 }}>
-                {t("Today's Attendance", "আজকের উপস্থিতি")}
-              </h3>
-
-              {attendanceLoading && !todayAttendance ? (
-                <p style={{ color: "#6b7280" }}>{t("Loading attendance...", "উপস্থিতির তথ্য লোড হচ্ছে...")}</p>
-              ) : (
-                <>
-                  <div style={{
-                    display: "grid",
-                    gridTemplateColumns: "repeat(auto-fit, minmax(130px, 1fr))",
-                    gap: 12,
-                  }}>
-                    <div>
-                      <div style={{ color: "#64748b", fontSize: 12 }}>
-                        {t("Status", "অবস্থা")}
-                      </div>
-                      <strong style={{ textTransform: "capitalize" }}>
-                        {todayAttendance?.status?.replaceAll("-", " ") ||
-                          t("Not checked in", "চেক-ইন করা হয়নি")}
-                      </strong>
-                    </div>
-                    <div>
-                      <div style={{ color: "#64748b", fontSize: 12 }}>
-                        {t("Check In", "চেক-ইন")}
-                      </div>
-                      <strong>{attendanceTime(todayAttendance?.checkIn)}</strong>
-                    </div>
-                    <div>
-                      <div style={{ color: "#64748b", fontSize: 12 }}>
-                        {t("Check Out", "চেক-আউট")}
-                      </div>
-                      <strong>{attendanceTime(todayAttendance?.checkOut)}</strong>
-                    </div>
-                    <div>
-                      <div style={{ color: "#64748b", fontSize: 12 }}>
-                        {t("Late", "দেরি")}
-                      </div>
-                      <strong>{attendanceDuration(todayAttendance?.lateMinutes)}</strong>
-                    </div>
-                    <div>
-                      <div style={{ color: "#64748b", fontSize: 12 }}>
-                        {t("Break", "বিরতি")}
-                      </div>
-                      <strong>{attendanceDuration(todayAttendance?.breakMinutes)}</strong>
-                    </div>
-                    <div>
-                      <div style={{ color: "#64748b", fontSize: 12 }}>
-                        {t("Working Time", "কাজের সময়")}
-                      </div>
-                      <strong>{attendanceDuration(todayAttendance?.workingMinutes)}</strong>
-                    </div>
-                    <div>
-                      <div style={{ color: "#64748b", fontSize: 12 }}>
-                        {t("Overtime", "অতিরিক্ত সময়")}
-                      </div>
-                      <strong>{attendanceDuration(todayAttendance?.overtimeMinutes)}</strong>
-                    </div>
-                  </div>
-
-                  {todayAttendance?.isWeeklyOff && (
-                    <p style={{ color: "#92400e", marginBottom: 0 }}>
-                      {t("Today is your weekly off day.", "আজ আপনার সাপ্তাহিক ছুটির দিন।")}
-                    </p>
-                  )}
-
-                  {transitionRemainingMs > 0 && (
-                    <p style={{
-                      background: "#fff7ed",
-                      color: "#9a3412",
-                      border: "1px solid #fed7aa",
-                      borderRadius: 8,
-                      padding: 12,
-                      margin: "16px 0 0",
-                      fontWeight: 600,
-                    }}>
-                      {t("Global transition gap ends in", "Global transition gap শেষ হবে")}{" "}
-                      {String(Math.floor(transitionRemainingMs / 60000)).padStart(2, "0")}m{" "}
-                      {String(Math.floor((transitionRemainingMs % 60000) / 1000)).padStart(2, "0")}s
-                    </p>
-                  )}
-
-                  <div style={{
-                    display: "flex",
-                    flexWrap: "wrap",
-                    gap: 10,
-                    marginTop: 18,
-                  }}>
-                    <button
-                      type="button"
-                      style={successButton}
-                      disabled={
-                        !!attendanceActionLoading ||
-                        !!todayAttendance ||
-                        !attendanceSettings?.scheduleEnabled ||
-
-                        !attendanceSettings?.shiftStart ||
-                        !attendanceSettings?.shiftEnd
-                      }
-                      onClick={() => runAttendanceAction("check-in", "/attendance/check-in")}
-                    >
-                      {attendanceActionLoading === "check-in"
-                        ? t("Checking in...", "চেক-ইন হচ্ছে...")
-                        : t("Check In", "চেক-ইন")}
-                    </button>
-
-                    {todayAttendance && !todayAttendance.checkOut && (
-                      <>
-                        {todayAttendance.breaks?.some((item) => !item.endedAt) ? (
-                          <button
-                            type="button"
-                            style={primaryButton}
-                            disabled={!!attendanceActionLoading}
-                            onClick={() => runAttendanceAction("break-end", "/attendance/break/end")}
-                          >
-                            {attendanceActionLoading === "break-end"
-                              ? t("Ending break...", "বিরতি শেষ হচ্ছে...")
-                              : t("End Break", "বিরতি শেষ করুন")}
-                          </button>
-                        ) : (
-                          <button
-                            type="button"
-                            style={buttonStyle}
-                            disabled={!!attendanceActionLoading}
-                            onClick={() => runAttendanceAction("break-start", "/attendance/break/start")}
-                          >
-                            {attendanceActionLoading === "break-start"
-                              ? t("Starting break...", "বিরতি শুরু হচ্ছে...")
-                              : t("Start Break", "বিরতি শুরু করুন")}
-                          </button>
-                        )}
-
-                        <button
-                          type="button"
-                          style={dangerButton}
-                          disabled={
-                            !!attendanceActionLoading ||
-                            !!todayAttendance.breaks?.some((item) => !item.endedAt)
-                          }
-                          onClick={() => {
-                            if (window.confirm(t(
-                              "Are you sure you want to check out?",
-                              "আপনি কি Check Out করতে চান?"
-                            ))) {
-                              runAttendanceAction("check-out", "/attendance/check-out");
-                            }
-                          }}
-                        >
-                          {attendanceActionLoading === "check-out"
-                            ? t("Checking out...", "চেক-আউট হচ্ছে...")
-                            : t("Check Out", "চেক-আউট")}
-                        </button>
-                      </>
-                    )}
-                  </div>
-                </>
-              )}
-            </div>
-
-            <div style={cardStyle}>
-              <h3 style={{ marginTop: 0 }}>
-                {t("Attendance History", "উপস্থিতির ইতিহাস")}
-              </h3>
-
-              {attendanceHistory.length === 0 ? (
-                <p style={{ color: "#6b7280" }}>
-                  {t("No attendance records found.", "কোনো উপস্থিতির রেকর্ড পাওয়া যায়নি।")}
-                </p>
-              ) : (
-                <div style={{ overflowX: "auto" }}>
-                  <table style={{
-                    width: "100%",
-                    borderCollapse: "collapse",
-                    minWidth: 650,
-                    fontSize: 13,
-                  }}>
-                    <thead>
-                      <tr style={{ background: "#f8fafc", textAlign: "left" }}>
-                        {[t("Date", "তারিখ"), t("Status", "অবস্থা"), t("Check In", "চেক-ইন"), t("Check Out", "চেক-আউট"), t("Working", "কাজের সময়"), t("Overtime", "অতিরিক্ত")].map((heading) => (
-                          <th key={heading} style={{ padding: 11, borderBottom: "1px solid #e5e7eb" }}>
-                            {heading}
-                          </th>
-                        ))}
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {attendanceHistory.map((item) => (
-                        <tr key={item._id || item.workDate}>
-                          <td style={{ padding: 11, borderBottom: "1px solid #f1f5f9" }}>{item.workDate || "—"}</td>
-                          <td style={{ padding: 11, borderBottom: "1px solid #f1f5f9", textTransform: "capitalize" }}>
-                            {item.status?.replaceAll("-", " ") || "—"}
-                          </td>
-                          <td style={{ padding: 11, borderBottom: "1px solid #f1f5f9" }}>{attendanceTime(item.checkIn)}</td>
-                          <td style={{ padding: 11, borderBottom: "1px solid #f1f5f9" }}>{attendanceTime(item.checkOut)}</td>
-                          <td style={{ padding: 11, borderBottom: "1px solid #f1f5f9" }}>{attendanceDuration(item.workingMinutes)}</td>
-                          <td style={{ padding: 11, borderBottom: "1px solid #f1f5f9" }}>{attendanceDuration(item.overtimeMinutes)}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              )}
-            </div>
+            )}
           </section>
         )}
 
