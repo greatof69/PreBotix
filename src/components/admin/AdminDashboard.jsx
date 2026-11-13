@@ -1,8 +1,9 @@
-﻿import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import DashboardLayout from "../shared/DashboardLayout";
 import { clearAuthSession, getAccessToken, authFetch } from "../../utils/authSession";
 import FloatingCalculator from "../shared/FloatingCalculator";
+import AdminModeratorEarnings from "./AdminModeratorEarnings";
 
 const API = import.meta.env.VITE_API_URL || "http://localhost:5000";
 
@@ -99,6 +100,7 @@ function readAdminTabCache() {
     "users",
     "moderatorApplications",
     "moderatorWork",
+    "moderatorEarnings",
     "stock",
     "messages",
     "paymentDelivery",
@@ -1910,14 +1912,19 @@ const deleteOrder = async (order) => {
       label: "Moderator Work",
       labelBn: "Moderator Shift & Attendance",
       icon: "◷",
-      },
-      {
+    },
+    {
+      id: "moderatorEarnings",
+      label: "Moderator Earnings",
+      labelBn: "মডারেটর আয়",
+      icon: "৳",
+    },
+    {
       id: "stock",
       label: "Product Stock",
       labelBn: "পণ্যের স্টক",
       icon: "📦",
-    },
-    {
+    },    {
       id: "messages",
       label: "Customer Messages",
       labelBn: "গ্রাহকের মেসেজ",
@@ -1951,6 +1958,8 @@ const pageTitle =
       ? t("Moderator Applications", "মডারেটর আবেদন")
       : tab === "moderatorWork"
         ? t("Moderator Work & Attendance", "মডারেটর শিফট ও উপস্থিতি")
+        : tab === "moderatorEarnings"
+        ? t("Moderator Earnings", "মডারেটর আয়")
         : tab === "stock"
         ? t("Product Stock Catalog", "পণ্যের স্টক ক্যাটালগ")
         : tab === "messages"
@@ -4315,6 +4324,10 @@ const pageTitle =
           </div>
         )}
 
+        {tab === "moderatorEarnings" && (
+          <AdminModeratorEarnings request={request} lang={lang} />
+        )}
+
         {tab === "history" && (
           <section style={cardStyle}>
             <SectionTitle
@@ -4462,4 +4475,8 @@ const pageTitle =
     
   );
 }
+
+
+
+
 

@@ -3,6 +3,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import DashboardLayout from "../shared/DashboardLayout";
 import FloatingCalculator from "../shared/FloatingCalculator";
+import ModeratorEarnings from "./ModeratorEarnings";
 import {
   clearAuthSession,
   authFetch,
@@ -1207,12 +1208,14 @@ export default function ModeratorDashboard({
 
     loadActiveTab(false);
 
-    const timer = window.setInterval(
-      () => loadActiveTab(true),
-      15000
-    );
+    const timer =
+      tab === "earnings"
+        ? null
+        : window.setInterval(() => loadActiveTab(true), 15000);
 
-    return () => window.clearInterval(timer);
+    return () => {
+      if (timer) window.clearInterval(timer);
+    };
   }, [
     tab,
     loadOrders,
@@ -2917,13 +2920,15 @@ export default function ModeratorDashboard({
           </section>
         )}
 
-        {["sales", "earnings", "profile"].includes(tab) && (
+        {tab === "earnings" && <ModeratorEarnings request={request} lang={lang} />}
+
+        {["sales", "profile"].includes(tab) && (
           <section style={cardStyle}>
             <h2 style={{ marginTop: 0 }}>{title}</h2>
             <p style={{ color: "#6b7280", lineHeight: 1.7 }}>
               {t(
                 "This section still needs to be connected to its backend endpoint.",
-                "এই বিভাগটি চালু করতে সংশ্লিষ্ট ব্যাকএন্ড API যুক্ত করতে হবে।"
+                "এই বিভাগটি চালু করতে সংশ্লিষ্ট API যুক্ত করতে হবে।"
               )}
             </p>
           </section>
@@ -2932,3 +2937,5 @@ export default function ModeratorDashboard({
     </DashboardLayout>
   );
 }
+
+
