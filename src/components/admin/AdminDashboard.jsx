@@ -304,6 +304,8 @@ const [savingAnnouncements, setSavingAnnouncements] = useState(false);
     transitionGapMinutes: 0,
   });
   const [moderatorAttendance, setModeratorAttendance] = useState([]);
+  const [deletingAttendanceId, setDeletingAttendanceId] = useState("");
+  const [deletingAllAttendance, setDeletingAllAttendance] = useState(false);
   const [loadingModeratorWork, setLoadingModeratorWork] = useState(false);
   const [savingModeratorWork, setSavingModeratorWork] = useState(false);
   const [moderatorAttendanceDate, setModeratorAttendanceDate] = useState("");
@@ -1239,73 +1241,125 @@ const deleteFilteredMessages = async () => {
     }
   }, [request, selectedModeratorShiftId]);
 
-useEffect(() => {
-  let refreshing = false;
+  const deleteModeratorAttendance = async (attendanceId) => {
+  if (!attendanceId || deletingAttendanceId || deletingAllAttendance) return;
 
-  const loadActiveTab = async (silent = false) => {
-    if (refreshing) return;
+  setDeletingAttendanceId(attendanceId);
+  setError("");
+  setMessage("");
 
-    refreshing = true;
+  try {
+    await request(`/moderator-attendance/${encodeURIComponent(attendanceId)}`, {
+      method: "DELETE",
+    });
+
+    setModeratorAttendance((current) => {
+      const updated = current.filter(
+        (record) => String(record._id) !== String(attendanceId)
+      );
+
+      saveAdminListCache("prebotix-admin-moderator-attendance-v1", updated);
+      return updated;
+    });
+
+    setMessage("Attendance record deleted successfully.");
+  } catch (err) {
+    setError(err.message || "Could not delete attendance record.");
+  } finally {
+    setDeletingAttendanceId("");
+  }
+};
+
+  const deleteAllModeratorAttendance = async () => {
+    if (!moderatorAttendance.length || deletingAllAttendance || deletingAttendanceId) return;
+
+    setDeletingAllAttendance(true);
+    setError("");
+    setMessage("");
 
     try {
-      if (tab === "moderatorApplications") {
-        await loadModeratorApplications();
-      } else if (tab === "moderatorWork") {
-        await loadModeratorWork(silent);
-      } else if (tab === "generalSettings") {
-        await loadGeneralSettings();
-      } else if (tab === "paymentDelivery") {
-        await loadPaymentDeliverySettings();
-      } else if (tab === "orders" || tab === "courier") {
-        await loadOrders({ silent });
-      } else if (tab === "users") {
-        await loadUsers({ silent });
-      } else if (tab === "messages") {
-        await Promise.all([
-          loadMessages({ silent }),
-          loadStockNotifications({ silent }),
-        ]);
-      } else if (tab === "stock") {
-        await loadStockCatalog({ silent });
-      } else if (tab === "history") {
-        await loadOrderHistory({ silent });
-      }
+      await request("/moderator-attendance", {
+        method: "DELETE",
+      });
+
+      setModeratorAttendance([]);
+      saveAdminListCache("prebotix-admin-moderator-attendance-v1", []);
+
+      setMessage("All moderator attendance records deleted.");
+    } catch (err) {
+      setError(err.message || "Could not delete attendance records.");
     } finally {
-      refreshing = false;
+      setDeletingAllAttendance(false);
     }
   };
 
-  loadActiveTab(false);
+  useEffect(() => {
+    let refreshing = false;
 
-  const shouldPoll = [
-    "orders",
-    "courier",
-    "users",
-    "moderatorWork",
-    "messages",
-    "stock",
-    "history",
-  ].includes(tab);
+    const loadActiveTab = async (silent = false) => {
+      if (refreshing) return;
 
-  const timer = shouldPoll
-    ? window.setInterval(() => loadActiveTab(true), 15000)
-    : null;
+      refreshing = true;
 
-  return () => {
-    if (timer) window.clearInterval(timer);
-  };
-}, [
-  tab,
-  loadOrders,
-  loadUsers,
-  loadMessages,
-  loadStockNotifications,
-  loadStockCatalog,
-  loadOrderHistory,
-  loadPaymentDeliverySettings,
-  loadModeratorApplications,
-  loadModeratorWork,
-]);
+      try {
+        if (tab === "moderatorApplications") {
+          await loadModeratorApplications();
+        } else if (tab === "moderatorWork") {
+          await loadModeratorWork(silent);
+        } else if (tab === "generalSettings") {
+          await loadGeneralSettings();
+        } else if (tab === "paymentDelivery") {
+          await loadPaymentDeliverySettings();
+        } else if (tab === "orders" || tab === "courier") {
+          await loadOrders({ silent });
+        } else if (tab === "users") {
+          await loadUsers({ silent });
+        } else if (tab === "messages") {
+          await Promise.all([
+            loadMessages({ silent }),
+            loadStockNotifications({ silent }),
+          ]);
+        } else if (tab === "stock") {
+          await loadStockCatalog({ silent });
+        } else if (tab === "history") {
+          await loadOrderHistory({ silent });
+        }
+      } finally {
+        refreshing = false;
+      }
+    };
+
+    loadActiveTab(false);
+
+    const shouldPoll = [
+      "orders",
+      "courier",
+      "users",
+      "moderatorWork",
+      "messages",
+      "stock",
+      "history",
+    ].includes(tab);
+
+    const timer = shouldPoll
+      ? window.setInterval(() => loadActiveTab(true), 15000)
+      : null;
+
+    return () => {
+      if (timer) window.clearInterval(timer);
+    };
+  }, [
+    tab,
+    loadOrders,
+    loadUsers,
+    loadMessages,
+    loadStockNotifications,
+    loadStockCatalog,
+    loadOrderHistory,
+    loadPaymentDeliverySettings,
+    loadModeratorApplications,
+    loadModeratorWork,
+  ]);
 
   const saveModeratorWorkSettings = async () => {
     setSavingModeratorWork(true);
@@ -3912,22 +3966,43 @@ const pageTitle =
             <section style={cardStyle}>
               <SectionTitle
                 right={
-                  <label style={{ display: "flex", gap: 8, alignItems: "center", fontSize: 13 }}>
-                    Date
-                    <input
-                      type="date"
-                      style={{ ...inputStyle, width: "auto" }}
-                      value={moderatorAttendanceDate}
-                      onChange={(e) => setModeratorAttendanceDate(e.target.value)}
-                    />
+                  <div style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 8,
+                    flexWrap: "wrap",
+                  }}>
+                    <label style={{
+                      display: "flex",
+                      gap: 8,
+                      alignItems: "center",
+                      fontSize: 13,
+                    }}>
+                      Date
+                      <input
+                        type="date"
+                        style={{ ...inputStyle, width: "auto" }}
+                        value={moderatorAttendanceDate}
+                        onChange={(e) => setModeratorAttendanceDate(e.target.value)}
+                      />
+                      <button
+                        type="button"
+                        style={buttonStyle}
+                        onClick={() => setModeratorAttendanceDate("")}
+                      >
+                        All
+                      </button>
+                    </label>
+
                     <button
                       type="button"
-                      style={buttonStyle}
-                      onClick={() => setModeratorAttendanceDate("")}
+                      style={dangerButtonStyle}
+                      disabled={!moderatorAttendance.length || deletingAllAttendance || !!deletingAttendanceId}
+                      onClick={deleteAllModeratorAttendance}
                     >
-                      All
+                      {deletingAllAttendance ? "Deleting..." : "Delete All"}
                     </button>
-                  </label>
+                  </div>
                 }
               >
                 {t("Moderator Attendance Records", "মডারেটর উপস্থিতির রেকর্ড")}
@@ -3997,6 +4072,20 @@ const pageTitle =
                             <div><span style={{ color: "#6b7280" }}>Break</span><br /><strong>{duration(record.breakMinutes)}</strong></div>
                             <div><span style={{ color: "#6b7280" }}>Working</span><br /><strong>{duration(record.workingMinutes)}</strong></div>
                             <div><span style={{ color: "#6b7280" }}>Overtime</span><br /><strong>{duration(record.overtimeMinutes)}</strong></div>
+                            <div style={{
+                              display: "flex",
+                              justifyContent: "flex-end",
+                              marginTop: 4,
+                            }}>
+                              <button
+                                type="button"
+                                style={dangerButtonStyle}
+                                disabled={!!deletingAttendanceId || deletingAllAttendance}
+                                onClick={() => deleteModeratorAttendance(record._id)}
+                              >
+                                {deletingAttendanceId === record._id ? "Deleting..." : "Delete"}
+                              </button>
+                            </div>
                           </div>
                         </article>
                       );
