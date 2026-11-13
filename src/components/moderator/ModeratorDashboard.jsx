@@ -2764,8 +2764,8 @@ export default function ModeratorDashboard({
               <strong>{t("Work Rules", "কাজের নিয়ম")}</strong>
               <div>
                 {t(
-                  "Press Present when you start work and End when you finish. Arriving after your shift start and late-grace period will be recorded as late. Admin can view your exact Present and End times and whether you were late or early.",
-                  "কাজ শুরু করলে Present এবং কাজ শেষ করলে End চাপুন। শিফট শুরুর সময় ও Late Grace Period পার হওয়ার পর উপস্থিত হলে Late হিসেবে গণ্য হবে। Admin আপনার Present ও End-এর সঠিক সময় এবং Late বা Early হয়েছে কি না দেখতে পারবেন।"
+                  "কাজ শুরু করলে Present এবং কাজ শেষ করলে End চাপুন।",
+                  "কাজ শুরু করলে Present এবং কাজ শেষ করলে End চাপুন।"
                 )}
               </div>
             </div>
