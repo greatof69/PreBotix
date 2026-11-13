@@ -297,6 +297,8 @@ export default function AdminDashboard({
   const [stockCatalogLoaded, setStockCatalogLoaded] = useState(false);
   const [stockNotifications, setStockNotifications] = useState([]);
   const [loadingStock, setLoadingStock] = useState(false);
+  const [deletingStockNotificationId, setDeletingStockNotificationId] = useState("");
+  const [deletingAllStockNotifications, setDeletingAllStockNotifications] = useState(false);
   const [stockEditId, setStockEditId] = useState(null);
   const [stockEditValue, setStockEditValue] = useState("");
   const [stockSearch, setStockSearch] = useState("");
@@ -713,6 +715,65 @@ const deleteAllHistory = async () => {
       if (!silent) setLoadingStock(false);
     }
   }, [request]);
+
+  const deleteStockNotification = async (item) => {
+  const id = String(item?._id || "");
+
+  if (!id || deletingStockNotificationId || deletingAllStockNotifications) return;
+
+  if (!window.confirm(t(
+    "Delete this Notify Me request?",
+    "এই Notify Me অনুরোধটি মুছে ফেলবেন?"
+  ))) return;
+
+  setDeletingStockNotificationId(id);
+  setError("");
+
+  try {
+    await request(`/stock-notifications/${encodeURIComponent(id)}`, {
+      method: "DELETE",
+    });
+
+    setStockNotifications((prev) =>
+      prev.filter((notification) => String(notification._id) !== id)
+    );
+
+    setMessage(t("Notify Me request deleted.", "Notify Me অনুরোধ মুছে ফেলা হয়েছে।"));
+  } catch (err) {
+    setError(err.message || "Could not delete Notify Me request.");
+  } finally {
+    setDeletingStockNotificationId("");
+  }
+};
+
+  const deleteAllStockNotifications = async () => {
+    if (deletingAllStockNotifications || deletingStockNotificationId) return;
+    if (!stockNotifications.length) return;
+
+    if (!window.confirm(t(
+      "Delete ALL Notify Me requests?",
+      "সব Notify Me অনুরোধ মুছে ফেলবেন?"
+    ))) return;
+
+    setDeletingAllStockNotifications(true);
+    setError("");
+
+    try {
+      await request("/stock-notifications/bulk", {
+        method: "DELETE",
+      });
+
+      setStockNotifications([]);
+      setMessage(t(
+        "All Notify Me requests deleted.",
+        "সব Notify Me অনুরোধ মুছে ফেলা হয়েছে।"
+      ));
+    } catch (err) {
+      setError(err.message || "Could not delete Notify Me requests.");
+    } finally {
+      setDeletingAllStockNotifications(false);
+    }
+  };
 
   const saveStockQuantity = useCallback(async (product) => {
     const productId = String(product.id);
@@ -2513,22 +2574,84 @@ const pageTitle =
             )}
 
             <div style={{ marginTop: 26 }}>
-              <SectionTitle>{t("Notify Me Requests", "Notify Me অনুরোধ")}</SectionTitle>
+              <SectionTitle
+                right={
+                  <button
+                    type="button"
+                    style={dangerButtonStyle}
+                    disabled={
+                      !stockNotifications.length ||
+                      deletingAllStockNotifications ||
+                      Boolean(deletingStockNotificationId)
+                    }
+                    onClick={deleteAllStockNotifications}
+                  >
+                    {deletingAllStockNotifications
+                      ? t("Deleting...", "মুছে ফেলা হচ্ছে...")
+                      : t("Delete All", "সব মুছুন")}
+                  </button>
+                }
+              >
+                {t("Notify Me Requests", "Notify Me অনুরোধ")}
+              </SectionTitle>
+
               {stockNotifications.length ? (
                 <div style={{ display: "grid", gap: 9 }}>
                   {stockNotifications.map((item) => (
-                    <div key={item._id} style={{ border: "1px solid #e5e7eb", borderRadius: 10, padding: 12, display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(150px,1fr))", gap: 8, alignItems: "center" }}>
+                    <div
+                      key={item._id}
+                      style={{
+                        border: "1px solid #e5e7eb",
+                        borderRadius: 10,
+                        padding: 12,
+                        display: "grid",
+                        gridTemplateColumns: "repeat(auto-fit,minmax(150px,1fr))",
+                        gap: 8,
+                        alignItems: "center",
+                      }}
+                    >
                       <strong>{item.productTitle}</strong>
-                      <span style={{ fontSize: 13 }}>{item.customerName || "Customer"} · {item.email}</span>
-                      <span style={{ fontSize: 12, color: "#64748b" }}>{new Date(item.createdAt).toLocaleString()}</span>
-                      <span style={{ fontSize: 12, fontWeight: 700, color: item.status === "notified" ? "#059669" : "#d97706" }}>
-                        {item.status === "notified" ? t("Email sent", "ইমেইল পাঠানো হয়েছে") : t("Pending", "অপেক্ষমাণ")}
+
+                      <span style={{ fontSize: 13 }}>
+                        {item.customerName || "Customer"} · {item.email}
                       </span>
+
+                      <span style={{ fontSize: 12, color: "#64748b" }}>
+                        {new Date(item.createdAt).toLocaleString()}
+                      </span>
+
+                      <span
+                        style={{
+                          fontSize: 12,
+                          fontWeight: 700,
+                          color: item.status === "notified" ? "#059669" : "#d97706",
+                        }}
+                      >
+                        {item.status === "notified"
+                          ? t("Email sent", "ইমেইল পাঠানো হয়েছে")
+                          : t("Pending", "অপেক্ষমাণ")}
+                      </span>
+
+                      <button
+                        type="button"
+                        style={dangerButtonStyle}
+                        disabled={
+                          deletingAllStockNotifications ||
+                          Boolean(deletingStockNotificationId)
+                        }
+                        onClick={() => deleteStockNotification(item)}
+                      >
+                        {deletingStockNotificationId === String(item._id)
+                          ? t("Deleting...", "মুছে ফেলা হচ্ছে...")
+                          : t("Delete", "মুছুন")}
+                      </button>
                     </div>
                   ))}
                 </div>
               ) : (
-                <EmptyState>{t("No stock notification requests yet.", "এখনো কোনো Notify Me অনুরোধ নেই।")}</EmptyState>
+                <EmptyState>
+                  {t("No stock notification requests yet.", "এখনো কোনো Notify Me অনুরোধ নেই।")}
+                </EmptyState>
               )}
             </div>
           </section>
@@ -2940,9 +3063,33 @@ const pageTitle =
             <div style={{ border: "1px solid #bfdbfe", background: "#eff6ff", borderRadius: 12, padding: 14, marginBottom: 20 }}>
               <SectionTitle
                 right={
-                  <button type="button" style={buttonStyle} onClick={loadStockNotifications}>
-                    {t("Refresh", "রিফ্রেশ")}
-                  </button>
+                  <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                    <button
+                      type="button"
+                      style={buttonStyle}
+                      disabled={loadingStock}
+                      onClick={loadStockNotifications}
+                    >
+                      {loadingStock
+                        ? t("Loading...", "লোড হচ্ছে...")
+                        : t("Refresh", "রিফ্রেশ")}
+                    </button>
+
+                    <button
+                      type="button"
+                      style={dangerButtonStyle}
+                      disabled={
+                        !stockNotifications.length ||
+                        deletingAllStockNotifications ||
+                        Boolean(deletingStockNotificationId)
+                      }
+                      onClick={deleteAllStockNotifications}
+                    >
+                      {deletingAllStockNotifications
+                        ? t("Deleting...", "মুছে ফেলা হচ্ছে...")
+                        : t("Delete All", "সব মুছুন")}
+                    </button>
+                  </div>
                 }
               >
                 {t("Stock Availability Notifications", "স্টক নোটিফিকেশন")}
@@ -2960,6 +3107,19 @@ const pageTitle =
                       <strong style={{ fontSize: 12, color: item.status === "notified" ? "#059669" : "#d97706" }}>
                         {item.status === "notified" ? t("Email sent", "ইমেইল পাঠানো হয়েছে") : t("Pending", "অপেক্ষমাণ")}
                       </strong>
+                      <button
+                        type="button"
+                        style={dangerButtonStyle}
+                        disabled={
+                          deletingAllStockNotifications ||
+                          Boolean(deletingStockNotificationId)
+                        }
+                        onClick={() => deleteStockNotification(item)}
+                      >
+                        {deletingStockNotificationId === String(item._id)
+                          ? t("Deleting...", "মুছে ফেলা হচ্ছে...")
+                          : t("Delete", "মুছুন")}
+                      </button>
                     </div>
                   ))}
                 </div>
