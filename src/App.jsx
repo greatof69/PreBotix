@@ -43,6 +43,7 @@ import {
   saveAuthSession,
   clearAuthSession,
   authFetch,
+  saveAuthUser,
 } from "./utils/authSession";
 
 const ProductBulkImport = lazy(() => import("./components/ProductBulkImport"));
@@ -653,40 +654,94 @@ const handleProductImageSettled = useCallback((productId) => {
 
   // Keep React state in sync when authFetch detects an expired session.
   useEffect(() => {
-    const handleSessionExpired = () => {
-      cartStorageAccountRef.current = "";
-      skipNextCartSaveRef.current = true;
+  const handleSessionExpired = () => {
+    cartStorageAccountRef.current = "";
+    skipNextCartSaveRef.current = true;
 
-      setAccountUser(null);
-      setCartItems([]);
-      setFavoriteIds([]);
-      setMyOrders([]);
-      setOrdersError("Your session has expired. Please log in again.");
+    setAccountUser(null);
+    setCartItems([]);
+    setFavoriteIds([]);
+    setMyOrders([]);
+    setOrdersError("Your session has expired. Please log in again.");
 
-      setAccountMode("login");
-      setAccountPassword("");
-      setAccountOtp("");
-      setAccountNewPassword("");
-      setAccountMessage("");
-      setAccountOpen(false);
+    setAccountMode("login");
+    setAccountPassword("");
+    setAccountOtp("");
+    setAccountNewPassword("");
+    setAccountMessage("");
+    setAccountOpen(false);
 
-      setCartOpen(false);
-      setCheckoutOpen(false);
-    };
+    setCartOpen(false);
+    setCheckoutOpen(false);
+  };
 
-    window.addEventListener(
+  const handleUserUpdated = () => {
+    setAccountUser(getAuthUser());
+  };
+
+  window.addEventListener(
+    "prebotix:session-expired",
+    handleSessionExpired
+  );
+
+  window.addEventListener(
+    "prebotix:user-updated",
+    handleUserUpdated
+  );
+
+  return () => {
+    window.removeEventListener(
       "prebotix:session-expired",
       handleSessionExpired
     );
 
+    window.removeEventListener(
+      "prebotix:user-updated",
+      handleUserUpdated
+    );
+  };
+}, []);
+
+  // Keep the logged-in user's role synchronized with the backend.
+  useEffect(() => {
+    let active = true;
+
+    const syncCurrentUser = async () => {
+      if (!getAccessToken()) return;
+
+      try {
+        const response = await authFetch(
+          `${API_BASE_URL}/api/auth/me`
+        );
+
+        if (!response.ok) return;
+
+        const data = await response.json();
+
+        if (!active || !data.success || !data.user) return;
+
+        saveAuthUser(data.user);
+      } catch (error) {
+        // Temporary network errors should not log the user out.
+        console.warn(
+          "[PreBotix] User sync failed:",
+          error.message
+        );
+      }
+    };
+
+    syncCurrentUser();
+
+    const intervalId = window.setInterval(
+      syncCurrentUser,
+      30000
+    );
+
     return () => {
-      window.removeEventListener(
-        "prebotix:session-expired",
-        handleSessionExpired
-      );
+      active = false;
+      window.clearInterval(intervalId);
     };
   }, []);
-
 
   const t = copy[lang];
 

@@ -68,11 +68,28 @@ export function saveAuthSession(
   storage.setItem(USER_KEY, JSON.stringify(user));
 }
 
-function updateTokens(accessToken, refreshToken) {
+export function saveAuthUser(user) {
+  if (!user || typeof user !== "object") return;
+
+  const storage = getStorage();
+
+  storage.setItem(USER_KEY, JSON.stringify(user));
+
+  window.dispatchEvent(
+    new Event("prebotix:user-updated")
+  );
+}
+
+
+function updateTokens(accessToken, refreshToken, user = null) {
   const storage = getStorage();
 
   storage.setItem(TOKEN_KEY, accessToken);
   storage.setItem(REFRESH_KEY, refreshToken);
+
+  if (user && typeof user === "object") {
+    storage.setItem(USER_KEY, JSON.stringify(user));
+  }
 }
 
 export function clearAuthSession() {
