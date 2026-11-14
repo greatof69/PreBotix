@@ -702,6 +702,7 @@ const handleProductImageSettled = useCallback((productId) => {
   };
 }, []);
 
+  
   // Keep the logged-in user's role synchronized with the backend.
   useEffect(() => {
     let active = true;
@@ -720,9 +721,17 @@ const handleProductImageSettled = useCallback((productId) => {
 
         if (!active || !data.success || !data.user) return;
 
-        saveAuthUser(data.user);
+        const currentUser = getAuthUser();
+
+        const roleChanged =
+          currentUser?.role !== data.user.role ||
+          currentUser?.isAdmin !== data.user.isAdmin;
+
+        if (roleChanged) {
+          saveAuthUser(data.user);
+          setAccountUser(data.user);
+        }
       } catch (error) {
-        // Temporary network errors should not log the user out.
         console.warn(
           "[PreBotix] User sync failed:",
           error.message
@@ -734,7 +743,7 @@ const handleProductImageSettled = useCallback((productId) => {
 
     const intervalId = window.setInterval(
       syncCurrentUser,
-      30000
+      5000
     );
 
     return () => {
@@ -742,6 +751,7 @@ const handleProductImageSettled = useCallback((productId) => {
       window.clearInterval(intervalId);
     };
   }, []);
+
 
   const t = copy[lang];
 
