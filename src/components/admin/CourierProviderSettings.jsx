@@ -317,9 +317,7 @@ export default function CourierProviderSettings({ request }) {
     setMessage("");
 
     try {
-      const path = provider.adapter === "pathao"
-        ? "/pathao/test"
-        : `/courier-providers/${provider._id}/test`;
+      const path = `/courier-providers/${provider._id}/test`;
 
       const result = await request(path, {
         method: "POST",
@@ -699,3 +697,4 @@ export default function CourierProviderSettings({ request }) {
     </section>
   );
 }
+
