@@ -1,4 +1,4 @@
-﻿import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 const PROVIDERS = [
   { adapter: "pathao", name: "Pathao" },
@@ -137,10 +137,8 @@ function SelectField({ label, value, onChange, options }) {
 export default function CourierProviderSettings({ request }) {
   const [providers, setProviders] = useState([]);
   const [form, setForm] = useState(emptyForm);
-  const [editingId, setEditingId] = useState("");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [testingId, setTestingId] = useState("");
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
 
@@ -181,31 +179,7 @@ export default function CourierProviderSettings({ request }) {
   };
 
   const startCreate = () => {
-    setEditingId("");
     setForm(emptyForm());
-    setMessage("");
-    setError("");
-  };
-
-  const startEdit = (provider) => {
-    setEditingId(provider._id);
-    setForm({
-      name: provider.name || "",
-      adapter: provider.adapter,
-      environment: provider.environment || "sandbox",
-      baseUrl: provider.baseUrl || "",
-      enabled: Boolean(provider.enabled),
-      settings: {
-        storeId: provider.settings?.storeId || "",
-        defaultWeight: String(provider.settings?.defaultWeight ?? 0.5),
-        deliveryType: String(provider.settings?.deliveryType ?? 48),
-        itemType: String(provider.settings?.itemType ?? 2),
-        pickupAddress: provider.settings?.pickupAddress || "",
-        pickupPhone: provider.settings?.pickupPhone || "",
-      },
-      credentials: {},
-      zonesText: JSON.stringify(provider.zones || [], null, 2),
-    });
     setMessage("");
     setError("");
   };
@@ -224,6 +198,7 @@ export default function CourierProviderSettings({ request }) {
 
       const payload = {
         name: form.name.trim(),
+        adapter: form.adapter,
         environment: form.environment,
         baseUrl: form.baseUrl.trim(),
         enabled: form.enabled,
@@ -238,6 +213,11 @@ export default function CourierProviderSettings({ request }) {
         zones,
       };
 
+      payload.code = form.name.trim()
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/^-+|-+$/g, "");
+
       const credentialEntries = Object.entries(form.credentials)
         .filter(([, value]) => String(value).trim() !== "");
 
@@ -245,112 +225,22 @@ export default function CourierProviderSettings({ request }) {
         payload.credentials = Object.fromEntries(credentialEntries);
       }
 
-      if (!editingId) {
-        payload.adapter = form.adapter;
-        payload.code = form.name.trim()
-          .toLowerCase()
-          .replace(/[^a-z0-9]+/g, "-")
-          .replace(/^-+|-+$/g, "");
-
-        if (form.adapter !== "pathao" && !payload.credentials) {
-          throw new Error("Enter the courier API credentials first.");
-        }
+      if (form.adapter !== "pathao" && !payload.credentials) {
+        throw new Error("Enter the courier API credentials first.");
       }
 
-      if (editingId) {
-        await request(`/courier-providers/${editingId}`, {
-          method: "PUT",
-          body: JSON.stringify(payload),
-        });
-        setMessage("Courier provider updated successfully.");
-      } else {
-        await request("/courier-providers", {
-          method: "POST",
-          body: JSON.stringify(payload),
-        });
-        setMessage("Courier provider added successfully.");
-      }
+      const result = await request("/courier-providers", {
+        method: "POST",
+        body: JSON.stringify(payload),
+      });
 
-      setEditingId("");
+      setMessage(result.message || "Courier provider added successfully.");
       setForm(emptyForm());
       await loadProviders();
     } catch (err) {
-      setError(err.message || "Could not save courier provider.");
+      setError(err.message || "Could not add courier provider.");
     } finally {
       setSaving(false);
-    }
-  };
-
-  const toggleProvider = async (provider) => {
-    setError("");
-    setMessage("");
-
-    try {
-      await request(`/courier-providers/${provider._id}`, {
-        method: "PUT",
-        body: JSON.stringify({ enabled: !provider.enabled }),
-      });
-      setMessage(
-        provider.enabled
-          ? `${provider.name} disabled.`
-          : `${provider.name} enabled.`
-      );
-      await loadProviders();
-    } catch (err) {
-      setError(err.message || "Could not update provider.");
-    }
-  };
-
-  const testProvider = async (provider) => {
-    if (provider.adapter === "paperfly") {
-      setError("Paperfly test is unavailable until its merchant API flow is verified.");
-      return;
-    }
-
-    if (provider.adapter === "ecourier") {
-      setError("eCourier test is temporarily disabled because its current POST /packages test may create a shipment. A verified read-only test is required.");
-      return;
-    }
-
-    setTestingId(provider._id);
-    setError("");
-    setMessage("");
-
-    try {
-      const path = `/courier-providers/${provider._id}/test`;
-
-      const result = await request(path, {
-        method: "POST",
-        body: JSON.stringify({}),
-      });
-
-      setMessage(result.message || "Connection test successful.");
-      await loadProviders();
-    } catch (err) {
-      setError(err.message || "Courier connection test failed.");
-      await loadProviders();
-    } finally {
-      setTestingId("");
-    }
-  };
-
-  const setDefault = async (provider) => {
-    if (!window.confirm(`Set ${provider.name} as the default courier for new bookings?`)) {
-      return;
-    }
-
-    setError("");
-    setMessage("");
-
-    try {
-      const result = await request(
-        `/courier-providers/${provider._id}/default`,
-        { method: "PATCH", body: JSON.stringify({}) }
-      );
-      setMessage(result.message || "Default courier updated.");
-      await loadProviders();
-    } catch (err) {
-      setError(err.message || "Could not change default courier.");
     }
   };
 
@@ -467,46 +357,6 @@ export default function CourierProviderSettings({ request }) {
                   </div>
                 </div>
 
-                <div style={{
-                  display: "flex",
-                  flexWrap: "wrap",
-                  gap: 7,
-                }}>
-                  <button
-                    type="button"
-                    style={styles.button}
-                    onClick={() => startEdit(provider)}
-                  >Edit</button>
-
-                  <button
-                    type="button"
-                    style={styles.button}
-                    onClick={() => toggleProvider(provider)}
-                    disabled={provider.isDefault && provider.enabled}
-                  >{provider.enabled ? "Disable" : "Enable"}</button>
-
-                  <button
-                    type="button"
-                    style={styles.button}
-                    disabled={
-                      testingId === provider._id ||
-                      provider.adapter === "paperfly" ||
-                      provider.adapter === "ecourier"
-                    }
-                    onClick={() => testProvider(provider)}
-                  >
-                    {testingId === provider._id ? "Testing..." : "Test API"}
-                  </button>
-
-                  {!provider.isDefault && (
-                    <button
-                      type="button"
-                      style={styles.primary}
-                      disabled={!provider.enabled}
-                      onClick={() => setDefault(provider)}
-                    >Set Default</button>
-                  )}
-                </div>
               </div>
             ))}
           </div>
@@ -519,7 +369,7 @@ export default function CourierProviderSettings({ request }) {
         borderTop: "1px solid #e5e7eb",
       }}>
         <h4 style={{ margin: "0 0 14px" }}>
-          {editingId ? "Edit Courier Provider" : "Add New Courier Provider"}
+          Add New Courier Provider
         </h4>
 
         <div style={styles.grid}>
@@ -530,20 +380,18 @@ export default function CourierProviderSettings({ request }) {
             placeholder="e.g. Steadfast"
           />
 
-          {!editingId && (
-            <SelectField
-              label="Courier Adapter"
-              value={form.adapter}
-              onChange={(value) => {
-                updateForm("adapter", value);
-                updateForm("credentials", {});
-              }}
-              options={PROVIDERS.map((item) => ({
-                value: item.adapter,
-                label: item.name,
-              }))}
-            />
-          )}
+          <SelectField
+            label="Courier Adapter"
+            value={form.adapter}
+            onChange={(value) => {
+              updateForm("adapter", value);
+              updateForm("credentials", {});
+            }}
+            options={PROVIDERS.map((item) => ({
+              value: item.adapter,
+              label: item.name,
+            }))}
+          />
 
           <SelectField
             label="Environment"
@@ -572,12 +420,6 @@ export default function CourierProviderSettings({ request }) {
           </p>
         ) : (
           <>
-            {editingId && (
-              <p style={{ fontSize: 12, opacity: 0.75 }}>
-                Saved credentials are hidden. Leave fields blank to keep the
-                existing credentials. Enter new values only when rotating keys.
-              </p>
-            )}
             <div style={styles.grid}>
               {credentialFields.map(([key, label]) => (
                 <Field
@@ -586,7 +428,7 @@ export default function CourierProviderSettings({ request }) {
                   type="password"
                   value={form.credentials[key] || ""}
                   onChange={(value) => updateCredential(key, value)}
-                  placeholder={editingId ? "Leave blank to keep saved value" : label}
+                  placeholder={label}
                 />
               ))}
             </div>
@@ -678,7 +520,7 @@ export default function CourierProviderSettings({ request }) {
           marginTop: 18,
         }}>
           <button type="submit" style={styles.primary} disabled={saving}>
-            {saving ? "Saving..." : editingId ? "Save Changes" : "Add Provider"}
+            {saving ? "Saving..." : "Add Provider"}
           </button>
 
           <button
