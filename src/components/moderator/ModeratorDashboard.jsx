@@ -1,4 +1,4 @@
-﻿import { createPortal } from "react-dom";
+import { createPortal } from "react-dom";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import DashboardLayout from "../shared/DashboardLayout";
@@ -423,61 +423,6 @@ export default function ModeratorDashboard({
       if (!silent) setLoading(false);
     }
   }, [request]);
-
-  const deleteCourierOrder = useCallback(async (orderId) => {
-    if (!orderId) return;
-
-    const confirmed = window.confirm(
-      t(
-        "Delete this courier order? This cannot be undone.",
-        "এই কুরিয়ার অর্ডারটি মুছবেন? এটি ফিরিয়ে আনা যাবে না।"
-      )
-    );
-    if (!confirmed) return;
-
-    setError("");
-    setNotice("");
-
-    try {
-      await request(`/courier-orders/${encodeURIComponent(orderId)}`, {
-        method: "DELETE",
-      });
-
-      setNotice(t("Courier order deleted.", "কুরিয়ার অর্ডার মুছে ফেলা হয়েছে।"));
-      await loadOrders();
-    } catch (err) {
-      setError(err.message || "Could not delete courier order.");
-    }
-  }, [request, loadOrders, lang]);
-
-  const deleteAllCourierOrders = useCallback(async () => {
-    const typed = window.prompt(
-      t(
-        "You are about to permanently delete ALL courier orders. Type DELETE to confirm.",
-        "আপনি সব কুরিয়ার অর্ডার স্থায়ীভাবে মুছতে যাচ্ছেন। নিশ্চিত করতে DELETE লিখুন।"
-      )
-    );
-    if (String(typed || "").trim() !== "DELETE") return;
-
-    setError("");
-    setNotice("");
-
-    try {
-      await request("/courier-orders", {
-        method: "DELETE",
-      });
-
-      setNotice(
-        t(
-          "All courier orders deleted successfully.",
-          "সব কুরিয়ার অর্ডার মুছে ফেলা হয়েছে।"
-        )
-      );
-      await loadOrders();
-    } catch (err) {
-      setError(err.message || "Could not delete courier orders.");
-    }
-  }, [request, loadOrders, lang]);
 
 
   // -------------------- Load History --------------------
@@ -1310,9 +1255,8 @@ export default function ModeratorDashboard({
         );
 
   const courierOrders = orders.filter((order) =>
-    ["confirmed", "processing", "shipped", "delivered"].includes(
-      statusOf(order)
-    )
+    String(order?.courier?.provider || "").toLowerCase() === "pathao" &&
+    Boolean(String(order?.courier?.consignmentId || "").trim())
   );
 
   const visibleOrderHistory = orderHistory.filter((item) => {
@@ -1728,33 +1672,17 @@ export default function ModeratorDashboard({
             >
               <div>
                 <h2 style={{ fontSize: 18, margin: 0 }}>
-                  {t("Courier Orders", "কুরিয়ার অর্ডার")}
+                  {t("Pathao Tracking", "Pathao ট্র্যাকিং")}
                 </h2>
-
                 <p style={{ color: "#6b7280", fontSize: 13 }}>
                   {t(
-                    "Update delivery status and complete paid orders.",
-                    "ডেলিভারি স্ট্যাটাস আপডেট করুন এবং পেমেন্ট সম্পন্ন অর্ডার হিস্টোরিতে নিন।"
+                    "View Pathao bookings created by Admin. This section is read-only.",
+                    "Admin-এর তৈরি Pathao booking দেখুন। এই বিভাগটি শুধু দেখার জন্য।"
                   )}
                 </p>
               </div>
 
-              <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-                <button
-                  type="button"
-                  style={{
-                    ...buttonStyle,
-                    background: "#dc2626",
-                    color: "#fff",
-                    border: "1px solid #dc2626",
-                  }}
-                  disabled={loading || courierOrders.length === 0}
-                  onClick={deleteAllCourierOrders}
-                >
-                  Delete All ({courierOrders.length})
-                </button>
-
-                <button
+              <button
                 type="button"
                 style={buttonStyle}
                 onClick={loadOrders}
@@ -1764,7 +1692,6 @@ export default function ModeratorDashboard({
                   ? t("Loading...", "লোড হচ্ছে...")
                   : t("Refresh", "রিফ্রেশ")}
               </button>
-              </div>
             </div>
 
             {loading && !ordersLoadedRef.current ? (
@@ -1772,19 +1699,20 @@ export default function ModeratorDashboard({
             ) : courierOrders.length === 0 ? (
               <p style={{ color: "#6b7280" }}>
                 {t(
-                  "No courier orders found.",
-                  "কোনো কুরিয়ার অর্ডার পাওয়া যায়নি।"
+                  "No Pathao bookings found. Orders appear here after Admin creates a booking.",
+                  "কোনো Pathao booking পাওয়া যায়নি। Admin booking তৈরি করলে এখানে দেখা যাবে।"
                 )}
               </p>
             ) : (
               <div style={{ display: "grid", gap: 16 }}>
                 {courierOrders.map((order, index) => {
                   const address = order?.shippingAddress || {};
+                  const courier = order?.courier || {};
                   const orderId = idOf(order);
-                  const status = statusOf(order);
-                  const paymentStatus = String(
-                    order?.paymentStatus || "unpaid"
-                  ).toLowerCase();
+                  const courierStatus =
+                    courier.orderStatus ||
+                    courier.orderStatusSlug ||
+                    (courier.bookingStatus === "booked" ? "Booked" : "N/A");
 
                   return (
                     <article
@@ -1810,7 +1738,6 @@ export default function ModeratorDashboard({
                             {order?.orderNumber ||
                               `#${String(orderId || "").slice(-8)}`}
                           </h3>
-
                           <p style={{ margin: "6px 0", color: "#6b7280" }}>
                             {getCustomerName(order)}
                           </p>
@@ -1818,29 +1745,22 @@ export default function ModeratorDashboard({
 
                         <span
                           style={{
-                            background:
-                              status === "delivered"
-                                ? "#dcfce7"
-                                : "#eff6ff",
-                            color:
-                              status === "delivered"
-                                ? "#166534"
-                                : "#1d4ed8",
+                            background: "#eff6ff",
+                            color: "#1d4ed8",
                             padding: "5px 10px",
                             borderRadius: 20,
                             fontSize: 12,
                             fontWeight: 700,
                           }}
                         >
-                          {status.toUpperCase()}
+                          {String(courierStatus).toUpperCase()}
                         </span>
                       </div>
 
                       <div
                         style={{
                           display: "grid",
-                          gridTemplateColumns:
-                            "repeat(auto-fit, minmax(180px, 1fr))",
+                          gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
                           gap: 12,
                           marginTop: 14,
                         }}
@@ -1861,54 +1781,30 @@ export default function ModeratorDashboard({
                               overflowWrap: "anywhere",
                             }}
                           >
-                            {[
-                              address.addressLine,
-                              address.city,
-                            ].filter(Boolean).join(", ") || "N/A"}
+                            {[address.addressLine, address.city]
+                              .filter(Boolean)
+                              .join(", ") || "N/A"}
                           </p>
                         </div>
 
                         <div>
-                          <strong>{t("Payment Method", "পেমেন্ট পদ্ধতি")}</strong>
-                          <p style={{ margin: "5px 0" }}>
-                            {order?.paymentMethodLabel ||
-                              order?.paymentMethod ||
-                              "N/A"}
-                          </p>
-                        </div>
-
-                        <div>
-                          <strong>{t("Payment Status", "পেমেন্ট স্ট্যাটাস")}</strong>
+                          <strong>Consignment ID</strong>
                           <p
                             style={{
                               margin: "5px 0",
-                              color:
-                                paymentStatus === "paid"
-                                  ? "#047857"
-                                  : "#b45309",
+                              overflowWrap: "anywhere",
                               fontWeight: 700,
                             }}
                           >
-                            {paymentStatus.toUpperCase()}
+                            {courier.consignmentId}
                           </p>
+                        </div>
 
-                          {paymentStatus === "failed" &&
-                            order?.paymentRejectionReason && (
-                              <p
-                                style={{
-                                  margin: "6px 0",
-                                  color: "#dc2626",
-                                  fontSize: 13,
-                                  whiteSpace: "pre-wrap",
-                                  overflowWrap: "anywhere",
-                                }}
-                              >
-                                <strong>
-                                  {t("Rejection Reason:", "Reject করার কারণ:")}
-                                </strong>{" "}
-                                {order.paymentRejectionReason}
-                              </p>
-                            )}
+                        <div>
+                          <strong>{t("Pathao Charge", "Pathao চার্জ")}</strong>
+                          <p style={{ margin: "5px 0", fontWeight: 700 }}>
+                            {money(courier.deliveryFee)}
+                          </p>
                         </div>
                       </div>
 
@@ -1921,14 +1817,10 @@ export default function ModeratorDashboard({
                         }}
                       >
                         <strong>{t("Order Items", "অর্ডারের পণ্য")}</strong>
-
                         {Array.isArray(order?.items) && order.items.length ? (
                           <ul style={{ marginBottom: 0, paddingLeft: 20 }}>
                             {order.items.map((item, itemIndex) => (
-                              <li
-                                key={item?._id || itemIndex}
-                                style={{ marginTop: 5 }}
-                              >
+                              <li key={item?._id || itemIndex} style={{ marginTop: 5 }}>
                                 {item?.name ||
                                   item?.title ||
                                   item?.product?.name ||
@@ -1945,214 +1837,40 @@ export default function ModeratorDashboard({
                         )}
                       </div>
 
-                      <div
-                        style={{
-                          display: "grid",
-                          gridTemplateColumns:
-                            "repeat(auto-fit, minmax(110px, 1fr))",
-                          gap: 10,
-                          marginTop: 14,
-                        }}
-                      >
-                        {[
-                          [
-                            t("Subtotal", "সাবটোটাল"),
-                            order?.subtotal,
-                          ],
-                          [
-                            t("Delivery Fee", "ডেলিভারি চার্জ"),
-                            order?.deliveryFee,
-                          ],
-                          [
-                            t("COD Fee", "COD চার্জ"),
-                            order?.codFee,
-                          ],
-                          [
-                            t("Order Total", "মোট অর্ডার"),
-                            order?.total,
-                          ],
-                        ].map(([label, value]) => (
-                          <div key={label}>
-                            <span
-                              style={{
-                                color: "#6b7280",
-                                fontSize: 12,
-                              }}
-                            >
-                              {label}
-                            </span>
-                            <div style={{ fontWeight: 700, marginTop: 4 }}>
-                              {money(value)}
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-
                       {address.note && (
                         <p style={{ marginTop: 12, overflowWrap: "anywhere" }}>
-                          <strong>
-                            {t("Customer Note", "ক্রেতার নোট")}:
-                          </strong>{" "}
+                          <strong>{t("Customer Note", "ক্রেতার নোট")}:</strong>{" "}
                           {address.note}
                         </p>
                       )}
 
-                      <div
-                        style={{
-                          display: "flex",
-                          flexWrap: "wrap",
-                          gap: 8,
-                          marginTop: 16,
-                        }}
-                      >
-                        <button
-                          type="button"
-                          style={primaryButton}
-                          onClick={async () => {
-                            try {
-                              await navigator.clipboard.writeText(
-                                getCourierBookingText(order)
-                              );
-
-                              setNotice(
-                                t(
-                                  "Courier booking details copied.",
-                                  "কুরিয়ার বুকিংয়ের তথ্য কপি হয়েছে।"
-                                )
-                              );
-                              setError("");
-                            } catch {
-                              setError(
-                                t(
-                                  "Could not copy. Check clipboard permissions.",
-                                  "কপি করা যায়নি। ব্রাউজারের clipboard permission পরীক্ষা করুন।"
-                                )
-                              );
-                            }
-                          }}
-                        >
-                          {t("Copy Courier Details", "কুরিয়ার তথ্য কপি করুন")}
-                        </button>
-
-                        {status === "confirmed" && (
-                          <button
-                            type="button"
-                            style={successButton}
-                            disabled={saving}
-                            onClick={() =>
-                              updateStatus(order, "processing")
-                            }
-                          >
-                            {t("Mark Processing", "প্রসেসিং শুরু করুন")}
-                          </button>
-                        )}
-
-                        {status === "processing" && (
-                          <button
-                            type="button"
-                            style={successButton}
-                            disabled={saving}
-                            onClick={() =>
-                              updateStatus(order, "shipped")
-                            }
-                          >
-                            {t("Mark Shipped", "শিপড হিসেবে চিহ্নিত করুন")}
-                          </button>
-                        )}
-
-                        {status === "shipped" && (
-                          <button
-                            type="button"
-                            style={successButton}
-                            disabled={saving}
-                            onClick={() =>
-                              updateStatus(order, "delivered")
-                            }
-                          >
-                            {t("Mark Delivered", "ডেলিভারি সম্পন্ন করুন")}
-                          </button>
-                        )}
-
-                        {status === "delivered" &&
-                          String(order?.paymentMethod || "").toLowerCase() === "cod" &&
-                          paymentStatus !== "paid" && (
-                            <button
-                              type="button"
-                              style={successButton}
-                              disabled={saving || Boolean(historyActionId)}
-                              onClick={() => markCodAsPaid(order)}
-                            >
-                              {t("Mark as Paid", "Paid হিসেবে চিহ্নিত করুন")}
-                            </button>
-                          )}
-
-                        {status === "delivered" && paymentStatus === "paid" && (
-                          <button
-                            type="button"
-                            style={successButton}
-                            disabled={Boolean(historyActionId)}
-                            onClick={() => completeOrder(order)}
-                          >
-                            {historyActionId === String(orderId)
-                              ? t("Saving...", "সংরক্ষণ হচ্ছে...")
-                              : t("Done", "সম্পন্ন")}
-                          </button>
-                        )}
-
-                        {["bkash", "nagad"].includes(
-                          String(order?.paymentMethod || "").toLowerCase()
-                        ) && paymentStatus === "pending" && (
-                          <>
-                            <button
-                              type="button"
-                              style={successButton}
-                              disabled={saving || Boolean(historyActionId)}
-                              onClick={() =>
-                                updateModeratorPaymentStatus(order, "paid")
-                              }
-                            >
-                              {t("Verify Payment", "পেমেন্ট Verify করুন")}
-                            </button>
-
-                            <button
-                              type="button"
-                              style={dangerButton}
-                              disabled={saving || Boolean(historyActionId)}
-                              onClick={() =>
-                                updateModeratorPaymentStatus(order, "failed")
-                              }
-                            >
-                              {t("Reject Payment", "পেমেন্ট Reject করুন")}
-                            </button>
-                          </>
-                        )}
-                      
-                        <button
-                          type="button"
+                      {courier.trackingUrl ? (
+                        <a
+                          href={courier.trackingUrl}
+                          target="_blank"
+                          rel="noreferrer"
                           style={{
-                            ...buttonStyle,
-                            background: "#dc2626",
-                            color: "#fff",
-                            border: "1px solid #dc2626",
+                            display: "inline-block",
+                            marginTop: 14,
+                            color: "#1d4ed8",
+                            fontWeight: 700,
                           }}
-                          disabled={saving || Boolean(historyActionId)}
-                          onClick={() => deleteCourierOrder(orderId)}
                         >
-                          Delete
-                        </button>
-</div>
+                          {t("Track Parcel", "পার্সেল ট্র্যাক করুন")} ↗
+                        </a>
+                      ) : (
+                        <p style={{ color: "#6b7280", fontSize: 12, marginTop: 14 }}>
+                          {t(
+                            "Tracking link is not available yet. Use the Consignment ID to check the parcel with Pathao.",
+                            "Tracking link এখনো পাওয়া যায়নি। Consignment ID দিয়ে Pathao-তে পার্সেল চেক করুন।"
+                          )}
+                        </p>
+                      )}
                     </article>
                   );
                 })}
               </div>
             )}
-
-            <p style={{ color: "#6b7280", fontSize: 12, marginTop: 18 }}>
-              {t(
-                "Copy Courier Details prepares text for manual booking. It does not create a courier booking or tracking number.",
-                "কুরিয়ার তথ্য কপি করলে ম্যানুয়াল বুকিংয়ের টেক্সট তৈরি হয়। এটি নিজে থেকে কুরিয়ার বুকিং বা ট্র্যাকিং নম্বর তৈরি করে না।"
-              )}
-            </p>
           </section>
         )}
 

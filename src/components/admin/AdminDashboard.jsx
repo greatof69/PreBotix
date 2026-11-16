@@ -4,6 +4,7 @@ import DashboardLayout from "../shared/DashboardLayout";
 import { clearAuthSession, getAccessToken, authFetch } from "../../utils/authSession";
 import FloatingCalculator from "../shared/FloatingCalculator";
 import AdminModeratorEarnings from "./AdminModeratorEarnings";
+import PathaoBookingPanel from "./PathaoBookingPanel";
 
 const API = import.meta.env.VITE_API_URL || "http://localhost:5000";
 
@@ -427,6 +428,7 @@ const [savingAnnouncements, setSavingAnnouncements] = useState(false);
   const [loadingOrders, setLoadingOrders] = useState(false);
   const [loadingUsers, setLoadingUsers] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [pathaoPanelOrderId, setPathaoPanelOrderId] = useState("");
 
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
@@ -3466,6 +3468,7 @@ const pageTitle =
                           </div>
                         )}
                       </div>
+
                     </article>
                   );
                 })}
@@ -3748,6 +3751,16 @@ const pageTitle =
                           </button>
                         )}
 
+                        {!order?.courier?.consignmentId && (
+                          <button
+                            type="button"
+                            style={primaryButtonStyle}
+                            onClick={() => setPathaoPanelOrderId((current) => current === String(orderId) ? "" : String(orderId))}
+                          >
+                            {pathaoPanelOrderId === String(orderId) ? "Close Pathao Form" : "Create Pathao Booking"}
+                          </button>
+                        )}
+
                         <button
                           type="button"
                           disabled={saving || historyActionId === orderId}
@@ -3762,6 +3775,19 @@ const pageTitle =
                           Delete
                         </button>
                       </div>
+
+                      {(pathaoPanelOrderId === String(orderId) || order?.courier?.consignmentId) && (
+                        <PathaoBookingPanel
+                          order={order}
+                          request={request}
+                          t={t}
+                          onBooked={async () => {
+                            await loadOrders({ silent: true });
+                            setPathaoPanelOrderId("");
+                            setMessage("Pathao booking details saved to this order.");
+                          }}
+                        />
+                      )}
                     </article>
                   );
                 })}
@@ -3770,8 +3796,8 @@ const pageTitle =
 
             <p style={{ color: "#6b7280", fontSize: 12, marginTop: 16 }}>
               {t(
-                "Copying prepares details for manual courier booking. It does not create a Pathao booking or tracking number.",
-                "কপি করলে ম্যানুয়াল কুরিয়ার বুকিংয়ের তথ্য তৈরি হবে। এতে Pathao বুকিং বা ট্র্যাকিং নম্বর তৈরি হবে না।"
+                "Create a Pathao booking through the secure PreBotix backend. Pathao sandbox credentials must be configured on the backend.",
+                "নিরাপদ PreBotix backend-এর মাধ্যমে Pathao booking তৈরি করুন। Backend-এ Pathao sandbox credentials configure থাকতে হবে।"
               )}
             </p>
           </section>
