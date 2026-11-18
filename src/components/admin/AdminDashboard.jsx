@@ -1,4 +1,4 @@
-﻿import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import DashboardLayout from "../shared/DashboardLayout";
 import { clearAuthSession, getAccessToken, authFetch } from "../../utils/authSession";
@@ -442,6 +442,13 @@ const [savingAnnouncements, setSavingAnnouncements] = useState(false);
   const [messageEndDate, setMessageEndDate] = useState("");
   const [deletingMessageId, setDeletingMessageId] = useState(null);
   const [deletingAllMessages, setDeletingAllMessages] = useState(false);
+  const [moderatorDashboardTabs, setModeratorDashboardTabs] = useState({
+    dashboard: true, orders: true, courier: true, history: true, messages: true,
+    sales: true, attendance: true, earnings: true, profile: true,
+  });
+  const [loadingModeratorDashboardTabs, setLoadingModeratorDashboardTabs] = useState(false);
+  const [savingModeratorDashboardTabs, setSavingModeratorDashboardTabs] = useState(false);
+
   const [deletingOrderId, setDeletingOrderId] = useState("");
   const [deletingAllOrders, setDeletingAllOrders] = useState(false);
 
@@ -485,6 +492,36 @@ const [savingAnnouncements, setSavingAnnouncements] = useState(false);
 
     return data;
   }, []);
+
+  const loadModeratorDashboardTabs = useCallback(async () => {
+    setLoadingModeratorDashboardTabs(true);
+    try {
+      const data = await request("/moderator-dashboard-settings");
+      if (data?.tabs) setModeratorDashboardTabs((current) => ({ ...current, ...data.tabs }));
+    } catch (err) {
+      setError(err.message || "Could not load Moderator Dashboard permissions.");
+    } finally {
+      setLoadingModeratorDashboardTabs(false);
+    }
+  }, [request]);
+
+  const saveModeratorDashboardTabs = useCallback(async () => {
+    setSavingModeratorDashboardTabs(true);
+    setError("");
+    setMessage("");
+    try {
+      const data = await request("/moderator-dashboard-settings", {
+        method: "PUT",
+        body: JSON.stringify({ tabs: moderatorDashboardTabs }),
+      });
+      if (data?.tabs) setModeratorDashboardTabs((current) => ({ ...current, ...data.tabs }));
+      setMessage("Moderator Dashboard permissions saved successfully.");
+    } catch (err) {
+      setError(err.message || "Could not save Moderator Dashboard permissions.");
+    } finally {
+      setSavingModeratorDashboardTabs(false);
+    }
+  }, [request, moderatorDashboardTabs]);
 
   const loadOrders = useCallback(async ({ silent = false } = {}) => {
     if (!silent) setLoadingOrders(true);
@@ -1428,7 +1465,9 @@ const deleteFilteredMessages = async () => {
       refreshing = true;
 
       try {
-        if (tab === "moderatorApplications") {
+        if (tab === "moderatorPermissions") {
+          await loadModeratorDashboardTabs();
+        } else if (tab === "moderatorApplications") {
           await loadModeratorApplications();
         } else if (tab === "moderatorWork") {
           await loadModeratorWork(silent);
@@ -1484,6 +1523,7 @@ const deleteFilteredMessages = async () => {
     loadOrderHistory,
     loadPaymentDeliverySettings,
     loadModeratorApplications,
+    loadModeratorDashboardTabs,
     loadModeratorWork,
   ]);
 
@@ -1917,6 +1957,12 @@ const deleteOrder = async (order) => {
       icon: "â—·",
     },
     {
+      id: "moderatorPermissions",
+      label: "Moderator Dashboard Access",
+      labelBn: "Moderator Dashboard Permissions",
+      icon: "🔐",
+    },
+    {
       id: "moderatorEarnings",
       label: "Moderator Earnings",
       labelBn: "à¦®à¦¡à¦¾à¦°à§‡à¦Ÿà¦° à¦†à§Ÿ",
@@ -1961,6 +2007,8 @@ const pageTitle =
       ? t("Moderator Applications", "à¦®à¦¡à¦¾à¦°à§‡à¦Ÿà¦° à¦†à¦¬à§‡à¦¦à¦¨")
       : tab === "moderatorWork"
         ? t("Moderator Work & Attendance", "à¦®à¦¡à¦¾à¦°à§‡à¦Ÿà¦° à¦¶à¦¿à¦«à¦Ÿ à¦“ à¦‰à¦ªà¦¸à§à¦¥à¦¿à¦¤à¦¿")
+        : tab === "moderatorPermissions"
+        ? t("Moderator Dashboard Access", "Moderator Dashboard Permissions")
         : tab === "moderatorEarnings"
         ? t("Moderator Earnings", "à¦®à¦¡à¦¾à¦°à§‡à¦Ÿà¦° à¦†à§Ÿ")
         : tab === "stock"
@@ -4350,6 +4398,48 @@ const pageTitle =
               })()}
             </section>
           </div>
+        )}
+
+        {tab === "moderatorPermissions" && (
+          <section style={{ ...cardStyle, display: "grid", gap: 16 }}>
+            <div>
+              <h2 style={{ margin: "0 0 6px" }}>Moderator Dashboard Access</h2>
+              <p style={{ margin: 0, color: "#64748b", lineHeight: 1.6 }}>
+                Choose which sections moderators can see and use. Disabled sections are also blocked by the backend, including direct API requests.
+              </p>
+            </div>
+            {loadingModeratorDashboardTabs ? (
+              <p>Loading permissions…</p>
+            ) : (
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 10 }}>
+                {[
+                  ["dashboard", "Dashboard"], ["orders", "Order Management"],
+                  ["courier", "Courier Orders"], ["history", "Order History"],
+                  ["messages", "Customer Messages"], ["sales", "My Sales"],
+                  ["attendance", "Attendance"], ["earnings", "Earnings"],
+                  ["profile", "Profile"],
+                ].map(([key, label]) => (
+                  <label key={key} style={{ display: "flex", alignItems: "center", gap: 10, padding: 12, border: "1px solid #e5e7eb", borderRadius: 10, cursor: "pointer" }}>
+                    <input
+                      type="checkbox"
+                      checked={!!moderatorDashboardTabs[key]}
+                      onChange={(event) => setModeratorDashboardTabs((current) => ({ ...current, [key]: event.target.checked }))}
+                    />
+                    <span style={{ fontWeight: 600 }}>{label}</span>
+                    <span style={{ marginLeft: "auto", color: moderatorDashboardTabs[key] ? "#059669" : "#dc2626", fontSize: 12 }}>
+                      {moderatorDashboardTabs[key] ? "Visible" : "Hidden"}
+                    </span>
+                  </label>
+                ))}
+              </div>
+            )}
+            <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+              <button type="button" style={buttonStyle} disabled={loadingModeratorDashboardTabs || savingModeratorDashboardTabs} onClick={loadModeratorDashboardTabs}>Reload</button>
+              <button type="button" style={primaryButtonStyle} disabled={loadingModeratorDashboardTabs || savingModeratorDashboardTabs} onClick={saveModeratorDashboardTabs}>
+                {savingModeratorDashboardTabs ? "Saving…" : "Save Permissions"}
+              </button>
+            </div>
+          </section>
         )}
 
         {tab === "moderatorEarnings" && (

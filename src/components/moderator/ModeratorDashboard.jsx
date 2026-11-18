@@ -272,6 +272,10 @@ export default function ModeratorDashboard({
   const navigate = useNavigate();
 
   const [tab, setTab] = useState(readModeratorActiveTab);
+  const [allowedTabs, setAllowedTabs] = useState({
+    dashboard: true, orders: true, courier: true, history: true,
+    messages: true, sales: true, attendance: true, earnings: true, profile: true,
+  });
 
   // Restore and persist the moderator's last opened tab across page refreshes.
   useEffect(() => {
@@ -401,6 +405,29 @@ export default function ModeratorDashboard({
 
     return data;
   }, []);
+
+  // Admin-controlled tab visibility is loaded from the backend.
+  // Backend middleware independently enforces the same permissions.
+  useEffect(() => {
+    let alive = true;
+    request("/permissions")
+      .then((data) => {
+        if (!alive) return;
+        const next = data?.tabs && typeof data.tabs === "object" ? data.tabs : {};
+        setAllowedTabs((current) => ({ ...current, ...next }));
+      })
+      .catch((err) => {
+        if (alive) console.error("Could not load moderator permissions:", err.message);
+      });
+    return () => { alive = false; };
+  }, [request]);
+
+  useEffect(() => {
+    if (!allowedTabs[tab]) {
+      const fallback = MODERATOR_VALID_TABS.find((item) => allowedTabs[item]);
+      if (fallback) setTab(fallback);
+    }
+  }, [allowedTabs, tab]);
 
   // -------------------- Load Orders --------------------
 
@@ -1225,7 +1252,7 @@ export default function ModeratorDashboard({
       labelBn: "প্রোফাইল",
       icon: "♙",
     },
-  ];
+  ].filter((item) => allowedTabs[item.id]);
 
   const title =
     navItems.find((item) => item.id === tab)?.label ||
