@@ -198,12 +198,31 @@ export default function SupplyDashboard({ request, lang = "en", isAdmin = false 
                       <div><span style={muted}>{bn ? "গ্রাহক" : "Customer"}</span><div style={{ fontWeight: 600 }}>{address.fullName || "—"}</div></div>
                       <div><span style={muted}>{bn ? "ফোন" : "Phone"}</span><div style={{ fontWeight: 600 }}>{address.phone || "—"}</div></div>
                       <div><span style={muted}>{bn ? "মোট" : "Total"}</span><div style={{ fontWeight: 700 }}>{money(order.total)}</div></div>
-                      <div><span style={muted}>{bn ? "Confirm Time" : "Confirmed"}</span><div>{dateText(order.confirmedAt)}</div></div>
+                      <div>
+                        <span style={muted}>
+                          {view === "cancel"
+                            ? (bn ? "বাতিলের সময়" : "Cancelled")
+                            : (bn ? "Confirm Time" : "Confirmed")}
+                        </span>
+                        <div>
+                          {dateText(
+                            view === "cancel"
+                              ? order.cancellation?.cancelledAt
+                              : order.confirmedAt
+                          )}
+                        </div>
+                      </div>
                     </div>
                     <div style={{ fontSize: 13, color: "#334155" }}>
                       {items.map((item, index) => <div key={item._id || `${item.productId}-${index}`}>{item.title} × {item.quantity}{item.selectedPriceOption?.optionText ? ` (${item.selectedPriceOption.optionText})` : ""}</div>)}
                     </div>
                     <div style={{ ...muted, overflowWrap: "anywhere" }}>{[address.addressLine, address.city].filter(Boolean).join(", ")}</div>
+                    {view === "cancel" && order.cancellation?.reason && (
+                      <div style={{ fontSize: 13, color: "#b91c1c" }}>
+                        <strong>{bn ? "বাতিলের কারণ:" : "Cancellation reason:"}</strong>{" "}
+                        {order.cancellation.reason}
+                      </div>
+                    )}
                     <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, flexWrap: "wrap", borderTop: "1px solid #e5e7eb", paddingTop: 10 }}>
                       <span style={{ fontSize: 12, color: order.moveDropSentAt ? "#047857" : "#64748b", fontWeight: 650 }}>
                         {order.moveDropSentAt
