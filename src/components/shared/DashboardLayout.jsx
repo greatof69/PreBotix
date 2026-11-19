@@ -1,4 +1,26 @@
 import { useNavigate } from "react-router-dom";
+import {
+  LayoutDashboard,
+  ClipboardList,
+  Users,
+  Settings,
+  ShieldCheck,
+  Clock,
+  Lock,
+  Wallet,
+  Package,
+  MessageSquare,
+  CreditCard,
+  Truck,
+  Boxes,
+  History,
+  TrendingUp,
+  CalendarDays,
+  UserRound,
+  Home,
+  LogOut,
+  Circle
+} from "lucide-react";
 
 const defaultTabs = {
   admin: [
@@ -16,6 +38,32 @@ const defaultTabs = {
   ],
 };
 
+const dashboardIcons = {
+  dashboard: LayoutDashboard,
+  orders: ClipboardList,
+  users: Users,
+  generalSettings: Settings,
+  moderatorApplications: ShieldCheck,
+  moderatorWork: Clock,
+  moderatorPermissions: Lock,
+  moderatorEarnings: Wallet,
+  stock: Package,
+  messages: MessageSquare,
+  paymentDelivery: CreditCard,
+  courier: Truck,
+  supply: Boxes,
+  history: History,
+  sales: TrendingUp,
+  attendance: CalendarDays,
+  earnings: Wallet,
+  profile: UserRound,
+};
+
+function NavIcon({ id }) {
+  const Icon = dashboardIcons[id] || Circle;
+
+  return <Icon size={18} strokeWidth={2} />;
+}
 export default function DashboardLayout({
   children,
   title = "Dashboard",
@@ -164,9 +212,15 @@ export default function DashboardLayout({
                 fontWeight: activeTab === item.id ? 700 : 400,
               }}
             >
-              <span style={{ width: 20 }}>
-                {item.icon || "•"}
-              </span>
+              <span style={{
+  width: 20,
+  minWidth: 20,
+  display: "inline-flex",
+  alignItems: "center",
+  justifyContent: "center"
+}}>
+  <NavIcon id={item.id} />
+</span>
               <span>
                 {lang === "bn" && item.labelBn
                   ? item.labelBn
@@ -184,7 +238,7 @@ export default function DashboardLayout({
           onClick={() => navigate("/")}
           style={styles.navButton}
         >
-          <span style={{ width: 20 }}>🏠</span>
+          <span style={{ width: 20, display: "inline-flex", justifyContent: "center" }}><Home size={18} /></span>
           <span>{t("Back to Home", "হোমে ফিরে যান")}</span>
         </button>
 
@@ -196,7 +250,7 @@ export default function DashboardLayout({
             color: "#fca5a5",
           }}
         >
-          <span style={{ width: 20 }}>↪</span>
+          <span style={{ width: 20, display: "inline-flex", justifyContent: "center" }}><LogOut size={18} /></span>
           <span>{t("Logout", "লগআউট")}</span>
         </button>
       </aside>
@@ -254,7 +308,7 @@ export default function DashboardLayout({
               onClick={() => navigate("/")}
               style={styles.button}
             >
-              🏠 {t("Home", "হোম")}
+              <Home size={16} style={{ verticalAlign: "middle" }} /> {t("Home", "হোম")}
             </button>
 
             <button
