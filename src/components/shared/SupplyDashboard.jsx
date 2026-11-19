@@ -39,6 +39,7 @@ export default function SupplyDashboard({ request, lang = "en", isAdmin = false 
   const [connection, setConnection] = useState(null);
   const [apiKey, setApiKey] = useState("");
   const [savingKey, setSavingKey] = useState(false);
+  const [sendingOrder, setSendingOrder] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -69,6 +70,26 @@ export default function SupplyDashboard({ request, lang = "en", isAdmin = false 
     const timer = window.setInterval(() => load(true), 15000);
     return () => window.clearInterval(timer);
   }, [load, view]);
+
+  const sendToMoveDrop = async (orderNumber) => {
+    if (!orderNumber || sendingOrder) return;
+    const confirmed = window.confirm(bn
+      ? `অর্ডার #${orderNumber} MoveDrop-এ পাঠানোর জন্য Ready করবেন?`
+      : `Queue order #${orderNumber} for MoveDrop?`);
+    if (!confirmed) return;
+    setSendingOrder(orderNumber);
+    setError("");
+    try {
+      await request(`/supply/orders/${encodeURIComponent(orderNumber)}/send`, {
+        method: "POST",
+      });
+      await load(true);
+    } catch (err) {
+      setError(err?.message || (bn ? "MoveDrop-এর জন্য অর্ডার Ready করা যায়নি।" : "Could not queue this order for MoveDrop."));
+    } finally {
+      setSendingOrder("");
+    }
+  };
 
   const saveApiKey = async () => {
     if (!apiKey.trim()) {
@@ -106,7 +127,7 @@ export default function SupplyDashboard({ request, lang = "en", isAdmin = false 
         <div>
           <h2 style={{ margin: 0, fontSize: 20 }}>📦 {bn ? "সাপ্লাই ম্যানেজমেন্ট" : "Supply Management"}</h2>
           <p style={{ ...muted, margin: "5px 0 0" }}>
-            {bn ? "ফোনে অর্ডার Confirm হলেই MoveDrop-এর জন্য Ready হবে। MoveDrop পরে Fetch করবে।" : "Orders become Ready to Fetch after confirmation in Order Management. MoveDrop fetches them later."}
+            {bn ? "Order Management-এ Confirm করার পর Send to MoveDrop চাপুন। এরপর MoveDrop API থেকে অর্ডার Fetch করবে।" : "Confirm the order, then select Send to MoveDrop. MoveDrop will fetch queued orders through its API."}
           </p>
         </div>
         <button type="button" style={buttonStyle} onClick={() => load(false)} disabled={loading}>
@@ -187,6 +208,24 @@ export default function SupplyDashboard({ request, lang = "en", isAdmin = false 
                       {items.map((item, index) => <div key={item._id || `${item.productId}-${index}`}>{item.title} × {item.quantity}{item.selectedPriceOption?.optionText ? ` (${item.selectedPriceOption.optionText})` : ""}</div>)}
                     </div>
                     <div style={{ ...muted, overflowWrap: "anywhere" }}>{[address.addressLine, address.city].filter(Boolean).join(", ")}</div>
+                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, flexWrap: "wrap", borderTop: "1px solid #e5e7eb", paddingTop: 10 }}>
+                      <span style={{ fontSize: 12, color: order.moveDropSentAt ? "#047857" : "#64748b", fontWeight: 650 }}>
+                        {order.moveDropSentAt
+                          ? (bn ? `MoveDrop-এ পাঠানো হয়েছে: ${dateText(order.moveDropSentAt)}` : `Queued for MoveDrop: ${dateText(order.moveDropSentAt)}`)
+                          : (bn ? "এখনো MoveDrop-এ পাঠানো হয়নি" : "Not yet sent to MoveDrop")}
+                      </span>
+                      {view === "orders" && (
+                        <button type="button" style={order.moveDropSentAt ? { ...buttonStyle, color: "#047857", borderColor: "#86efac", cursor: "default" } : activeButtonStyle}
+                          onClick={() => sendToMoveDrop(order.orderNumber)}
+                          disabled={Boolean(order.moveDropSentAt) || Boolean(sendingOrder)}>
+                          {sendingOrder === order.orderNumber
+                            ? (bn ? "পাঠানো হচ্ছে…" : "Sending…")
+                            : order.moveDropSentAt
+                              ? (bn ? "✓ MoveDrop-এ পাঠানো হয়েছে" : "✓ Sent to MoveDrop")
+                              : (bn ? "MoveDrop-এ পাঠান" : "Send to MoveDrop")}
+                        </button>
+                      )}
+                    </div>
                   </article>
                 );
               })}
