@@ -6,6 +6,7 @@ import FloatingCalculator from "../shared/FloatingCalculator";
 import AdminModeratorEarnings from "./AdminModeratorEarnings";
 import PathaoBookingPanel from "./PathaoBookingPanel";
 import CourierProviderSettings from "./CourierProviderSettings";
+import SupplyDashboard from "../shared/SupplyDashboard";
 
 const API = import.meta.env.VITE_API_URL || "http://localhost:5000";
 
@@ -443,7 +444,7 @@ const [savingAnnouncements, setSavingAnnouncements] = useState(false);
   const [deletingMessageId, setDeletingMessageId] = useState(null);
   const [deletingAllMessages, setDeletingAllMessages] = useState(false);
   const [moderatorDashboardTabs, setModeratorDashboardTabs] = useState({
-    dashboard: true, orders: true, courier: true, history: true, messages: true,
+    dashboard: true, orders: true, courier: true, supply: true, history: true, messages: true,
     sales: true, attendance: true, earnings: true, profile: true,
   });
   const [loadingModeratorDashboardTabs, setLoadingModeratorDashboardTabs] = useState(false);
@@ -1991,6 +1992,7 @@ const deleteOrder = async (order) => {
       labelBn: "à¦•à§à¦°à¦¿à§Ÿà¦¾à¦° à¦…à¦°à§à¦¡à¦¾à¦°",
       icon: "ðŸ“¦",
     },
+    { id: "supply", label: "Supply", labelBn: "সাপ্লাই", icon: "📦" },
     {
       id: "history",
       label: "Order History",
@@ -2019,6 +2021,8 @@ const pageTitle =
           ? t("Payment & Delivery Settings", "à¦ªà§‡à¦®à§‡à¦¨à§à¦Ÿ à¦“ à¦¡à§‡à¦²à¦¿à¦­à¦¾à¦°à¦¿ à¦¸à§‡à¦Ÿà¦¿à¦‚à¦¸")
           : tab === "courier"
             ? t("Courier Orders", "à¦•à§à¦°à¦¿à§Ÿà¦¾à¦° à¦…à¦°à§à¦¡à¦¾à¦°")
+            : tab === "supply"
+            ? t("Supply", "সাপ্লাই")
             : tab === "history"
               ? t("Order History", "à¦…à¦°à§à¦¡à¦¾à¦° à¦¹à¦¿à¦¸à§à¦Ÿà§‹à¦°à¦¿")
               : t("Order Management", "à¦…à¦°à§à¦¡à¦¾à¦° à¦®à§à¦¯à¦¾à¦¨à§‡à¦œà¦®à§‡à¦¨à§à¦Ÿ");
@@ -4414,7 +4418,7 @@ const pageTitle =
               <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 10 }}>
                 {[
                   ["dashboard", "Dashboard"], ["orders", "Order Management"],
-                  ["courier", "Courier Orders"], ["history", "Order History"],
+                  ["courier", "Courier Orders"], ["supply", "Supply"], ["history", "Order History"],
                   ["messages", "Customer Messages"], ["sales", "My Sales"],
                   ["attendance", "Attendance"], ["earnings", "Earnings"],
                   ["profile", "Profile"],
@@ -4445,6 +4449,8 @@ const pageTitle =
         {tab === "moderatorEarnings" && (
           <AdminModeratorEarnings request={request} lang={lang} />
         )}
+
+        {tab === "supply" && <SupplyDashboard request={request} lang={lang} isAdmin />}
 
         {tab === "history" && (
           <section style={cardStyle}>

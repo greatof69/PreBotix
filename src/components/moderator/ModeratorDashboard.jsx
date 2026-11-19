@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import DashboardLayout from "../shared/DashboardLayout";
 import FloatingCalculator from "../shared/FloatingCalculator";
 import ModeratorEarnings from "./ModeratorEarnings";
+import SupplyDashboard from "../shared/SupplyDashboard";
 import {
   clearAuthSession,
   authFetch,
@@ -109,6 +110,7 @@ const MODERATOR_VALID_TABS = [
   "dashboard",
   "orders",
   "courier",
+  "supply",
   "history",
   "messages",
   "sales",
@@ -273,7 +275,7 @@ export default function ModeratorDashboard({
 
   const [tab, setTab] = useState(readModeratorActiveTab);
   const [allowedTabs, setAllowedTabs] = useState({
-    dashboard: true, orders: true, courier: true, history: true,
+    dashboard: true, orders: true, courier: true, supply: true, history: true,
     messages: true, sales: true, attendance: true, earnings: true, profile: true,
   });
 
@@ -1217,6 +1219,12 @@ export default function ModeratorDashboard({
       icon: "📦",
     },
     {
+      id: "supply",
+      label: t("Supply", "সাপ্লাই"),
+      labelBn: "সাপ্লাই",
+      icon: "📦",
+    },
+    {
       id: "history",
       label: t("Order History", "অর্ডার হিস্টোরি"),
       labelBn: "অর্ডার হিস্টোরি",
@@ -2125,6 +2133,8 @@ export default function ModeratorDashboard({
         )}
 
         {/* ==================== Customer Messages ==================== */}
+
+        {tab === "supply" && <SupplyDashboard request={request} lang={lang} />}
 
         {tab === "messages" && (
           <section style={cardStyle}>
