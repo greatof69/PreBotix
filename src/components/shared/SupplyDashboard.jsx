@@ -72,11 +72,7 @@ export default function SupplyDashboard({ request, lang = "en", isAdmin = false 
   }, [load, view]);
 
   const sendToMoveDrop = async (orderNumber) => {
-    if (!orderNumber || sendingOrder) return;
-    const confirmed = window.confirm(bn
-      ? `অর্ডার #${orderNumber} MoveDrop-এ পাঠানোর জন্য Ready করবেন?`
-      : `Queue order #${orderNumber} for MoveDrop?`);
-    if (!confirmed) return;
+    
     setSendingOrder(orderNumber);
     setError("");
     try {
