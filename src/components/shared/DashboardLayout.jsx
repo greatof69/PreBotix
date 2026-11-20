@@ -1,4 +1,4 @@
-import { useNavigate } from "react-router-dom";
+﻿import { useNavigate } from "react-router-dom";
 import {
   LayoutDashboard,
   ClipboardList,
@@ -24,17 +24,17 @@ import {
 
 const defaultTabs = {
   admin: [
-    { id: "orders", label: "Dashboard", icon: "▦" },
-    { id: "users", label: "Customers & Roles", icon: "♙" },
+    { id: "orders", label: "Dashboard", icon: "â–¦" },
+    { id: "users", label: "Customers & Roles", icon: "â™™" },
   ],
   moderator: [
-    { id: "dashboard", label: "Dashboard", icon: "▦" },
-    { id: "orders", label: "Assigned Orders", icon: "▤" },
-    { id: "messages", label: "Customer Messages", icon: "✉" },
-    { id: "sales", label: "My Sales", icon: "↗" },
-    { id: "attendance", label: "Attendance", icon: "◷" },
-    { id: "earnings", label: "Earnings", icon: "৳" },
-    { id: "profile", label: "Profile", icon: "♙" },
+    { id: "dashboard", label: "Dashboard", icon: "â–¦" },
+    { id: "orders", label: "Assigned Orders", icon: "â–¤" },
+    { id: "messages", label: "Customer Messages", icon: "âœ‰" },
+    { id: "sales", label: "My Sales", icon: "â†—" },
+    { id: "attendance", label: "Attendance", icon: "â—·" },
+    { id: "earnings", label: "Earnings", icon: "à§³" },
+    { id: "profile", label: "Profile", icon: "â™™" },
   ],
 };
 
@@ -51,7 +51,7 @@ const dashboardIcons = {
   messages: MessageSquare,
   paymentDelivery: CreditCard,
   courier: Truck,
-  supply: Boxes,
+  supplyStock: Package,
   history: History,
   sales: TrendingUp,
   attendance: CalendarDays,
@@ -188,8 +188,8 @@ export default function DashboardLayout({
 
         <div style={styles.role}>
           {isModerator
-            ? t("Moderator Panel", "মডারেটর প্যানেল")
-            : t("Administrator Panel", "অ্যাডমিন প্যানেল")}
+            ? t("Moderator Panel", "à¦®à¦¡à¦¾à¦°à§‡à¦Ÿà¦° à¦ªà§à¦¯à¦¾à¦¨à§‡à¦²")
+            : t("Administrator Panel", "à¦…à§à¦¯à¦¾à¦¡à¦®à¦¿à¦¨ à¦ªà§à¦¯à¦¾à¦¨à§‡à¦²")}
         </div>
 
         <nav>
@@ -239,7 +239,7 @@ export default function DashboardLayout({
           style={styles.navButton}
         >
           <span style={{ width: 20, display: "inline-flex", justifyContent: "center" }}><Home size={18} /></span>
-          <span>{t("Back to Home", "হোমে ফিরে যান")}</span>
+          <span>{t("Back to Home", "à¦¹à§‹à¦®à§‡ à¦«à¦¿à¦°à§‡ à¦¯à¦¾à¦¨")}</span>
         </button>
 
         <button
@@ -251,7 +251,7 @@ export default function DashboardLayout({
           }}
         >
           <span style={{ width: 20, display: "inline-flex", justifyContent: "center" }}><LogOut size={18} /></span>
-          <span>{t("Logout", "লগআউট")}</span>
+          <span>{t("Logout", "à¦²à¦—à¦†à¦‰à¦Ÿ")}</span>
         </button>
       </aside>
 
@@ -272,7 +272,7 @@ export default function DashboardLayout({
               style={styles.button}
               className="prebotix-menu-button"
             >
-              ☰
+              â˜°
             </button>
 
             <div>
@@ -308,7 +308,7 @@ export default function DashboardLayout({
               onClick={() => navigate("/")}
               style={styles.button}
             >
-              <Home size={16} style={{ verticalAlign: "middle" }} /> {t("Home", "হোম")}
+              <Home size={16} style={{ verticalAlign: "middle" }} /> {t("Home", "à¦¹à§‹à¦®")}
             </button>
 
             <button
@@ -316,7 +316,7 @@ export default function DashboardLayout({
               onClick={() => setLang(lang === "bn" ? "en" : "bn")}
               style={styles.button}
             >
-              🌐 {lang === "bn" ? "English" : "বাংলা"}
+              ðŸŒ {lang === "bn" ? "English" : "à¦¬à¦¾à¦‚à¦²à¦¾"}
             </button>
           </div>
         </header>
