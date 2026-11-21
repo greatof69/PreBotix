@@ -106,15 +106,39 @@ export default function App() {
   // PRODUCTS FROM MONGODB API + INSTANT LOCAL CACHE
   const [products, setProducts] = useState(() => readCachedProducts());
 
+  // Supply products are kept separate from regular Product IDs and cache.
+  const [supplyProducts, setSupplyProducts] = useState([]);
+  const [supplyProductsLoaded, setSupplyProductsLoaded] = useState(false);
+
   const [productsLoaded, setProductsLoaded] = useState(
     () => readCachedProducts().length > 0
   );
 
   const [productsError, setProductsError] = useState("");
+  // Customer catalog: regular products + public Supply products.
+  const catalogSupplyProducts = useMemo(
+    () =>
+      supplyProducts.map((product) => ({
+        ...product,
+        id: String(product._id || product.supplyProductId || ""),
+        source: "supply",
+        supplyProductId: String(product._id || product.supplyProductId || ""),
+        price: Number(product.sellingPrice || 0),
+        stock: Number(product.sellableStock || 0),
+        priceOptionsEnabled: false,
+        priceOptions: [],
+      })),
+    [supplyProducts]
+  );
+
+  const catalogProducts = useMemo(
+    () => [...products, ...catalogSupplyProducts],
+    [products, catalogSupplyProducts]
+  );
 
   // Save the latest successful product data for the next visit.
   useEffect(() => {
-    if (!productsLoaded) return;
+    if (!productsLoaded || !supplyProductsLoaded) return;
 
     try {
       localStorage.setItem(
@@ -263,6 +287,19 @@ export default function App() {
           settingsResponse.json().catch(() => ({})),
         ]);
         if (!active) return;
+        try {
+          const supplyResponse = await fetch(`${API_BASE_URL}/api/storefront/supply-products`);
+          const supplyData = await supplyResponse.json().catch(() => ({}));
+          if (active && supplyResponse.ok && Array.isArray(supplyData.supplyProducts)) {
+            setSupplyProducts((current) =>
+              JSON.stringify(current) === JSON.stringify(supplyData.supplyProducts)
+                ? current
+                : supplyData.supplyProducts
+            );
+          }
+        } catch {
+          // Keep the last successfully loaded Supply products.
+        }
         if (productResponse.ok && Array.isArray(productData.products)) {
           setProducts((current) =>
             JSON.stringify(current) === JSON.stringify(productData.products)
@@ -331,6 +368,34 @@ export default function App() {
   }, []);
 
 
+  // Load public Supply products independently from the regular catalog.
+  useEffect(() => {
+    const controller = new AbortController();
+
+    async function loadSupplyProducts() {
+      try {
+        const response = await fetch(`${API_BASE_URL}/api/storefront/supply-products`, {
+          signal: controller.signal,
+        });
+        const data = await response.json().catch(() => ({}));
+
+        if (response.ok && Array.isArray(data.supplyProducts)) {
+          setSupplyProducts(data.supplyProducts);
+        }
+      } catch (error) {
+        if (error.name !== "AbortError") {
+          console.warn("[PreBotix] Supply product loading failed:", error);
+        }
+      } finally {
+        if (!controller.signal.aborted) {
+          setSupplyProductsLoaded(true);
+        }
+      }
+    }
+
+    loadSupplyProducts();
+    return () => controller.abort();
+  }, []);
   const reloadPublicProducts = useCallback(async () => {
     const response = await fetch(`${API_BASE_URL}/api/products`);
     const data = await response.json().catch(() => ({}));
@@ -338,6 +403,15 @@ export default function App() {
       throw new Error(data.message || "Could not reload products.");
     }
     setProducts(data.products);
+    try {
+      const supplyResponse = await fetch(`${API_BASE_URL}/api/storefront/supply-products`);
+      const supplyData = await supplyResponse.json().catch(() => ({}));
+      if (supplyResponse.ok && Array.isArray(supplyData.supplyProducts)) {
+        setSupplyProducts(supplyData.supplyProducts);
+      }
+    } catch {
+      // Keep the last successfully loaded Supply products.
+    }
     setProductsLoaded(true);
     return data.products;
   }, []);
@@ -469,7 +543,9 @@ export default function App() {
       item.priceOptionId ||
       "";
 
-    return `${item.id}:${optionId || "default"}`;
+    const source = item.source === "supply" ? "supply" : "product";
+    const itemId = source === "supply" ? (item.supplyProductId || item.id) : item.id;
+    return `${source}:${itemId}:${optionId || "default"}`;
   };
 
   const getAccountStorageKey = (baseKey, user) => {
@@ -560,6 +636,31 @@ const handleProductImageSettled = useCallback((productId) => {
       setAccountOpen(false);
       return;
     }
+    const supplyMatch = path.match(/^\/supply-products\/([^/]+)$/);
+    if (supplyMatch) {
+      const supplyId = decodeURIComponent(supplyMatch[1]);
+      const supply = supplyProducts.find(
+        (item) => String(item._id || item.supplyProductId || item.id) === supplyId
+      );
+
+      setShowCatalogPage(false);
+      setShowWishlist(false);
+      setAccountOpen(false);
+
+      if (supply) {
+        setSelectedProduct({
+          ...supply,
+          id: supplyId,
+          source: "supply",
+          supplyProductId: supplyId,
+          price: Number(supply.sellingPrice || 0),
+          stock: Number(supply.sellableStock || 0),
+          priceOptionsEnabled: false,
+          priceOptions: [],
+        });
+      }
+      return;
+    }
     const productMatch = path.match(/^\/products\/([^/]+)$/);
     if (productMatch) {
       const productId = decodeURIComponent(productMatch[1]);
@@ -631,6 +732,8 @@ const handleProductImageSettled = useCallback((productId) => {
     location.pathname,
     products,
     productsLoaded,
+    supplyProducts,
+    supplyProductsLoaded,
     isAdminUser,
     isModeratorUser,
     navigate,
@@ -765,7 +868,7 @@ const handleProductImageSettled = useCallback((productId) => {
 
   // SAVE CART ONLY TO THE CURRENT ACCOUNT
   useEffect(() => {
-    if (!productsLoaded) return;
+    if (!productsLoaded || !supplyProductsLoaded) return;
 
     if (skipNextCartSaveRef.current) {
       skipNextCartSaveRef.current = false;
@@ -784,9 +887,12 @@ const handleProductImageSettled = useCallback((productId) => {
         JSON.stringify(
           cartItems.map((item) => ({
             id: item.id,
+            source: item.source === "supply" ? "supply" : "product",
+            ...(item.source === "supply"
+              ? { supplyProductId: item.supplyProductId || item.id }
+              : {}),
             quantity: item.quantity,
-            priceOptionId:
-              item.selectedPriceOption?.optionId || "",
+            priceOptionId: item.selectedPriceOption?.optionId || "",
           }))
         )
       );
@@ -828,7 +934,7 @@ const handleProductImageSettled = useCallback((productId) => {
 
   // LOAD CART FOR THE CURRENT ACCOUNT
   useEffect(() => {
-    if (!productsLoaded) return;
+    if (!productsLoaded || !supplyProductsLoaded) return;
 
     if (!accountUser) {
       cartStorageAccountRef.current = "";
@@ -859,6 +965,32 @@ const handleProductImageSettled = useCallback((productId) => {
 
       const restoredItems = savedItems
         .map((saved) => {
+          if (saved.source === "supply") {
+            const supplyId = String(saved.supplyProductId || saved.id || "");
+            const supplyProduct = supplyProducts.find(
+              (item) => String(item._id || item.id) === supplyId
+            );
+
+            if (!supplyProduct) return null;
+
+            const quantity = Math.max(
+              1,
+              Math.min(Number(supplyProduct.sellableStock) || 1, Number(saved.quantity) || 1)
+            );
+
+            const restoredItem = {
+              ...supplyProduct,
+              id: supplyProduct.id || supplyProduct._id,
+              source: "supply",
+              supplyProductId: supplyId,
+              price: Number(supplyProduct.sellingPrice),
+              quantity,
+              selectedPriceOption: null,
+            };
+
+            return { ...restoredItem, cartKey: getCartKey(restoredItem) };
+          }
+
           const product = products.find(
             (item) => String(item.id) === String(saved.id)
           );
@@ -917,12 +1049,12 @@ const handleProductImageSettled = useCallback((productId) => {
     } catch {
       setCartItems([]);
     }
-  }, [productsLoaded, products, accountUser]);
+  }, [productsLoaded, products, supplyProductsLoaded, supplyProducts, accountUser]);
 
   // PRODUCT FILTERING
   const visibleProducts = useMemo(() => {
     const query = searchQuery.trim();
-    return products
+    return catalogProducts
       .map((product) => ({
         product,
         score: productSearchScore(product, query),
@@ -942,14 +1074,14 @@ const handleProductImageSettled = useCallback((productId) => {
       })
       .sort((a, b) => (query ? b.score - a.score : 0))
       .map(({ product }) => product);
-  }, [products, searchQuery, category]);
+  }, [catalogProducts, searchQuery, category]);
 
   const searchSuggestions = useMemo(() => {
     const query = searchQuery.toLowerCase().trim();
 
     if (!query) return [];
 
-    return products
+    return catalogProducts
       .map((product) => ({
         product,
         score: productSearchScore(product, query),
@@ -958,7 +1090,7 @@ const handleProductImageSettled = useCallback((productId) => {
       .sort((a, b) => b.score - a.score)
       .slice(0, 8)
       .map((item) => item.product);
-  }, [products, searchQuery]);
+  }, [catalogProducts, searchQuery]);
 
   // SAVE WISHLIST
   useEffect(() => {
@@ -1026,11 +1158,11 @@ const handleProductImageSettled = useCallback((productId) => {
   };
 
   // WISHLIST: TOGGLE FAVORITE
-  const toggleFavorite = (productId) => {
+  const toggleFavorite = (productId, source = "product") => {
     if (isAdminUser || isModeratorUser) {
       showNotice(
         lang === "bn"
-          ? "à¦à¦‡ à¦…à§à¦¯à¦¾à¦•à¦¾à¦‰à¦¨à§à¦Ÿà§‡ à¦‰à¦‡à¦¶à¦²à¦¿à¦¸à§à¦Ÿ à¦¬à§à¦¯à¦¬à¦¹à¦¾à¦° à¦•à¦°à¦¾ à¦¯à¦¾à¦¬à§‡ à¦¨à¦¾à¥¤"
+          ? "Ã Â¦ÂÃ Â¦â€¡ Ã Â¦â€¦Ã Â§ÂÃ Â¦Â¯Ã Â¦Â¾Ã Â¦â€¢Ã Â¦Â¾Ã Â¦â€°Ã Â¦Â¨Ã Â§ÂÃ Â¦Å¸Ã Â§â€¡ Ã Â¦â€°Ã Â¦â€¡Ã Â¦Â¶Ã Â¦Â²Ã Â¦Â¿Ã Â¦Â¸Ã Â§ÂÃ Â¦Å¸ Ã Â¦Â¬Ã Â§ÂÃ Â¦Â¯Ã Â¦Â¬Ã Â¦Â¹Ã Â¦Â¾Ã Â¦Â° Ã Â¦â€¢Ã Â¦Â°Ã Â¦Â¾ Ã Â¦Â¯Ã Â¦Â¾Ã Â¦Â¬Ã Â§â€¡ Ã Â¦Â¨Ã Â¦Â¾Ã Â¥Â¤"
           : "Wishlist is not available for this account."
       );
       return;
@@ -1040,7 +1172,7 @@ const handleProductImageSettled = useCallback((productId) => {
 
     if (!accountUser || !token) {
       showNotice(
-        lang === "bn" ? "à¦†à¦—à§‡ à¦²à¦—à¦‡à¦¨ à¦•à¦°à§à¦¨!" : "Please login first!"
+        lang === "bn" ? "Ã Â¦â€ Ã Â¦â€”Ã Â§â€¡ Ã Â¦Â²Ã Â¦â€”Ã Â¦â€¡Ã Â¦Â¨ Ã Â¦â€¢Ã Â¦Â°Ã Â§ÂÃ Â¦Â¨!" : "Please login first!"
       );
       setAccountMode("login");
       setAccountOpen(true);
@@ -1062,7 +1194,7 @@ const handleProductImageSettled = useCallback((productId) => {
     if (isAdminUser || isModeratorUser) {
       showNotice(
         lang === "bn"
-          ? "à¦à¦‡ à¦…à§à¦¯à¦¾à¦•à¦¾à¦‰à¦¨à§à¦Ÿà§‡ à¦‰à¦‡à¦¶à¦²à¦¿à¦¸à§à¦Ÿ à¦¬à§à¦¯à¦¬à¦¹à¦¾à¦° à¦•à¦°à¦¾ à¦¯à¦¾à¦¬à§‡ à¦¨à¦¾à¥¤"
+          ? "Ã Â¦ÂÃ Â¦â€¡ Ã Â¦â€¦Ã Â§ÂÃ Â¦Â¯Ã Â¦Â¾Ã Â¦â€¢Ã Â¦Â¾Ã Â¦â€°Ã Â¦Â¨Ã Â§ÂÃ Â¦Å¸Ã Â§â€¡ Ã Â¦â€°Ã Â¦â€¡Ã Â¦Â¶Ã Â¦Â²Ã Â¦Â¿Ã Â¦Â¸Ã Â§ÂÃ Â¦Å¸ Ã Â¦Â¬Ã Â§ÂÃ Â¦Â¯Ã Â¦Â¬Ã Â¦Â¹Ã Â¦Â¾Ã Â¦Â° Ã Â¦â€¢Ã Â¦Â°Ã Â¦Â¾ Ã Â¦Â¯Ã Â¦Â¾Ã Â¦Â¬Ã Â§â€¡ Ã Â¦Â¨Ã Â¦Â¾Ã Â¥Â¤"
           : "Wishlist is not available for this account."
       );
       return;
@@ -1091,20 +1223,28 @@ const handleProductImageSettled = useCallback((productId) => {
     if (isAdminUser || isModeratorUser) {
       showNotice(
         lang === "bn"
-          ? "à¦à¦‡ à¦…à§à¦¯à¦¾à¦•à¦¾à¦‰à¦¨à§à¦Ÿà§‡ à¦•à¦¾à¦°à§à¦Ÿ à¦¬à§à¦¯à¦¬à¦¹à¦¾à¦° à¦•à¦°à¦¾ à¦¯à¦¾à¦¬à§‡ à¦¨à¦¾à¥¤"
+          ? "Ã Â¦ÂÃ Â¦â€¡ Ã Â¦â€¦Ã Â§ÂÃ Â¦Â¯Ã Â¦Â¾Ã Â¦â€¢Ã Â¦Â¾Ã Â¦â€°Ã Â¦Â¨Ã Â§ÂÃ Â¦Å¸Ã Â§â€¡ Ã Â¦â€¢Ã Â¦Â¾Ã Â¦Â°Ã Â§ÂÃ Â¦Å¸ Ã Â¦Â¬Ã Â§ÂÃ Â¦Â¯Ã Â¦Â¬Ã Â¦Â¹Ã Â¦Â¾Ã Â¦Â° Ã Â¦â€¢Ã Â¦Â°Ã Â¦Â¾ Ã Â¦Â¯Ã Â¦Â¾Ã Â¦Â¬Ã Â§â€¡ Ã Â¦Â¨Ã Â¦Â¾Ã Â¥Â¤"
           : "Cart is not available for this account."
       );
       return;
     }
 
-    // Always use the latest product data from App state.
-    const currentProduct =
-      products.find(
-        (item) => String(item.id) === String(product.id)
-      ) || product;
+    // Resolve Product and Supply items from their own collections.
+    const isSupplyProduct = product?.source === "supply";
+    const supplyId = String(
+      product?.supplyProductId || product?._id || product?.id || ""
+    );
+
+    const currentProduct = isSupplyProduct
+      ? supplyProducts.find(
+          (item) => String(item._id || item.id) === supplyId
+        ) || product
+      : products.find(
+          (item) => String(item.id) === String(product.id)
+        ) || product;
 
     const optionsEnabled =
-      currentProduct.priceOptionsEnabled === true;
+      !isSupplyProduct && currentProduct.priceOptionsEnabled === true;
 
     // Resolve selected option from the latest product data.
     const latestOption = optionsEnabled
@@ -1117,7 +1257,7 @@ const handleProductImageSettled = useCallback((productId) => {
     if (optionsEnabled && !latestOption) {
       showNotice(
         lang === "bn"
-          ? "à¦•à¦¾à¦°à§à¦Ÿà§‡ à¦¯à§‹à¦— à¦•à¦°à¦¾à¦° à¦†à¦—à§‡ à¦à¦•à¦Ÿà¦¿ à¦¸à¦ à¦¿à¦• Price Option à¦¨à¦¿à¦°à§à¦¬à¦¾à¦šà¦¨ à¦•à¦°à§à¦¨à¥¤"
+          ? "Ã Â¦â€¢Ã Â¦Â¾Ã Â¦Â°Ã Â§ÂÃ Â¦Å¸Ã Â§â€¡ Ã Â¦Â¯Ã Â§â€¹Ã Â¦â€” Ã Â¦â€¢Ã Â¦Â°Ã Â¦Â¾Ã Â¦Â° Ã Â¦â€ Ã Â¦â€”Ã Â§â€¡ Ã Â¦ÂÃ Â¦â€¢Ã Â¦Å¸Ã Â¦Â¿ Ã Â¦Â¸Ã Â¦Â Ã Â¦Â¿Ã Â¦â€¢ Price Option Ã Â¦Â¨Ã Â¦Â¿Ã Â¦Â°Ã Â§ÂÃ Â¦Â¬Ã Â¦Â¾Ã Â¦Å¡Ã Â¦Â¨ Ã Â¦â€¢Ã Â¦Â°Ã Â§ÂÃ Â¦Â¨Ã Â¥Â¤"
           : "Please select a valid price option."
       );
       return;
@@ -1126,12 +1266,16 @@ const handleProductImageSettled = useCallback((productId) => {
     // Main product price OR latest selected option price.
     const selectedPrice = optionsEnabled
       ? Number(latestOption.price)
-      : Number(currentProduct.price);
+      : Number(
+          isSupplyProduct
+            ? currentProduct.sellingPrice
+            : currentProduct.price
+        );
 
     if (!Number.isFinite(selectedPrice) || selectedPrice < 0) {
       showNotice(
         lang === "bn"
-          ? "à¦ªà¦£à§à¦¯à§‡à¦° à¦¦à¦¾à¦® à¦¸à¦ à¦¿à¦• à¦¨à¦¯à¦¼à¥¤"
+          ? "Ã Â¦ÂªÃ Â¦Â£Ã Â§ÂÃ Â¦Â¯Ã Â§â€¡Ã Â¦Â° Ã Â¦Â¦Ã Â¦Â¾Ã Â¦Â® Ã Â¦Â¸Ã Â¦Â Ã Â¦Â¿Ã Â¦â€¢ Ã Â¦Â¨Ã Â¦Â¯Ã Â¦Â¼Ã Â¥Â¤"
           : "The product price is invalid."
       );
       return;
@@ -1141,20 +1285,35 @@ const handleProductImageSettled = useCallback((productId) => {
       ? String(latestOption.id)
       : "";
 
-    const cartKey = `${currentProduct.id}:${optionId || "default"}`;
+    const cartIdentity = {
+      ...currentProduct,
+      id: currentProduct.id || currentProduct._id || product.id,
+      source: isSupplyProduct ? "supply" : "product",
+      ...(isSupplyProduct ? { supplyProductId: supplyId } : {}),
+      priceOptionId: optionId,
+    };
+    const cartKey = getCartKey(cartIdentity);
 
     const currentProductQty = cartItems
-      .filter(
-        (item) => String(item.id) === String(currentProduct.id)
+      .filter((item) =>
+        isSupplyProduct
+          ? item.source === "supply" &&
+            String(item.supplyProductId || item.id) === supplyId
+          : item.source !== "supply" &&
+            String(item.id) === String(currentProduct.id)
       )
       .reduce(
         (sum, item) => sum + Number(item.quantity || 0),
         0
       );
 
+    const availableStock = isSupplyProduct
+      ? currentProduct.sellableStock
+      : currentProduct.stock;
+
     const available = Math.max(
       0,
-      Number(currentProduct.stock || 0) - currentProductQty
+      Number(availableStock || 0) - currentProductQty
     );
 
     if (available <= 0) {
@@ -1189,6 +1348,9 @@ const handleProductImageSettled = useCallback((productId) => {
             ? {
               ...item,
               ...currentProduct,
+              id: currentProduct.id || currentProduct._id || product.id,
+              source: isSupplyProduct ? "supply" : "product",
+              ...(isSupplyProduct ? { supplyProductId: supplyId } : {}),
               price: selectedPrice,
               quantity: Number(item.quantity || 0) + addQty,
               selectedPriceOption: optionSnapshot,
@@ -1202,6 +1364,9 @@ const handleProductImageSettled = useCallback((productId) => {
         ...items,
         {
           ...currentProduct,
+          id: currentProduct.id || currentProduct._id || product.id,
+          source: isSupplyProduct ? "supply" : "product",
+          ...(isSupplyProduct ? { supplyProductId: supplyId } : {}),
           price: selectedPrice,
           quantity: addQty,
           selectedPriceOption: optionSnapshot,
@@ -1214,18 +1379,18 @@ const handleProductImageSettled = useCallback((productId) => {
 
     showNotice(
       addQty < requestedQty
-        ? `${name} â€” ${lang === "bn"
-          ? `à¦®à¦¾à¦¤à§à¦° ${addQty}à¦Ÿà¦¿ à¦¯à§‹à¦— à¦•à¦°à¦¾ à¦¹à¦¯à¦¼à§‡à¦›à§‡; à¦¸à¦°à§à¦¬à§‹à¦šà§à¦š à¦¸à§à¦Ÿà¦•à§‡à¦° à¦¸à§€à¦®à¦¾à¦¯à¦¼ à¦ªà§Œà¦à¦›à§‡à¦›à§‡à¥¤`
+        ? `${name} Ã¢â‚¬â€ ${lang === "bn"
+          ? `Ã Â¦Â®Ã Â¦Â¾Ã Â¦Â¤Ã Â§ÂÃ Â¦Â° ${addQty}Ã Â¦Å¸Ã Â¦Â¿ Ã Â¦Â¯Ã Â§â€¹Ã Â¦â€” Ã Â¦â€¢Ã Â¦Â°Ã Â¦Â¾ Ã Â¦Â¹Ã Â¦Â¯Ã Â¦Â¼Ã Â§â€¡Ã Â¦â€ºÃ Â§â€¡; Ã Â¦Â¸Ã Â¦Â°Ã Â§ÂÃ Â¦Â¬Ã Â§â€¹Ã Â¦Å¡Ã Â§ÂÃ Â¦Å¡ Ã Â¦Â¸Ã Â§ÂÃ Â¦Å¸Ã Â¦â€¢Ã Â§â€¡Ã Â¦Â° Ã Â¦Â¸Ã Â§â‚¬Ã Â¦Â®Ã Â¦Â¾Ã Â¦Â¯Ã Â¦Â¼ Ã Â¦ÂªÃ Â§Å’Ã Â¦ÂÃ Â¦â€ºÃ Â§â€¡Ã Â¦â€ºÃ Â§â€¡Ã Â¥Â¤`
           : `only ${addQty} added; maximum stock reached.`
         }`
-        : `${name} â€” ${t.added}`
+        : `${name} Ã¢â‚¬â€ ${t.added}`
     );
   };
 
   // PRODUCT DETAILS
   const openProduct = (product) => {
     setSelectedProduct(product);
-    navigate(`/products/${encodeURIComponent(product.id)}`);
+    navigate(`${product.source === "supply" ? "/supply-products" : "/products"}/${encodeURIComponent(product.source === "supply" ? (product.supplyProductId || product.id) : product.id)}`);
     setShowCatalogPage(false);
     setShowWishlist(false);
 
@@ -1352,13 +1517,27 @@ const handleProductImageSettled = useCallback((productId) => {
 
       if (!target) return items;
 
+      const isSupply = target.source === "supply";
+      const targetId = String(
+        isSupply ? (target.supplyProductId || target.id) : target.id
+      );
+
       const currentProductQty = items
-        .filter((item) => Number(item.id) === Number(target.id))
+        .filter((item) =>
+          isSupply
+            ? item.source === "supply" &&
+              String(item.supplyProductId || item.id) === targetId
+            : item.source !== "supply" &&
+              String(item.id) === targetId
+        )
         .reduce((sum, item) => sum + Number(item.quantity || 0), 0);
 
-      const nextQty = target.quantity + delta;
+      const availableStock = Number(
+        isSupply ? target.sellableStock : target.stock
+      );
+      const nextQty = Number(target.quantity || 0) + Number(delta || 0);
 
-      if (delta > 0 && currentProductQty >= Number(target.stock)) {
+      if (delta > 0 && currentProductQty >= availableStock) {
         showNotice(t.maxStock);
         return items;
       }
@@ -1368,7 +1547,7 @@ const handleProductImageSettled = useCallback((productId) => {
 
         return {
           ...item,
-          quantity: Math.max(1, Math.min(Number(item.stock), nextQty)),
+          quantity: Math.max(1, Math.min(Number(isSupply ? item.sellableStock : item.stock), nextQty)),
         };
       });
     });
@@ -1389,7 +1568,7 @@ const handleProductImageSettled = useCallback((productId) => {
     if (!accessToken) {
       throw new Error(
         lang === "bn"
-          ? "à¦…à¦°à§à¦¡à¦¾à¦° à¦•à¦°à¦¤à§‡ à¦ªà§à¦°à¦¥à¦®à§‡ à¦²à¦—à¦‡à¦¨ à¦•à¦°à§à¦¨à¥¤"
+          ? "Ã Â¦â€¦Ã Â¦Â°Ã Â§ÂÃ Â¦Â¡Ã Â¦Â¾Ã Â¦Â° Ã Â¦â€¢Ã Â¦Â°Ã Â¦Â¤Ã Â§â€¡ Ã Â¦ÂªÃ Â§ÂÃ Â¦Â°Ã Â¦Â¥Ã Â¦Â®Ã Â§â€¡ Ã Â¦Â²Ã Â¦â€”Ã Â¦â€¡Ã Â¦Â¨ Ã Â¦â€¢Ã Â¦Â°Ã Â§ÂÃ Â¦Â¨Ã Â¥Â¤"
           : "Please log in before placing your order."
       );
     }
@@ -1403,6 +1582,10 @@ const handleProductImageSettled = useCallback((productId) => {
         form: payload.form,
         items: payload.items.map((item) => ({
           id: item.id,
+          source: item.source === "supply" ? "supply" : "product",
+          ...(item.source === "supply"
+            ? { supplyProductId: item.supplyProductId || item.id }
+            : {}),
           quantity: item.quantity,
           priceOptionId:
             item.priceOptionId ||
@@ -1423,7 +1606,7 @@ const handleProductImageSettled = useCallback((productId) => {
       throw new Error(
         result.message ||
           (lang === "bn"
-            ? `à¦…à¦°à§à¦¡à¦¾à¦° à¦•à¦°à¦¾ à¦¯à¦¾à¦¯à¦¼à¦¨à¦¿à¥¤ Error: ${response.status}`
+            ? `Ã Â¦â€¦Ã Â¦Â°Ã Â§ÂÃ Â¦Â¡Ã Â¦Â¾Ã Â¦Â° Ã Â¦â€¢Ã Â¦Â°Ã Â¦Â¾ Ã Â¦Â¯Ã Â¦Â¾Ã Â¦Â¯Ã Â¦Â¼Ã Â¦Â¨Ã Â¦Â¿Ã Â¥Â¤ Error: ${response.status}`
             : `Could not place order. Error: ${response.status}`)
       );
     }
@@ -1433,16 +1616,18 @@ const handleProductImageSettled = useCallback((productId) => {
     if (!savedOrder?.orderNumber || !Array.isArray(savedOrder.items)) {
       throw new Error(
         lang === "bn"
-          ? "à¦¸à¦¾à¦°à§à¦­à¦¾à¦° à¦¥à§‡à¦•à§‡ à¦…à¦°à§à¦¡à¦¾à¦°à¦Ÿà¦¿ à¦¸à¦ à¦¿à¦•à¦­à¦¾à¦¬à§‡ à¦¨à¦¿à¦¶à§à¦šà¦¿à¦¤ à¦•à¦°à¦¾ à¦¯à¦¾à¦¯à¦¼à¦¨à¦¿à¥¤"
+          ? "Ã Â¦Â¸Ã Â¦Â¾Ã Â¦Â°Ã Â§ÂÃ Â¦Â­Ã Â¦Â¾Ã Â¦Â° Ã Â¦Â¥Ã Â§â€¡Ã Â¦â€¢Ã Â§â€¡ Ã Â¦â€¦Ã Â¦Â°Ã Â§ÂÃ Â¦Â¡Ã Â¦Â¾Ã Â¦Â°Ã Â¦Å¸Ã Â¦Â¿ Ã Â¦Â¸Ã Â¦Â Ã Â¦Â¿Ã Â¦â€¢Ã Â¦Â­Ã Â¦Â¾Ã Â¦Â¬Ã Â§â€¡ Ã Â¦Â¨Ã Â¦Â¿Ã Â¦Â¶Ã Â§ÂÃ Â¦Å¡Ã Â¦Â¿Ã Â¦Â¤ Ã Â¦â€¢Ã Â¦Â°Ã Â¦Â¾ Ã Â¦Â¯Ã Â¦Â¾Ã Â¦Â¯Ã Â¦Â¼Ã Â¦Â¨Ã Â¦Â¿Ã Â¥Â¤"
           : "The server did not return a valid order confirmation."
       );
     }
 
-    // Immediately update product stock after checkout.
+    // Update regular Product stock only.
     setProducts((currentProducts) =>
       currentProducts.map((product) => {
         const orderedItem = savedOrder.items.find(
-          (item) => Number(item.productId) === Number(product.id)
+          (item) =>
+            item.source !== "supply" &&
+            Number(item.productId) === Number(product.id)
         );
 
         if (!orderedItem) return product;
@@ -1450,6 +1635,27 @@ const handleProductImageSettled = useCallback((productId) => {
         return {
           ...product,
           stock: Math.max(0, product.stock - Number(orderedItem.quantity)),
+        };
+      })
+    );
+
+    // Update Supply sellable stock separately.
+    setSupplyProducts((currentProducts) =>
+      currentProducts.map((product) => {
+        const orderedItem = savedOrder.items.find(
+          (item) =>
+            item.source === "supply" &&
+            String(item.supplyProductId) === String(product._id || product.id)
+        );
+
+        if (!orderedItem) return product;
+
+        return {
+          ...product,
+          sellableStock: Math.max(
+            0,
+            Number(product.sellableStock) - Number(orderedItem.quantity)
+          ),
         };
       })
     );
@@ -1463,7 +1669,13 @@ const handleProductImageSettled = useCallback((productId) => {
       total: savedOrder.total,
 
       items: savedOrder.items.map((item) => ({
-        id: item.productId,
+        id: item.source === "supply"
+          ? item.supplyProductId
+          : item.productId,
+        source: item.source === "supply" ? "supply" : "product",
+        ...(item.source === "supply"
+          ? { supplyProductId: item.supplyProductId }
+          : {}),
         title: item.title,
         bn: item.title,
         price: Number(item.price),
@@ -1600,11 +1812,47 @@ const handleProductImageSettled = useCallback((productId) => {
               let orderComplete = true;
 
               for (const item of orderItems) {
+                if (item.source === "supply") {
+                  const supplyId = String(item.supplyProductId || item.id || "");
+                  const supplyProduct = supplyProducts.find(
+                    (p) => String(p._id || p.id) === supplyId
+                  );
+
+                  if (!supplyProduct) {
+                    orderComplete = false;
+                    break;
+                  }
+
+                  const quantity = Math.max(1, Number(item.quantity) || 1);
+                  const existingIndex = orderCart.findIndex(
+                    (saved) =>
+                      saved.source === "supply" &&
+                      String(saved.supplyProductId || saved.id) === supplyId
+                  );
+
+                  if (existingIndex >= 0) {
+                    orderCart[existingIndex] = {
+                      ...orderCart[existingIndex],
+                      quantity:
+                        (Number(orderCart[existingIndex].quantity) || 0) +
+                        quantity,
+                    };
+                  } else {
+                    orderCart.push({
+                      id: supplyId,
+                      source: "supply",
+                      supplyProductId: supplyId,
+                      quantity,
+                    });
+                  }
+
+                  continue;
+                }
+
                 const productId = item.productId ?? item.id;
                 const product = products.find(
                   (p) => String(p.id) === String(productId)
                 );
-
                 if (!product) {
                   orderComplete = false;
                   break;
@@ -1697,6 +1945,27 @@ const handleProductImageSettled = useCallback((productId) => {
               // Rebuild the in-memory cart from the saved cart.
               const restoredItems = mergedCart
                 .map((saved) => {
+                  if (saved.source === "supply") {
+                    const supplyId = String(saved.supplyProductId || saved.id || "");
+                    const supplyProduct = supplyProducts.find(
+                      (p) => String(p._id || p.id) === supplyId
+                    );
+                    if (!supplyProduct) return null;
+                    const quantity = Math.max(1, Math.min(
+                      Number(supplyProduct.sellableStock) || 1,
+                      Number(saved.quantity) || 1
+                    ));
+                    const restoredItem = {
+                      ...supplyProduct,
+                      id: supplyProduct.id || supplyProduct._id,
+                      source: "supply",
+                      supplyProductId: supplyId,
+                      price: Number(supplyProduct.sellingPrice),
+                      quantity,
+                      selectedPriceOption: null,
+                    };
+                    return { ...restoredItem, cartKey: getCartKey(restoredItem) };
+                  }
                   const product = products.find(
                     (p) => String(p.id) === String(saved.id)
                   );
@@ -1769,7 +2038,7 @@ const handleProductImageSettled = useCallback((productId) => {
     } finally {
       if (!silent) setOrdersLoading(false);
     }
-  }, [lang, accountUser, products, productsLoaded]);
+  }, [lang, accountUser, products, productsLoaded, supplyProducts, supplyProductsLoaded]);
 
   // OPEN ACCOUNT (navbar account icon, user clicks on purpose)
   const openAccount = () => {
@@ -1842,7 +2111,7 @@ const handleProductImageSettled = useCallback((productId) => {
     ) {
       setAccountMessage(
         lang === "bn"
-          ? "à¦¸à¦¬ à¦ªà§à¦°à¦¯à¦¼à§‹à¦œà¦¨à§€à¦¯à¦¼ à¦¤à¦¥à§à¦¯ à¦ªà§‚à¦°à¦£ à¦•à¦°à§à¦¨à¥¤"
+          ? "Ã Â¦Â¸Ã Â¦Â¬ Ã Â¦ÂªÃ Â§ÂÃ Â¦Â°Ã Â¦Â¯Ã Â¦Â¼Ã Â§â€¹Ã Â¦Å“Ã Â¦Â¨Ã Â§â‚¬Ã Â¦Â¯Ã Â¦Â¼ Ã Â¦Â¤Ã Â¦Â¥Ã Â§ÂÃ Â¦Â¯ Ã Â¦ÂªÃ Â§â€šÃ Â¦Â°Ã Â¦Â£ Ã Â¦â€¢Ã Â¦Â°Ã Â§ÂÃ Â¦Â¨Ã Â¥Â¤"
           : "Please fill in all required fields."
       );
       return;
@@ -1867,7 +2136,7 @@ const handleProductImageSettled = useCallback((productId) => {
         setAccountMessage(
           data.message ||
             (lang === "bn"
-              ? "à¦‡à¦®à§‡à¦‡à¦²à§‡ à¦ªà¦¾à¦ à¦¾à¦¨à§‹ OTP à¦¦à¦¿à¦¯à¦¼à§‡ à¦¯à¦¾à¦šà¦¾à¦‡ à¦•à¦°à§à¦¨à¥¤"
+              ? "Ã Â¦â€¡Ã Â¦Â®Ã Â§â€¡Ã Â¦â€¡Ã Â¦Â²Ã Â§â€¡ Ã Â¦ÂªÃ Â¦Â¾Ã Â¦Â Ã Â¦Â¾Ã Â¦Â¨Ã Â§â€¹ OTP Ã Â¦Â¦Ã Â¦Â¿Ã Â¦Â¯Ã Â¦Â¼Ã Â§â€¡ Ã Â¦Â¯Ã Â¦Â¾Ã Â¦Å¡Ã Â¦Â¾Ã Â¦â€¡ Ã Â¦â€¢Ã Â¦Â°Ã Â§ÂÃ Â¦Â¨Ã Â¥Â¤"
               : "Check your email for the verification code.")
         );
       } else if (accountMode === "login") {
@@ -1885,7 +2154,7 @@ const handleProductImageSettled = useCallback((productId) => {
         setAccountMessage(
           data.message ||
             (lang === "bn"
-              ? "à¦‡à¦®à§‡à¦‡à¦²à§‡ à¦ªà¦¾à¦ à¦¾à¦¨à§‹ OTP à¦¦à¦¿à¦¯à¦¼à§‡ à¦²à¦—à¦‡à¦¨ à¦¸à¦®à§à¦ªà¦¨à§à¦¨ à¦•à¦°à§à¦¨à¥¤"
+              ? "Ã Â¦â€¡Ã Â¦Â®Ã Â§â€¡Ã Â¦â€¡Ã Â¦Â²Ã Â§â€¡ Ã Â¦ÂªÃ Â¦Â¾Ã Â¦Â Ã Â¦Â¾Ã Â¦Â¨Ã Â§â€¹ OTP Ã Â¦Â¦Ã Â¦Â¿Ã Â¦Â¯Ã Â¦Â¼Ã Â§â€¡ Ã Â¦Â²Ã Â¦â€”Ã Â¦â€¡Ã Â¦Â¨ Ã Â¦Â¸Ã Â¦Â®Ã Â§ÂÃ Â¦ÂªÃ Â¦Â¨Ã Â§ÂÃ Â¦Â¨ Ã Â¦â€¢Ã Â¦Â°Ã Â§ÂÃ Â¦Â¨Ã Â¥Â¤"
               : "Check your email for the login code.")
         );
       }
@@ -1919,7 +2188,7 @@ const handleProductImageSettled = useCallback((productId) => {
         setAccountMessage(
           data.message ||
             (lang === "bn"
-              ? "à¦‡à¦®à§‡à¦‡à¦² à¦¯à¦¾à¦šà¦¾à¦‡ à¦¸à¦®à§à¦ªà¦¨à§à¦¨ à¦¹à¦¯à¦¼à§‡à¦›à§‡à¥¤ à¦à¦–à¦¨ à¦²à¦—à¦‡à¦¨ à¦•à¦°à§à¦¨à¥¤"
+              ? "Ã Â¦â€¡Ã Â¦Â®Ã Â§â€¡Ã Â¦â€¡Ã Â¦Â² Ã Â¦Â¯Ã Â¦Â¾Ã Â¦Å¡Ã Â¦Â¾Ã Â¦â€¡ Ã Â¦Â¸Ã Â¦Â®Ã Â§ÂÃ Â¦ÂªÃ Â¦Â¨Ã Â§ÂÃ Â¦Â¨ Ã Â¦Â¹Ã Â¦Â¯Ã Â¦Â¼Ã Â§â€¡Ã Â¦â€ºÃ Â§â€¡Ã Â¥Â¤ Ã Â¦ÂÃ Â¦â€“Ã Â¦Â¨ Ã Â¦Â²Ã Â¦â€”Ã Â¦â€¡Ã Â¦Â¨ Ã Â¦â€¢Ã Â¦Â°Ã Â§ÂÃ Â¦Â¨Ã Â¥Â¤"
               : "Email verified. You can now log in.")
         );
       } else if (accountMode === "verify-login") {
@@ -1961,7 +2230,7 @@ const handleProductImageSettled = useCallback((productId) => {
 
         showNotice(
           data.message ||
-            (lang === "bn" ? "à¦²à¦—à¦‡à¦¨ à¦¸à¦«à¦² à¦¹à¦¯à¦¼à§‡à¦›à§‡à¥¤" : "Login successful.")
+            (lang === "bn" ? "Ã Â¦Â²Ã Â¦â€”Ã Â¦â€¡Ã Â¦Â¨ Ã Â¦Â¸Ã Â¦Â«Ã Â¦Â² Ã Â¦Â¹Ã Â¦Â¯Ã Â¦Â¼Ã Â§â€¡Ã Â¦â€ºÃ Â§â€¡Ã Â¥Â¤" : "Login successful.")
         );
       }
     } catch (error) {
@@ -1991,7 +2260,7 @@ const handleProductImageSettled = useCallback((productId) => {
       setAccountMessage(
         data.message ||
           (lang === "bn"
-            ? "à¦¯à§‹à¦—à§à¦¯ à¦…à§à¦¯à¦¾à¦•à¦¾à¦‰à¦¨à§à¦Ÿ à¦¥à¦¾à¦•à¦²à§‡ à¦‡à¦®à§‡à¦‡à¦²à§‡ OTP à¦ªà¦¾à¦ à¦¾à¦¨à§‹ à¦¹à¦¬à§‡à¥¤"
+            ? "Ã Â¦Â¯Ã Â§â€¹Ã Â¦â€”Ã Â§ÂÃ Â¦Â¯ Ã Â¦â€¦Ã Â§ÂÃ Â¦Â¯Ã Â¦Â¾Ã Â¦â€¢Ã Â¦Â¾Ã Â¦â€°Ã Â¦Â¨Ã Â§ÂÃ Â¦Å¸ Ã Â¦Â¥Ã Â¦Â¾Ã Â¦â€¢Ã Â¦Â²Ã Â§â€¡ Ã Â¦â€¡Ã Â¦Â®Ã Â§â€¡Ã Â¦â€¡Ã Â¦Â²Ã Â§â€¡ OTP Ã Â¦ÂªÃ Â¦Â¾Ã Â¦Â Ã Â¦Â¾Ã Â¦Â¨Ã Â§â€¹ Ã Â¦Â¹Ã Â¦Â¬Ã Â§â€¡Ã Â¥Â¤"
             : "If an eligible account exists, a reset code will be sent.")
       );
     } catch (error) {
@@ -2026,7 +2295,7 @@ const handleProductImageSettled = useCallback((productId) => {
       setAccountMessage(
         data.message ||
           (lang === "bn"
-            ? "à¦¯à§‹à¦—à§à¦¯ à¦…à§à¦¯à¦¾à¦•à¦¾à¦‰à¦¨à§à¦Ÿ à¦¥à¦¾à¦•à¦²à§‡ à¦¨à¦¤à§à¦¨ OTP à¦ªà¦¾à¦ à¦¾à¦¨à§‹ à¦¹à¦¬à§‡à¥¤"
+            ? "Ã Â¦Â¯Ã Â§â€¹Ã Â¦â€”Ã Â§ÂÃ Â¦Â¯ Ã Â¦â€¦Ã Â§ÂÃ Â¦Â¯Ã Â¦Â¾Ã Â¦â€¢Ã Â¦Â¾Ã Â¦â€°Ã Â¦Â¨Ã Â§ÂÃ Â¦Å¸ Ã Â¦Â¥Ã Â¦Â¾Ã Â¦â€¢Ã Â¦Â²Ã Â§â€¡ Ã Â¦Â¨Ã Â¦Â¤Ã Â§ÂÃ Â¦Â¨ OTP Ã Â¦ÂªÃ Â¦Â¾Ã Â¦Â Ã Â¦Â¾Ã Â¦Â¨Ã Â§â€¹ Ã Â¦Â¹Ã Â¦Â¬Ã Â§â€¡Ã Â¥Â¤"
             : "If eligible, a new OTP will be sent.")
       );
 
@@ -2048,7 +2317,7 @@ const handleProductImageSettled = useCallback((productId) => {
     if (accountNewPassword.length < 8 || accountNewPassword.length > 72) {
       setAccountMessage(
         lang === "bn"
-          ? "à¦ªà¦¾à¦¸à¦“à¦¯à¦¼à¦¾à¦°à§à¦¡ à§® à¦¥à§‡à¦•à§‡ à§­à§¨ à¦…à¦•à§à¦·à¦°à§‡à¦° à¦®à¦§à§à¦¯à§‡ à¦¹à¦¤à§‡ à¦¹à¦¬à§‡à¥¤"
+          ? "Ã Â¦ÂªÃ Â¦Â¾Ã Â¦Â¸Ã Â¦â€œÃ Â¦Â¯Ã Â¦Â¼Ã Â¦Â¾Ã Â¦Â°Ã Â§ÂÃ Â¦Â¡ Ã Â§Â® Ã Â¦Â¥Ã Â§â€¡Ã Â¦â€¢Ã Â§â€¡ Ã Â§Â­Ã Â§Â¨ Ã Â¦â€¦Ã Â¦â€¢Ã Â§ÂÃ Â¦Â·Ã Â¦Â°Ã Â§â€¡Ã Â¦Â° Ã Â¦Â®Ã Â¦Â§Ã Â§ÂÃ Â¦Â¯Ã Â§â€¡ Ã Â¦Â¹Ã Â¦Â¤Ã Â§â€¡ Ã Â¦Â¹Ã Â¦Â¬Ã Â§â€¡Ã Â¥Â¤"
           : "Password must be between 8 and 72 characters."
       );
       return;
@@ -2071,7 +2340,7 @@ const handleProductImageSettled = useCallback((productId) => {
       setAccountMessage(
         data.message ||
           (lang === "bn"
-            ? "à¦ªà¦¾à¦¸à¦“à¦¯à¦¼à¦¾à¦°à§à¦¡ à¦ªà¦°à¦¿à¦¬à¦°à§à¦¤à¦¨ à¦¹à¦¯à¦¼à§‡à¦›à§‡à¥¤ à¦à¦–à¦¨ à¦²à¦—à¦‡à¦¨ à¦•à¦°à§à¦¨à¥¤"
+            ? "Ã Â¦ÂªÃ Â¦Â¾Ã Â¦Â¸Ã Â¦â€œÃ Â¦Â¯Ã Â¦Â¼Ã Â¦Â¾Ã Â¦Â°Ã Â§ÂÃ Â¦Â¡ Ã Â¦ÂªÃ Â¦Â°Ã Â¦Â¿Ã Â¦Â¬Ã Â¦Â°Ã Â§ÂÃ Â¦Â¤Ã Â¦Â¨ Ã Â¦Â¹Ã Â¦Â¯Ã Â¦Â¼Ã Â§â€¡Ã Â¦â€ºÃ Â§â€¡Ã Â¥Â¤ Ã Â¦ÂÃ Â¦â€“Ã Â¦Â¨ Ã Â¦Â²Ã Â¦â€”Ã Â¦â€¡Ã Â¦Â¨ Ã Â¦â€¢Ã Â¦Â°Ã Â§ÂÃ Â¦Â¨Ã Â¥Â¤"
             : "Password reset successful. Please log in.")
       );
     } catch (error) {
@@ -2135,7 +2404,7 @@ const handleProductImageSettled = useCallback((productId) => {
     if (routePath !== "/admin") return <NotFoundPage />;
 
     return (
-      <Suspense fallback={<div className="pb-route-loading" role="status">Loading dashboardâ€¦</div>}>
+      <Suspense fallback={<div className="pb-route-loading" role="status">Loading dashboardÃ¢â‚¬Â¦</div>}>
         <>
           <RoleGuard allowedRoles={["admin"]}>
             <AdminDashboard
@@ -2153,7 +2422,7 @@ const handleProductImageSettled = useCallback((productId) => {
           <AIChat
             isOpen={isAIChatOpen}
             onClose={() => setIsAIChatOpen(false)}
-            products={products}
+            products={catalogProducts}
             lang={lang}
             onDetails={openProduct}
             onAdd={addToCart}
@@ -2167,7 +2436,7 @@ const handleProductImageSettled = useCallback((productId) => {
     if (routePath !== "/moderator") return <NotFoundPage />;
 
     return (
-      <Suspense fallback={<div className="pb-route-loading" role="status">Loading dashboardâ€¦</div>}>
+      <Suspense fallback={<div className="pb-route-loading" role="status">Loading dashboardÃ¢â‚¬Â¦</div>}>
         <>
           <RoleGuard allowedRoles={["moderator"]}>
             <ModeratorDashboard
@@ -2185,7 +2454,7 @@ const handleProductImageSettled = useCallback((productId) => {
           <AIChat
             isOpen={isAIChatOpen}
             onClose={() => setIsAIChatOpen(false)}
-            products={products}
+            products={catalogProducts}
             lang={lang}
             onDetails={openProduct}
             onAdd={addToCart}
@@ -2204,23 +2473,23 @@ const handleProductImageSettled = useCallback((productId) => {
       {productsError && (
         <div role="alert" className="toast-notice">
           {lang === "bn"
-            ? "à¦ªà§à¦°à§‹à¦¡à¦¾à¦•à§à¦Ÿ à¦²à§‹à¦¡ à¦•à¦°à¦¾ à¦¯à¦¾à¦¯à¦¼à¦¨à¦¿à¥¤ Backend à¦šà¦¾à¦²à§ à¦†à¦›à§‡ à¦•à¦¿ à¦¨à¦¾ à¦¦à§‡à¦–à§à¦¨à¥¤"
+            ? "Ã Â¦ÂªÃ Â§ÂÃ Â¦Â°Ã Â§â€¹Ã Â¦Â¡Ã Â¦Â¾Ã Â¦â€¢Ã Â§ÂÃ Â¦Å¸ Ã Â¦Â²Ã Â§â€¹Ã Â¦Â¡ Ã Â¦â€¢Ã Â¦Â°Ã Â¦Â¾ Ã Â¦Â¯Ã Â¦Â¾Ã Â¦Â¯Ã Â¦Â¼Ã Â¦Â¨Ã Â¦Â¿Ã Â¥Â¤ Backend Ã Â¦Å¡Ã Â¦Â¾Ã Â¦Â²Ã Â§Â Ã Â¦â€ Ã Â¦â€ºÃ Â§â€¡ Ã Â¦â€¢Ã Â¦Â¿ Ã Â¦Â¨Ã Â¦Â¾ Ã Â¦Â¦Ã Â§â€¡Ã Â¦â€“Ã Â§ÂÃ Â¦Â¨Ã Â¥Â¤"
             : "Could not load products. Check whether the backend is running."}{" "}
           <button type="button" onClick={() => window.location.reload()}>
-            {lang === "bn" ? "à¦†à¦¬à¦¾à¦° à¦šà§‡à¦·à§à¦Ÿà¦¾ à¦•à¦°à§à¦¨" : "Retry"}
+            {lang === "bn" ? "Ã Â¦â€ Ã Â¦Â¬Ã Â¦Â¾Ã Â¦Â° Ã Â¦Å¡Ã Â§â€¡Ã Â¦Â·Ã Â§ÂÃ Â¦Å¸Ã Â¦Â¾ Ã Â¦â€¢Ã Â¦Â°Ã Â§ÂÃ Â¦Â¨" : "Retry"}
           </button>
         </div>
       )}
 
       {!productsLoaded && !productsError && (
         <div className="toast-notice" role="status">
-          {lang === "bn" ? "à¦ªà§à¦°à§‹à¦¡à¦¾à¦•à§à¦Ÿ à¦²à§‹à¦¡ à¦¹à¦šà§à¦›à§‡..." : "Loading products..."}
+          {lang === "bn" ? "Ã Â¦ÂªÃ Â§ÂÃ Â¦Â°Ã Â§â€¹Ã Â¦Â¡Ã Â¦Â¾Ã Â¦â€¢Ã Â§ÂÃ Â¦Å¸ Ã Â¦Â²Ã Â§â€¹Ã Â¦Â¡ Ã Â¦Â¹Ã Â¦Å¡Ã Â§ÂÃ Â¦â€ºÃ Â§â€¡..." : "Loading products..."}
         </div>
       )}
 
       {productsLoaded && productsRefreshing && (
         <div className="toast-notice" role="status">
-          {lang === "bn" ? "à¦ªà§à¦°à§‹à¦¡à¦¾à¦•à§à¦Ÿ à¦²à§‹à¦¡ à¦¹à¦šà§à¦›à§‡..." : "Loading products..."}
+          {lang === "bn" ? "Ã Â¦ÂªÃ Â§ÂÃ Â¦Â°Ã Â§â€¹Ã Â¦Â¡Ã Â¦Â¾Ã Â¦â€¢Ã Â§ÂÃ Â¦Å¸ Ã Â¦Â²Ã Â§â€¹Ã Â¦Â¡ Ã Â¦Â¹Ã Â¦Å¡Ã Â§ÂÃ Â¦â€ºÃ Â§â€¡..." : "Loading products..."}
         </div>
       )}
 
@@ -2276,7 +2545,7 @@ const handleProductImageSettled = useCallback((productId) => {
         <StoreSearch
           lang={lang}
           t={t}
-          products={products}
+          products={catalogProducts}
           category={category}
           setCategory={setCategory}
           categoryOpen={categoryOpen}
@@ -2304,7 +2573,7 @@ const handleProductImageSettled = useCallback((productId) => {
 
 
       <main className={showCatalogPage ? "catalog-route-main" : ""}>
-        <Suspense fallback={<div className="pb-route-loading" role="status">Loading pageâ€¦</div>}>
+        <Suspense fallback={<div className="pb-route-loading" role="status">Loading pageÃ¢â‚¬Â¦</div>}>
         {routePath === "/apply-moderator" ? (
           <ModeratorApplicationPage lang={lang} />
         ) : routePath === "/contact" ? (
@@ -2320,9 +2589,9 @@ const handleProductImageSettled = useCallback((productId) => {
           <CustomProjectPage lang={lang} />
         ) : selectedProduct ? (
           <ProductDetails
-            key={selectedProduct.id}
+            key={`${selectedProduct.source || "product"}:${selectedProduct.id}`}
             product={selectedProduct}
-            products={products}
+            products={catalogProducts}
             user={accountUser}
             storefrontSettings={storefrontSettings}
             isAdmin={isAdminUser}
@@ -2340,7 +2609,7 @@ const handleProductImageSettled = useCallback((productId) => {
           />
         ) : showWishlist ? (
           <WishlistPage
-            products={products}
+            products={catalogProducts}
             favoriteIds={favoriteIds}
             onToggleFavorite={toggleFavorite}
             onAdd={addToCart}
@@ -2358,7 +2627,7 @@ const handleProductImageSettled = useCallback((productId) => {
         ) : showCatalogPage ? (
           <CatalogPage
             recentList={recentList}
-            products={products}
+            products={catalogProducts}
             query={searchQuery}
             lang={lang}
             t={t}
@@ -2412,7 +2681,7 @@ const handleProductImageSettled = useCallback((productId) => {
             slideDir={slideDir}
             goToSlide={goToSlide}
             slideText={slideText}
-            products={products}
+            products={catalogProducts}
             category={category}
             setCategory={setCategory}
             categoryOptions={categoryOptions}
@@ -2556,7 +2825,7 @@ const handleProductImageSettled = useCallback((productId) => {
         <AIChat
           isOpen={isAIChatOpen}
           onClose={() => setIsAIChatOpen(false)}
-          products={products}
+          products={catalogProducts}
           lang={lang}
           onDetails={openProduct}
           onAdd={addToCart}
@@ -2566,5 +2835,6 @@ const handleProductImageSettled = useCallback((productId) => {
     </div>
   );
 }
+
 
 

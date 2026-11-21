@@ -374,7 +374,7 @@ export default function CatalogPage({
               <button
                 type="button"
                 className="catalog-mini-product"
-                key={product.id}
+                key={`${product.source || "product"}:${product.id}`}
                 onClick={() => onDetails?.(product)}
               >
                 <img
@@ -398,7 +398,7 @@ export default function CatalogPage({
               <button
                 type="button"
                 className="catalog-mini-product"
-                key={product.id}
+                key={`${product.source || "product"}:${product.id}`}
                 onClick={() => onDetails?.(product)}
               >
                 <img
@@ -515,7 +515,7 @@ export default function CatalogPage({
             {paginatedProducts.length > 0 ? (
               paginatedProducts.map((product, index) => (
                 <ProductCard
-                  key={product.id}
+                  key={`${product.source || "product"}:${product.id}`}
                   imagePriority={index < 2}
                   product={product}
                   lang={lang}
@@ -527,11 +527,11 @@ export default function CatalogPage({
                   qty={
                     cartItems.find(
                       (item) =>
-                        String(item.id) === String(product.id)
+                        product.source === "supply" ? item.source === "supply" && String(item.supplyProductId || item.id) === String(product.supplyProductId || product.id) : item.source !== "supply" && String(item.id) === String(product.id)
                     )?.quantity || 0
                   }
                   isFavorite={favoriteIds.some(
-                    (id) => String(id) === String(product.id)
+                    (id) => String(id) === (product.source === "supply" ? `supply:${product.supplyProductId || product.id}` : String(product.id))
                   )}
                   onToggleFavorite={onToggleFavorite}
                   isAdmin={adminView}

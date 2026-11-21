@@ -1,4 +1,4 @@
-﻿
+
 import { useEffect, useMemo, useState } from "react";
 import {
   ArrowRight,
@@ -437,6 +437,10 @@ if (invalidPrice) {
         // actual final price from the database.
         items: items.map((item) => ({
           id: item.id,
+          source: item.source === "supply" ? "supply" : "product",
+          ...(item.source === "supply"
+            ? { supplyProductId: item.supplyProductId || item.id }
+            : {}),
           quantity: item.quantity,
           ...(item.selectedPriceOption?.optionId
             ? {

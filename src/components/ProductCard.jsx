@@ -1,4 +1,4 @@
-﻿
+
 import { useEffect, useState } from "react";
 import {
   ArrowRight,
@@ -308,7 +308,7 @@ export default function ProductCard({
 
   return (
     <article
-      id={`product-card-${product.id}`}
+      id={`product-card-${product.source === "supply" ? "supply-" : ""}${product.id}`}
 
       className={`product-card ${
         outOfStock ? "out-of-stock" : ""
@@ -605,7 +605,7 @@ export default function ProductCard({
                 onClick={(event) => {
                   event.preventDefault();
                   event.stopPropagation();
-                  onToggleFavorite?.(product.id);
+                  onToggleFavorite?.(product.source === "supply" ? (product.supplyProductId || product.id) : product.id, product.source === "supply" ? "supply" : "product");
                 }}
               >
                 <Heart

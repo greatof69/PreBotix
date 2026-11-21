@@ -1,4 +1,4 @@
-
+﻿
 import { ArrowLeft, Heart } from "lucide-react";
 import ProductCard from "../components/ProductCard";
 
@@ -15,7 +15,7 @@ export default function WishlistPage({
   isAdmin = false,
   isModerator = false,
 }) {
-  // Admin ও Moderator Wishlist ব্যবহার করতে পারবে না।
+  // Admin à¦“ Moderator Wishlist à¦¬à§à¦¯à¦¬à¦¹à¦¾à¦° à¦•à¦°à¦¤à§‡ à¦ªà¦¾à¦°à¦¬à§‡ à¦¨à¦¾à¥¤
   const canUseWishlist = !isAdmin && !isModerator;
 
   if (!canUseWishlist) {
@@ -25,12 +25,12 @@ export default function WishlistPage({
           <Heart size={48} />
           <h2>
             {lang === "bn"
-              ? "উইশলিস্ট ব্যবহার করা যাবে না"
+              ? "à¦‰à¦‡à¦¶à¦²à¦¿à¦¸à§à¦Ÿ à¦¬à§à¦¯à¦¬à¦¹à¦¾à¦° à¦•à¦°à¦¾ à¦¯à¦¾à¦¬à§‡ à¦¨à¦¾"
               : "Wishlist unavailable"}
           </h2>
           <p>
             {lang === "bn"
-              ? "এই অ্যাকাউন্টে উইশলিস্ট ব্যবহারের অনুমতি নেই।"
+              ? "à¦à¦‡ à¦…à§à¦¯à¦¾à¦•à¦¾à¦‰à¦¨à§à¦Ÿà§‡ à¦‰à¦‡à¦¶à¦²à¦¿à¦¸à§à¦Ÿ à¦¬à§à¦¯à¦¬à¦¹à¦¾à¦°à§‡à¦° à¦…à¦¨à§à¦®à¦¤à¦¿ à¦¨à§‡à¦‡à¥¤"
               : "Wishlist is not available for this account."}
           </p>
           <button
@@ -38,7 +38,7 @@ export default function WishlistPage({
             className="button button-primary"
             onClick={onBack}
           >
-            {lang === "bn" ? "পণ্যে ফিরে যান" : "Back to products"}
+            {lang === "bn" ? "à¦ªà¦£à§à¦¯à§‡ à¦«à¦¿à¦°à§‡ à¦¯à¦¾à¦¨" : "Back to products"}
           </button>
         </div>
       </section>
@@ -46,13 +46,21 @@ export default function WishlistPage({
   }
 
   const favorites = products.filter((product) =>
-    favoriteIds.some((id) => String(id) === String(product.id))
+    favoriteIds.some((id) =>
+      String(id) === (product.source === "supply"
+        ? `supply:${product.supplyProductId || product.id}`
+        : String(product.id))
+    )
   );
 
-  const getQuantity = (id) =>
-    cartItems.find((item) => String(item.id) === String(id))
-      ?.quantity || 0;
-
+  const getQuantity = (product) =>
+    cartItems.find((item) =>
+      product.source === "supply"
+        ? item.source === "supply" &&
+          String(item.supplyProductId || item.id) === String(product.supplyProductId || product.id)
+        : item.source !== "supply" &&
+          String(item.id) === String(product.id)
+    )?.quantity || 0;
   return (
     <section className="catalog-page wishlist-page">
       <div className="wishlist-header">
@@ -62,7 +70,7 @@ export default function WishlistPage({
           onClick={onBack}
         >
           <ArrowLeft size={16} />
-          {lang === "bn" ? "ফিরে যান" : "Back"}
+          {lang === "bn" ? "à¦«à¦¿à¦°à§‡ à¦¯à¦¾à¦¨" : "Back"}
         </button>
 
         <div className="wishlist-title-row">
@@ -70,11 +78,11 @@ export default function WishlistPage({
             <span className="section-kicker">PREBOTIX / WISHLIST</span>
             <h1>
               <Heart size={25} />
-              {lang === "bn" ? "আমার উইশলিস্ট" : "My Wishlist"}
+              {lang === "bn" ? "à¦†à¦®à¦¾à¦° à¦‰à¦‡à¦¶à¦²à¦¿à¦¸à§à¦Ÿ" : "My Wishlist"}
             </h1>
             <p>
               {lang === "bn"
-                ? `আপনার পছন্দের পণ্য ${favorites.length}টি`
+                ? `à¦†à¦ªà¦¨à¦¾à¦° à¦ªà¦›à¦¨à§à¦¦à§‡à¦° à¦ªà¦£à§à¦¯ ${favorites.length}à¦Ÿà¦¿`
                 : `${favorites.length} favorite product${favorites.length === 1 ? "" : "s"}`}
             </p>
           </div>
@@ -86,12 +94,12 @@ export default function WishlistPage({
           <Heart size={48} />
           <h2>
             {lang === "bn"
-              ? "আপনার উইশলিস্ট খালি"
+              ? "à¦†à¦ªà¦¨à¦¾à¦° à¦‰à¦‡à¦¶à¦²à¦¿à¦¸à§à¦Ÿ à¦–à¦¾à¦²à¦¿"
               : "Your wishlist is empty"}
           </h2>
           <p>
             {lang === "bn"
-              ? "পছন্দের পণ্যের হার্ট আইকনে ক্লিক করে এখানে সংরক্ষণ করুন।"
+              ? "à¦ªà¦›à¦¨à§à¦¦à§‡à¦° à¦ªà¦£à§à¦¯à§‡à¦° à¦¹à¦¾à¦°à§à¦Ÿ à¦†à¦‡à¦•à¦¨à§‡ à¦•à§à¦²à¦¿à¦• à¦•à¦°à§‡ à¦à¦–à¦¾à¦¨à§‡ à¦¸à¦‚à¦°à¦•à§à¦·à¦£ à¦•à¦°à§à¦¨à¥¤"
               : "Tap the heart on any product to save it here."}
           </p>
           <button
@@ -99,20 +107,20 @@ export default function WishlistPage({
             className="button button-primary"
             onClick={onBack}
           >
-            {lang === "bn" ? "পণ্য দেখুন" : "Explore products"}
+            {lang === "bn" ? "à¦ªà¦£à§à¦¯ à¦¦à§‡à¦–à§à¦¨" : "Explore products"}
           </button>
         </div>
       ) : (
         <div className="catalog-page-grid wishlist-grid">
           {favorites.map((product) => (
             <ProductCard
-              key={product.id}
+              key={`${product.source || "product"}:${product.id}`}
               product={product}
               lang={lang}
               t={t}
               onAdd={onAdd}
               onDetails={onDetails}
-              qty={getQuantity(product.id)}
+              qty={getQuantity(product)}
               isFavorite
               onToggleFavorite={onToggleFavorite}
               isAdmin={isAdmin}
@@ -124,3 +132,4 @@ export default function WishlistPage({
     </section>
   );
 }
+

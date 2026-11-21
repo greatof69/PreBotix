@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+﻿import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { ArrowRight } from "lucide-react";
 import "../pb-focus.css";
@@ -56,7 +56,7 @@ export default function HomePage({
     if (!highlightedId) return;
     const timer = setTimeout(() => {
       document
-        .getElementById(`product-card-${highlightedId}`)
+        .getElementById(`product-card-${highlightedId.startsWith("supply:") ? "supply-" : ""}${highlightedId.startsWith("supply:") ? highlightedId.slice(7) : highlightedId}`)
         ?.scrollIntoView({ behavior: "smooth", block: "center" });
     }, 400);
     return () => clearTimeout(timer);
@@ -67,7 +67,7 @@ export default function HomePage({
     <TrustStrip lang={lang} />
     <section className="section products-section" id="projects">
       <div className="section-heading">
-        <div><span className="section-kicker">{t.catalog} · {products.length} {t.results}</span><h2>{t.productsTitle}</h2></div>
+        <div><span className="section-kicker">{t.catalog} Â· {products.length} {t.results}</span><h2>{t.productsTitle}</h2></div>
         {isAdmin && (
           <div className="pb-product-admin-actions">
             <button
@@ -75,7 +75,7 @@ export default function HomePage({
               className="pb-storefront-add"
               onClick={onAddProduct}
             >
-              ＋ Add Product
+              ï¼‹ Add Product
             </button>
 
             <button
@@ -83,7 +83,7 @@ export default function HomePage({
               className="pb-storefront-import"
               onClick={onImportProducts}
             >
-              ⇧ Import Products
+              â‡§ Import Products
             </button>
           </div>
         )}
@@ -101,16 +101,16 @@ export default function HomePage({
         {visibleProducts.length ? (
           visibleProducts.map((product, index) => (
             <div
-              key={product.id}
-              id={`product-card-${product.id}`}
+              key={`${product.source || "product"}:${product.id}`}
+              id={`product-card-${product.source === "supply" ? "supply-" : ""}${product.id}`}
               onClickCapture={(e) => {
-                if (highlightedId === String(product.id)) {
+                if (highlightedId === String(product.id) || highlightedId === `supply:${product.supplyProductId || product.id}`) {
                   e.preventDefault();
                   e.stopPropagation(); // ProductCard er onClick/onDetails porjonto jabe na
                   setHighlightedId(null);
                 }
               }}
-              className={`pb-product-slot${highlightedId === String(product.id) ? " pb-product-slot--focus" : ""}`}
+              className={`pb-product-slot${(highlightedId === String(product.id) || highlightedId === `supply:${product.supplyProductId || product.id}`) ? " pb-product-slot--focus" : ""}`}
             >
             <ProductCard
               product={product}
@@ -120,11 +120,11 @@ export default function HomePage({
               onDetails={openProduct}
               qty={
                 cartItems.find(
-                  item => String(item.id) === String(product.id)
+                  item => product.source === "supply" ? item.source === "supply" && String(item.supplyProductId || item.id) === String(product.supplyProductId || product.id) : item.source !== "supply" && String(item.id) === String(product.id)
                 )?.quantity || 0
               }
               isFavorite={favoriteIds.some(
-                id => String(id) === String(product.id)
+                id => String(id) === (product.source === "supply" ? `supply:${product.supplyProductId || product.id}` : String(product.id))
               )}
               onToggleFavorite={onToggleFavorite}
               isAdmin={isAdmin}
@@ -148,3 +148,4 @@ export default function HomePage({
     <HowItWorks t={t} />
   </>;
 }
+
