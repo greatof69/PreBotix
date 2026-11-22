@@ -546,7 +546,7 @@ export default function ProductDetails({
 
             <span className="detail-image-label">
               PREBOTIX / {isBn ? "পণ্য" : "PRODUCT"}{" "}
-              {String(product.serialNumber ?? product.id ?? "").padStart(3, "0")}
+              {String(product.displaySerial ?? product.serialNumber ?? product.id ?? "").padStart(3, "0")}
             </span>
           </div>
 
