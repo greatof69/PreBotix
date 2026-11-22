@@ -1,4 +1,4 @@
-﻿import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import DashboardLayout from "../shared/DashboardLayout";
 import { clearAuthSession, getAccessToken, authFetch } from "../../utils/authSession";
@@ -2549,6 +2549,8 @@ const pageTitle =
                     {stockProducts.filter((product) => {
                       const query = stockSearch.trim().toLowerCase();
                       return !query || [
+                        product.serialNumber,
+                        product.serialNumber,
                         product.id,
                         product.title,
                         product.category,
@@ -2559,7 +2561,7 @@ const pageTitle =
                       const available = Number(product.stock) > 0;
                       return (
                         <tr key={product._id || product.id}>
-                          <td style={{ padding: 11, borderBottom: "1px solid #f1f5f9" }}>{product.id}</td>
+                          <td style={{ padding: 11, borderBottom: "1px solid #f1f5f9" }}>{product.serialNumber ?? product.id}</td>
                           <td style={{ padding: 11, borderBottom: "1px solid #f1f5f9", fontWeight: 650 }}>{product.title}</td>
                           <td style={{ padding: 11, borderBottom: "1px solid #f1f5f9" }}>{product.category}</td>
                           <td style={{ padding: 11, borderBottom: "1px solid #f1f5f9", fontWeight: 750 }}>
