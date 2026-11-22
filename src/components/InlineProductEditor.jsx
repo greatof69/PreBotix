@@ -198,6 +198,10 @@ function getInitialForm(product) {
             option?.originalPrice == null
               ? ""
               : String(option.originalPrice),
+          costPrice:
+            option?.costPrice == null
+              ? ""
+              : String(option.costPrice),
         }))
       : [],
 
@@ -669,6 +673,7 @@ export default function InlineProductEditor({
           text: "",
           price: "",
           originalPrice: "",
+          costPrice: "",
         },
       ],
     }));
@@ -1021,6 +1026,20 @@ export default function InlineProductEditor({
             return;
           }
         }
+
+        if (option.costPrice !== "" && option.costPrice != null) {
+          const costPrice = Number(option.costPrice);
+
+          if (
+            !Number.isSafeInteger(costPrice) ||
+            costPrice < 0
+          ) {
+            setError(
+              "Option supplier cost must be a valid non-negative whole number."
+            );
+            return;
+          }
+        }
       }
     }
 
@@ -1128,6 +1147,11 @@ export default function InlineProductEditor({
                     originalPrice: Number(
                       option.originalPrice
                     ),
+                  }
+                : {}),
+              ...(option.costPrice !== "" && option.costPrice != null
+                ? {
+                    costPrice: Number(option.costPrice),
                   }
                 : {}),
             }))
@@ -1562,6 +1586,29 @@ export default function InlineProductEditor({
                           </label>
 
                           <label>
+                            Supplier Cost (৳)
+
+                            <input
+                              type="number"
+                              min="0"
+                              step="1"
+                              value={option.costPrice ?? ""}
+                              onChange={(event) =>
+                                updatePriceOption(
+                                  index,
+                                  "costPrice",
+                                  event.target.value
+                                )
+                              }
+                              placeholder="Optional"
+                            />
+
+                            <small>
+                              Internal only. Never shown to customers. Leave empty if unknown.
+                            </small>
+                          </label>
+
+                          <label>
                             Original price (৳)
 
                             <input
@@ -1791,3 +1838,4 @@ export default function InlineProductEditor({
     </div>
   );
 }
+
