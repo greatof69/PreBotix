@@ -5003,3 +5003,12 @@ body img:not([data-allow-image-copy]) {
 }
 /* END PREBOTIX SELL PRICE VISIBILITY FIX */
 
+
+/* PREBOTIX OLD PRICE SIZE MATCH */
+.product-card .product-price-group > .product-original-price,
+.product-card .product-price-group > del {
+  font-size: clamp(12px, 7cqw, 18px) !important;
+  font-weight: 700;
+}
+/* END PREBOTIX OLD PRICE SIZE MATCH */
+
