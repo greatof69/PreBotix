@@ -4960,3 +4960,46 @@ body img:not([data-allow-image-copy]) {
   line-height: 1.5;
   white-space: nowrap;
 }
+/* PREBOTIX SELL PRICE VISIBILITY FIX */
+@container (max-width: 320px) {
+  .product-card .product-bottom {
+    flex-wrap: wrap;
+    align-items: center;
+    row-gap: 8px;
+  }
+
+  .product-card .product-price-group {
+    flex: 1 1 100%;
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
+    overflow: visible;
+    flex-wrap: wrap;
+  }
+
+  .product-card .product-price-group > strong {
+    flex: 0 1 auto;
+    min-width: 0;
+    max-width: 100%;
+    overflow: visible;
+    white-space: normal;
+    overflow-wrap: anywhere;
+    text-overflow: unset;
+    font-size: clamp(12px, 7cqw, 18px);
+  }
+
+  .product-card .product-price-group > .product-original-price,
+  .product-card .product-price-group > del {
+    flex: 0 1 auto;
+    width: auto;
+    max-width: 100%;
+    overflow: visible;
+  }
+
+  .product-card .product-actions {
+    flex: 0 0 auto;
+    margin-left: auto;
+  }
+}
+/* END PREBOTIX SELL PRICE VISIBILITY FIX */
+
