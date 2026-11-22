@@ -310,6 +310,7 @@ export default function AdminDashboard({
   const [stockEditValue, setStockEditValue] = useState("");
   const [stockSearch, setStockSearch] = useState("");
   const [stockSavingId, setStockSavingId] = useState(null);
+  const [visibilitySavingId, setVisibilitySavingId] = useState(null);
   const [paymentDeliverySettings, setPaymentDeliverySettings] = useState(() => readAdminSettingsCache("prebotix-admin-payment-delivery-v1", {
     paymentMethods: [],
     deliveryZones: [],
@@ -869,6 +870,42 @@ const deleteAllHistory = async () => {
     }
   }, [request, t]);
 
+
+  const toggleProductVisibility = useCallback(async (product) => {
+    const productId = String(product.id);
+    const newActive = product.active === false;
+
+    setVisibilitySavingId(productId);
+    setError("");
+    setMessage("");
+
+    try {
+      const data = await request(`/products/${encodeURIComponent(productId)}`, {
+        method: "PATCH",
+        body: JSON.stringify({ active: newActive }),
+      });
+
+      const updatedProduct = data.product || data.data?.product || null;
+
+      setStockProducts((previous) =>
+        previous.map((item) =>
+          String(item.id) === productId
+            ? { ...item, ...(updatedProduct || {}), active: newActive }
+            : item
+        )
+      );
+
+      setMessage(
+        newActive
+          ? t("Product is now visible in the shop.", "পণ্যটি এখন শপে দেখা যাবে।")
+          : t("Product hidden from the shop.", "পণ্যটি শপ থেকে লুকানো হয়েছে।")
+      );
+    } catch (err) {
+      setError(err.message || "Could not update product visibility.");
+    } finally {
+      setVisibilitySavingId(null);
+    }
+  }, [request, t]);
 
   const [replyDrafts, setReplyDrafts] = useState({});
   const [replyVisibility, setReplyVisibility] = useState({});
@@ -2500,10 +2537,10 @@ const pageTitle =
               <EmptyState>{t("Loading product catalog...", "à¦ªà¦£à§à¦¯à§‡à¦° à¦¤à¦¾à¦²à¦¿à¦•à¦¾ à¦²à§‹à¦¡ à¦¹à¦šà§à¦›à§‡...")}</EmptyState>
             ) : (
               <div style={{ overflowX: "auto" }}>
-                <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 620 }}>
+                <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 760 }}>
                   <thead>
                     <tr style={{ background: "#f8fafc", textAlign: "left" }}>
-                      {["ID", t("Product", "à¦ªà¦£à§à¦¯"), t("Category", "à¦•à§à¦¯à¦¾à¦Ÿà¦¾à¦—à¦°à¦¿"), t("Stock quantity", "à¦¸à§à¦Ÿà¦• à¦ªà¦°à¦¿à¦®à¦¾à¦£"), t("Status", "à¦…à¦¬à¦¸à§à¦¥à¦¾"), t("Action", "à¦…à§à¦¯à¦¾à¦•à¦¶à¦¨")].map((heading) => (
+                      {["ID", t("Product", "à¦ªà¦£à§à¦¯"), t("Category", "à¦•à§à¦¯à¦¾à¦Ÿà¦¾à¦—à¦°à¦¿"), t("Stock quantity", "à¦¸à§à¦Ÿà¦• à¦ªà¦°à¦¿à¦®à¦¾à¦£"), t("Status", "অবস্থা"), t("Visibility", "দৃশ্যমানতা"), t("Action", "অ্যাকশন")].map((heading) => (
                         <th key={heading} style={{ padding: 11, borderBottom: "1px solid #e5e7eb", fontSize: 12 }}>{heading}</th>
                       ))}
                     </tr>
@@ -2605,9 +2642,38 @@ const pageTitle =
                             </button>
                           </td>
                           <td style={{ padding: 11, borderBottom: "1px solid #f1f5f9" }}>
-                            <button type="button" style={primaryButtonStyle} onClick={() => navigate("/", { state: { focusProductId: product.id } })}>
-                              {t("View product", "à¦ªà¦£à§à¦¯ à¦¦à§‡à¦–à§à¦¨")}
-                            </button>
+                            <span style={{
+                              display: "inline-block",
+                              padding: "5px 9px",
+                              borderRadius: 20,
+                              fontSize: 12,
+                              fontWeight: 750,
+                              color: product.active === false ? "#dc2626" : "#059669",
+                              background: product.active === false ? "#fef2f2" : "#ecfdf5",
+                            }}>
+                              {product.active === false
+                                ? t("Hidden", "লুকানো")
+                                : t("Visible", "দৃশ্যমান")}
+                            </span>
+                          </td>
+                          <td style={{ padding: 11, borderBottom: "1px solid #f1f5f9" }}>
+                            <div style={{ display: "flex", flexWrap: "wrap", gap: 7 }}>
+                              <button
+                                type="button"
+                                disabled={visibilitySavingId === String(product.id)}
+                                onClick={() => toggleProductVisibility(product)}
+                                style={product.active === false ? primaryButtonStyle : dangerButtonStyle}
+                              >
+                                {visibilitySavingId === String(product.id)
+                                  ? t("Saving...", "সেভ হচ্ছে...")
+                                  : product.active === false
+                                    ? t("Unhide", "আবার দেখান")
+                                    : t("Hide", "লুকান")}
+                              </button>
+                              <button type="button" style={buttonStyle} onClick={() => navigate("/", { state: { focusProductId: product.id } })}>
+                                {t("View product", "পণ্য দেখুন")}
+                              </button>
+                            </div>
                           </td>
                         </tr>
                       );
@@ -2616,7 +2682,7 @@ const pageTitle =
                       const query = stockSearch.trim().toLowerCase();
                       return !query || [product.id, product.title, product.category].some((value) => String(value ?? "").toLowerCase().includes(query));
                     }) && (
-                      <tr><td colSpan={6} style={{ padding: 18, textAlign: "center", color: "#64748b" }}>{t("No products found.", "à¦•à§‹à¦¨à§‹ à¦ªà¦£à§à¦¯ à¦ªà¦¾à¦“à§Ÿà¦¾ à¦¯à¦¾à§Ÿà¦¨à¦¿à¥¤")}</td></tr>
+                      <tr><td colSpan={7} style={{ padding: 18, textAlign: "center", color: "#64748b" }}>{t("No products found.", "à¦•à§‹à¦¨à§‹ à¦ªà¦£à§à¦¯ à¦ªà¦¾à¦“à§Ÿà¦¾ à¦¯à¦¾à§Ÿà¦¨à¦¿à¥¤")}</td></tr>
                     )}
                   </tbody>
                 </table>
@@ -4614,6 +4680,8 @@ const pageTitle =
     
   );
 }
+
+
 
 
 
