@@ -605,7 +605,7 @@ export default function ProductCard({
                 onClick={(event) => {
                   event.preventDefault();
                   event.stopPropagation();
-                  onToggleFavorite?.(product.source === "supply" ? (product.supplyProductId || product.id) : product.id, product.source === "supply" ? "supply" : "product");
+                  onToggleFavorite?.(product.source === "supply" ? (product.supplyProductId || product.id) : (product._id || product.id), product.source === "supply" ? "supply" : "product");
                 }}
               >
                 <Heart

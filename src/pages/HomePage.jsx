@@ -120,11 +120,11 @@ export default function HomePage({
               onDetails={openProduct}
               qty={
                 cartItems.find(
-                  item => product.source === "supply" ? item.source === "supply" && String(item.supplyProductId || item.id) === String(product.supplyProductId || product.id) : item.source !== "supply" && String(item.id) === String(product.id)
+                  item => product.source === "supply" ? item.source === "supply" && String(item.supplyProductId || item.id) === String(product.supplyProductId || product.id) : item.source !== "supply" && String(item._id || item.productRef || item.id) === String(product._id || product.id)
                 )?.quantity || 0
               }
               isFavorite={favoriteIds.some(
-                id => String(id) === (product.source === "supply" ? `supply:${product.supplyProductId || product.id}` : String(product.id))
+                id => String(id) === (product.source === "supply" ? `supply:${product.supplyProductId || product.id}` : String(product._id || product.id))
               )}
               onToggleFavorite={onToggleFavorite}
               isAdmin={isAdmin}

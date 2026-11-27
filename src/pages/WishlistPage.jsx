@@ -49,7 +49,7 @@ export default function WishlistPage({
     favoriteIds.some((id) =>
       String(id) === (product.source === "supply"
         ? `supply:${product.supplyProductId || product.id}`
-        : String(product.id))
+        : String(product._id || product.id))
     )
   );
 
@@ -59,7 +59,7 @@ export default function WishlistPage({
         ? item.source === "supply" &&
           String(item.supplyProductId || item.id) === String(product.supplyProductId || product.id)
         : item.source !== "supply" &&
-          String(item.id) === String(product.id)
+          String(item._id || item.productRef || item.id) === String(product._id || product.id)
     )?.quantity || 0;
   return (
     <section className="catalog-page wishlist-page">

@@ -1,4 +1,4 @@
-﻿import { createPortal } from "react-dom";
+import { createPortal } from "react-dom";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import DashboardLayout from "../shared/DashboardLayout";
@@ -6,6 +6,7 @@ import FloatingCalculator from "../shared/FloatingCalculator";
 import ModeratorEarnings from "./ModeratorEarnings";
 import SupplyDashboard from "../shared/SupplyDashboard";
 import SupplyStockDashboard from "../shared/SupplyStockDashboard";
+import ModeratorProductStockDashboard from "../shared/ModeratorProductStockDashboard";
 import {
   clearAuthSession,
   authFetch,
@@ -113,6 +114,7 @@ const MODERATOR_VALID_TABS = [
   "courier",
   "supply",
   "supplyStock",
+  "productStock",
   "history",
   "messages",
   "sales",
@@ -282,6 +284,7 @@ export default function ModeratorDashboard({
     courier: true,
     supply: true,
     supplyStock: true,
+    productStock: true,
     history: true,
     messages: true,
     sales: true,
@@ -1236,6 +1239,12 @@ export default function ModeratorDashboard({
       icon: "ðŸ“¦",
     },
     {
+      id: "productStock",
+      label: t("Product Stock", "প্রোডাক্ট স্টক"),
+      labelBn: "প্রোডাক্ট স্টক",
+      icon: "📦",
+    },
+    {
       id: "history",
       label: t("Order History", "à¦…à¦°à§à¦¡à¦¾à¦° à¦¹à¦¿à¦¸à§à¦Ÿà§‹à¦°à¦¿"),
       labelBn: "à¦…à¦°à§à¦¡à¦¾à¦° à¦¹à¦¿à¦¸à§à¦Ÿà§‹à¦°à¦¿",
@@ -2149,6 +2158,10 @@ export default function ModeratorDashboard({
 
         {tab === "supplyStock" && (
           <SupplyStockDashboard request={request} lang={lang} />
+        )}
+
+        {tab === "productStock" && (
+          <ModeratorProductStockDashboard request={request} lang={lang} />
         )}
 
         {tab === "messages" && (

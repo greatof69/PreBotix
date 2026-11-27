@@ -544,7 +544,9 @@ export default function App() {
       "";
 
     const source = item.source === "supply" ? "supply" : "product";
-    const itemId = source === "supply" ? (item.supplyProductId || item.id) : item.id;
+    const itemId = source === "supply"
+      ? (item.supplyProductId || item.id)
+      : (item._id || item.productRef || item.id);
     return `${source}:${itemId}:${optionId || "default"}`;
   };
 
@@ -664,7 +666,9 @@ const handleProductImageSettled = useCallback((productId) => {
     const productMatch = path.match(/^\/products\/([^/]+)$/);
     if (productMatch) {
       const productId = decodeURIComponent(productMatch[1]);
-      const product = products.find((item) => String(item.id) === productId);
+      const product = products.find((item) =>
+        String(item._id || "") === productId || String(item.id) === productId
+      );
 
       setShowCatalogPage(false);
       setShowWishlist(false);
@@ -862,7 +866,7 @@ const handleProductImageSettled = useCallback((productId) => {
 
   const recentList = recentIds
     .map((id) =>
-      products.find((product) => String(product.id) === String(id))
+      products.find((product) => String(product._id || product.id) === String(id))
     )
     .filter(Boolean);
 
@@ -887,6 +891,9 @@ const handleProductImageSettled = useCallback((productId) => {
         JSON.stringify(
           cartItems.map((item) => ({
             id: item.id,
+            ...(item.source !== "supply"
+              ? { productRef: item._id || item.productRef || null }
+              : {}),
             source: item.source === "supply" ? "supply" : "product",
             ...(item.source === "supply"
               ? { supplyProductId: item.supplyProductId || item.id }
@@ -900,6 +907,29 @@ const handleProductImageSettled = useCallback((productId) => {
       // Cart remains usable in the current session.
     }
   }, [cartItems, accountUser, productsLoaded]);
+
+  // Migrate legacy numeric wishlist IDs to immutable MongoDB Product IDs.
+  useEffect(() => {
+    if (!productsLoaded || !favoriteIds.length) return;
+    setFavoriteIds((currentIds) => {
+      const migrated = currentIds.map((savedId) => {
+        const value = String(savedId);
+        if (value.startsWith("supply:")) return value;
+        const legacyProduct = products.find((product) =>
+          Array.isArray(product.legacyIds) &&
+          product.legacyIds.some((legacyId) => Number(legacyId) === Number(value))
+        );
+        const currentProduct = products.find(
+          (product) => String(product.id) === value
+        );
+        const match = legacyProduct || currentProduct;
+        return match ? String(match._id || match.id) : value;
+      });
+      return migrated.every((value, index) => value === String(currentIds[index]))
+        ? currentIds
+        : migrated;
+    });
+  }, [productsLoaded, products, favoriteIds]);
 
   // SAVE WISHLIST ONLY TO THE CURRENT ACCOUNT
   useEffect(() => {
@@ -991,8 +1021,14 @@ const handleProductImageSettled = useCallback((productId) => {
             return { ...restoredItem, cartKey: getCartKey(restoredItem) };
           }
 
-          const product = products.find(
-            (item) => String(item.id) === String(saved.id)
+          const product = products.find((item) =>
+            saved.productRef && String(item._id) === String(saved.productRef)
+          ) || products.find((item) =>
+            !saved.productRef &&
+            Array.isArray(item.legacyIds) &&
+            item.legacyIds.some((legacyId) => Number(legacyId) === Number(saved.id))
+          ) || products.find((item) =>
+            !saved.productRef && String(item.id) === String(saved.id)
           );
 
           if (!product) return null;
@@ -1029,7 +1065,7 @@ const handleProductImageSettled = useCallback((productId) => {
               }
             : null;
 
-          const cartKey = `${product.id}:${
+          const cartKey = `product:${product._id || product.id}:${
             optionId || "default"
           }`;
 
@@ -1180,7 +1216,9 @@ const handleProductImageSettled = useCallback((productId) => {
     }
 
     setFavoriteIds((currentIds) => {
-      const id = String(productId);
+      const id = source === "supply"
+        ? `supply:${String(productId)}`
+        : String(productId);
       const exists = currentIds.some((savedId) => String(savedId) === id);
 
       return exists
@@ -1240,7 +1278,7 @@ const handleProductImageSettled = useCallback((productId) => {
           (item) => String(item._id || item.id) === supplyId
         ) || product
       : products.find(
-          (item) => String(item.id) === String(product.id)
+          (item) => String(item._id || item.id) === String(product._id || product.productRef || product.id)
         ) || product;
 
     const optionsEnabled =
@@ -1288,6 +1326,7 @@ const handleProductImageSettled = useCallback((productId) => {
     const cartIdentity = {
       ...currentProduct,
       id: currentProduct.id || currentProduct._id || product.id,
+      ...(!isSupplyProduct ? { productRef: currentProduct._id || currentProduct.productRef || null } : {}),
       source: isSupplyProduct ? "supply" : "product",
       ...(isSupplyProduct ? { supplyProductId: supplyId } : {}),
       priceOptionId: optionId,
@@ -1300,7 +1339,7 @@ const handleProductImageSettled = useCallback((productId) => {
           ? item.source === "supply" &&
             String(item.supplyProductId || item.id) === supplyId
           : item.source !== "supply" &&
-            String(item.id) === String(currentProduct.id)
+            String(item._id || item.productRef || item.id) === String(currentProduct._id || currentProduct.id)
       )
       .reduce(
         (sum, item) => sum + Number(item.quantity || 0),
@@ -1349,6 +1388,7 @@ const handleProductImageSettled = useCallback((productId) => {
               ...item,
               ...currentProduct,
               id: currentProduct.id || currentProduct._id || product.id,
+              ...(!isSupplyProduct ? { productRef: currentProduct._id || currentProduct.productRef || null } : {}),
               source: isSupplyProduct ? "supply" : "product",
               ...(isSupplyProduct ? { supplyProductId: supplyId } : {}),
               price: selectedPrice,
@@ -1365,6 +1405,7 @@ const handleProductImageSettled = useCallback((productId) => {
         {
           ...currentProduct,
           id: currentProduct.id || currentProduct._id || product.id,
+          ...(!isSupplyProduct ? { productRef: currentProduct._id || currentProduct.productRef || null } : {}),
           source: isSupplyProduct ? "supply" : "product",
           ...(isSupplyProduct ? { supplyProductId: supplyId } : {}),
           price: selectedPrice,
@@ -1390,14 +1431,14 @@ const handleProductImageSettled = useCallback((productId) => {
   // PRODUCT DETAILS
   const openProduct = (product) => {
     setSelectedProduct(product);
-    navigate(`${product.source === "supply" ? "/supply-products" : "/products"}/${encodeURIComponent(product.source === "supply" ? (product.supplyProductId || product.id) : product.id)}`);
+    navigate(`${product.source === "supply" ? "/supply-products" : "/products"}/${encodeURIComponent(product.source === "supply" ? (product.supplyProductId || product.id) : (product._id || product.id))}`);
     setShowCatalogPage(false);
     setShowWishlist(false);
 
     setRecentIds((ids) =>
       [
-        product.id,
-        ...ids.filter((id) => String(id) !== String(product.id)),
+        product._id || product.id,
+        ...ids.filter((id) => String(id) !== String(product._id || product.id)),
       ].slice(0, 4)
     );
 
@@ -1582,6 +1623,9 @@ const handleProductImageSettled = useCallback((productId) => {
         form: payload.form,
         items: payload.items.map((item) => ({
           id: item.id,
+          ...(item.source !== "supply"
+            ? { productRef: item._id || item.productRef || null }
+            : {}),
           source: item.source === "supply" ? "supply" : "product",
           ...(item.source === "supply"
             ? { supplyProductId: item.supplyProductId || item.id }
@@ -1627,7 +1671,8 @@ const handleProductImageSettled = useCallback((productId) => {
         const orderedItem = savedOrder.items.find(
           (item) =>
             item.source !== "supply" &&
-            Number(item.productId) === Number(product.id)
+            (String(item.productRef || "") === String(product._id || "") ||
+              Number(item.productId) === Number(product.id))
         );
 
         if (!orderedItem) return product;
@@ -1850,8 +1895,10 @@ const handleProductImageSettled = useCallback((productId) => {
                 }
 
                 const productId = item.productId ?? item.id;
-                const product = products.find(
-                  (p) => String(p.id) === String(productId)
+                const product = products.find((p) =>
+                  item.productRef
+                    ? String(p._id) === String(item.productRef)
+                    : String(p.id) === String(productId)
                 );
                 if (!product) {
                   orderComplete = false;
@@ -1896,7 +1943,7 @@ const handleProductImageSettled = useCallback((productId) => {
 
                 const existingIndex = orderCart.findIndex((saved) => {
                   return (
-                    String(saved.id) === String(product.id) &&
+                    String(saved.productRef || saved.id) === String(product._id || product.id) &&
                     String(saved.priceOptionId || "") === optionId
                   );
                 });
@@ -1911,6 +1958,7 @@ const handleProductImageSettled = useCallback((productId) => {
                 } else {
                   orderCart.push({
                     id: product.id,
+                    productRef: product._id,
                     quantity,
                     priceOptionId: optionId,
                   });
@@ -1966,8 +2014,13 @@ const handleProductImageSettled = useCallback((productId) => {
                     };
                     return { ...restoredItem, cartKey: getCartKey(restoredItem) };
                   }
-                  const product = products.find(
-                    (p) => String(p.id) === String(saved.id)
+                  const product = products.find((p) =>
+                    saved.productRef && String(p._id) === String(saved.productRef)
+                  ) || products.find((p) =>
+                    !saved.productRef && Array.isArray(p.legacyIds) &&
+                    p.legacyIds.some((legacyId) => Number(legacyId) === Number(saved.id))
+                  ) || products.find((p) =>
+                    !saved.productRef && String(p.id) === String(saved.id)
                   );
 
                   if (!product) return null;
